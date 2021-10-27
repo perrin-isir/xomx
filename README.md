@@ -8,11 +8,14 @@ XAIO is a python library providing data processing and
 machine learning tools for computational omics, with a 
 particular emphasis on explainability.
 
-It relies on AnnData objects, which makes it compatible with Scanpy.
+It relies on [AnnData](https://anndata.readthedocs.io) objects, which makes it
+fully compatible with [Scanpy](https://scanpy.readthedocs.io).
 
-*It is currently in beta version.*
+*XAIO is currently in beta version.*
 
 -----
+
+
 
 ## Install
 
@@ -34,8 +37,8 @@ pip install -e .
 Tutorials (in [xaio/tutorials/](xaio/tutorials/)) are the best way to learn to use
 the XAIO library.
 
-Here is the list of tutorials:
-* [kidney_classif.md](xaio/tutorials/kidney_classif.md) (*goal:*  use a recursive feature 
+List of tutorials:
+* [xaio_kidney_classif.md](xaio/tutorials/xaio_kidney_classif.md) (*goal:*  use a recursive feature 
 elimination method on RNA-Seq data to identify gene biomarkers for the differential 
 diagnosis of three types of kidney cancer)
 
