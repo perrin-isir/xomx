@@ -39,7 +39,6 @@ def indices_per_label(labels) -> dict:
 def train_and_test_indices(
     adata: sc.AnnData, indices_per_label_key, test_train_ratio=0.25
 ):
-    sc._utils.view_to_actual(adata)
     train_indices_per_label = {}
     test_indices_per_label = {}
     for annot in adata.uns[indices_per_label_key]:
@@ -54,3 +53,26 @@ def train_and_test_indices(
     adata.uns["test_indices_per_label"] = test_indices_per_label
     adata.uns["train_indices"] = train_indices
     adata.uns["test_indices"] = test_indices
+
+
+def confusion_matrix(classifier, data_test, target_test) -> np.ndarray:
+    nr_neg = len(np.where(target_test == 0)[0])
+    nr_pos = len(np.where(target_test == 1)[0])
+    result = classifier.predict(data_test) - target_test
+    fp = len(np.where(result == 1)[0])
+    fn = len(np.where(result == -1)[0])
+    tp = nr_pos - fn
+    tn = nr_neg - fp
+    return np.array([[tp, fp], [fn, tn]])
+
+
+def matthews_coef(confusion_m: np.ndarray) -> float:
+    tp = confusion_m[0, 0]
+    fp = confusion_m[0, 1]
+    fn = confusion_m[1, 0]
+    tn = confusion_m[1, 1]
+    denominator = (tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)
+    if denominator == 0:
+        denominator = 1
+    mcc = (tp * tn - fp * fn) / np.sqrt(denominator)
+    return mcc

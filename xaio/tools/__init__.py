@@ -6,6 +6,8 @@ from .utils import (
     all_labels,
     indices_per_label,
     train_and_test_indices,
+    confusion_matrix,
+    matthews_coef,
 )
 
 assert var_mean_values
@@ -15,3 +17,5 @@ assert obs_indices
 assert all_labels
 assert indices_per_label
 assert train_and_test_indices
+assert confusion_matrix
+# assert matthews_coef

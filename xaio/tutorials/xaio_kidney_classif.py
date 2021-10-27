@@ -137,8 +137,8 @@ if step == 3:
 
 
 """
-STEP 4: Annotate the samples.
-Annotations (labels) are fetched from the previously created file manifest.txt.
+STEP 4: Labelling samples.
+Labels (annotations) are fetched from the previously created file manifest.txt.
 """
 if step == 4:
     # Loading the AnnData object:
@@ -162,7 +162,7 @@ if step == 4:
     # Compute the list of different labels:
     xd.uns["all_labels"] = xaio.tl.all_labels(xd.obs["labels"])
 
-    # Computing the list of sample indices for every annotation:
+    # Computing the list of sample (obs) indices for every label:
     xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
 
     # Saving the AnnData object to the disk:
@@ -184,58 +184,57 @@ if step == 5:
     # Filter the data to keep only the 4000 highly variable features
     xd = xd[:, xd.var.highly_variable]
 
+    # Randomly separate samples into train and test sets.
     xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
-
-    from IPython import embed as e
-
-    e()
-    quit()
+    # New annotations after this call:
+    # xd.uns["train_indices_per_label"]
+    # xd.uns["test_indices_per_label"]
+    # xd.uns["train_indices"]
+    # xd.uns["test_indices"]
 
     # Saving the filtered data to a new file:
     xd.write(os.path.join(savedir, "xaio_k_c_small.h5ad"))
-
-    xd.load(["raw"], os.path.join(savedir, "xd"))
-    xd.reduce_features(np.argsort(xd.feature_standard_deviations)[-4000:])
-    xd.compute_train_and_test_indices(test_train_ratio=0.25)
-    xd.save(["raw"], os.path.join(savedir, "xd_small"))
     print("STEP 5: done")
 
-#
-# """
-# STEP 6: Train binary classifiers for every annotation, with recursive feature
-# elimination to keep 10 features per classifier.
-# """
-# if step == 6:
-#     xd = XAIOData()
-#     xd.load(["raw"], os.path.join(savedir, "xd_small"))
-#     nr_annotations = len(xd.all_annotations)
-#     feature_selector = np.empty(nr_annotations, dtype=object)
-#     for i in range(nr_annotations):
-#         print("Annotation: " + xd.all_annotations[i])
-#         feature_selector[i] = RFEExtraTrees(
-#             xd,
-#             xd.all_annotations[i],
-#             n_estimators=450,
-#             random_state=0,
-#         )
-#         feature_selector[i].init()
-#         for siz in [100, 30, 20, 15, 10]:
-#             print("Selecting", siz, "features...")
-#             feature_selector[i].select_features(siz)
-#             cm = confusion_matrix(
-#                 feature_selector[i],
-#                 feature_selector[i].data_test,
-#                 feature_selector[i].target_test,
-#             )
-#             print("MCC score:", matthews_coef(cm))
-#         feature_selector[i].save(
-#             os.path.join(
-#                 savedir, "xd_small", "feature_selectors", xd.all_annotations[i]
-#             )
-#         )
-#         print("Done.")
-#
-#     print("STEP 6: done")
+
+"""
+STEP 6: Train binary classifiers for every annotation, with recursive feature
+elimination to keep 10 features per classifier.
+"""
+if step == 6:
+    xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
+
+    # from IPython import embed as e ; e() ; quit()
+
+    n_labels = len(xd.uns["all_labels"])
+    feature_selector = np.empty(n_labels, dtype=object)
+    for i in range(n_labels):
+        print("Annotation: " + xd.uns["all_labels"][i])
+        feature_selector[i] = xaio.fs.RFEExtraTrees(
+            xd,
+            xd.uns["all_labels"][i],
+            n_estimators=450,
+            random_state=0,
+        )
+        feature_selector[i].init()
+        for siz in [100, 30, 20, 15, 10]:
+            print("Selecting", siz, "features...")
+            feature_selector[i].select_features(siz)
+            cm = xaio.tl.confusion_matrix(
+                feature_selector[i],
+                feature_selector[i].data_test,
+                feature_selector[i].target_test,
+            )
+            print("MCC score:", xaio.tl.matthews_coef(cm))
+        feature_selector[i].plot()
+        feature_selector[i].save(
+            os.path.join(
+                savedir, "xd_small", "feature_selectors", xd.uns["all_labels"][i]
+            )
+        )
+        print("Done.")
+
+    print("STEP 6: done")
 #
 #
 # """
