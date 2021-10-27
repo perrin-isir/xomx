@@ -154,3 +154,11 @@ class RFEExtraTrees:
         xaio.pl.plot_scores(
             self.adata, res, 0.5, self.adata.uns["test_indices"], label, save_dir
         )
+
+
+def load_RFEExtraTrees(
+    fpath, adata: sc.AnnData, label, n_estimators=450, random_state=None
+) -> RFEExtraTrees:
+    rfeet = RFEExtraTrees(adata, label, n_estimators, random_state)
+    rfeet.load(fpath)
+    return rfeet

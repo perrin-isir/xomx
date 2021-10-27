@@ -1,1 +1,1 @@
-from .RFEExtraTrees import RFEExtraTrees
+from .RFEExtraTrees import RFEExtraTrees, load_RFEExtraTrees

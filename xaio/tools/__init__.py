@@ -9,13 +9,3 @@ from .utils import (
     confusion_matrix,
     matthews_coef,
 )
-
-assert var_mean_values
-assert var_standard_deviations
-assert var_indices
-assert obs_indices
-assert all_labels
-assert indices_per_label
-assert train_and_test_indices
-assert confusion_matrix
-# assert matthews_coef

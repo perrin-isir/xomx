@@ -146,11 +146,6 @@ if step == 4:
 
     manifest = pd.read_table(os.path.join(savedir, "manifest.txt"), header=0)
 
-    # # Compute the set of sample (obs) indices:
-    # xd.uns["var_indices"] = xaio.tl.obs_indices(xd)
-    # # Compute the set of feature (var) indices:
-    # xd.uns["obs_indices"] = xaio.tl.var_indices(xd)
-
     # Create a dictionary of labels:
     label_dict = {}
     for i in range(xd.n_obs):
@@ -198,116 +193,107 @@ if step == 5:
 
 
 """
-STEP 6: Train binary classifiers for every annotation, with recursive feature
-elimination to keep 10 features per classifier.
+STEP 6: For every label, train a binary classifier with recursive feature
+elimination to determine a discriminative list of 10 features.
 """
 if step == 6:
     xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
-
-    # from IPython import embed as e ; e() ; quit()
-
-    n_labels = len(xd.uns["all_labels"])
-    feature_selector = np.empty(n_labels, dtype=object)
-    for i in range(n_labels):
-        print("Annotation: " + xd.uns["all_labels"][i])
-        feature_selector[i] = xaio.fs.RFEExtraTrees(
+    feature_selector = {}
+    for label in xd.uns["all_labels"]:
+        print("Annotation: " + label)
+        feature_selector[label] = xaio.fs.RFEExtraTrees(
             xd,
-            xd.uns["all_labels"][i],
+            label,
             n_estimators=450,
             random_state=0,
         )
-        feature_selector[i].init()
+        feature_selector[label].init()
         for siz in [100, 30, 20, 15, 10]:
             print("Selecting", siz, "features...")
-            feature_selector[i].select_features(siz)
+            feature_selector[label].select_features(siz)
             cm = xaio.tl.confusion_matrix(
-                feature_selector[i],
-                feature_selector[i].data_test,
-                feature_selector[i].target_test,
+                feature_selector[label],
+                feature_selector[label].data_test,
+                feature_selector[label].target_test,
             )
             print("MCC score:", xaio.tl.matthews_coef(cm))
-        feature_selector[i].plot()
-        feature_selector[i].save(
-            os.path.join(
-                savedir, "xd_small", "feature_selectors", xd.uns["all_labels"][i]
-            )
+        feature_selector[label].save(
+            os.path.join(savedir, "xd_small", "feature_selectors", label)
         )
         print("Done.")
 
     print("STEP 6: done")
-#
-#
-# """
-# STEP 7: Visualizing results.
-# """
-# if step == 7:
-#     xd = XAIOData()
-#     xd.load(["raw"], os.path.join(savedir, "xd_small"))
-#
-#     xd.compute_normalization("std")
-#     xd.function_scatter(
-#         lambda idx: xd.feature_mean_values[idx],
-#         lambda idx: xd.feature_standard_deviations[idx],
-#         "features",
-#         xlog_scale=True,
-#         ylog_scale=True,
-#     )
-#
-#     feature_selector = np.empty(len(xd.all_annotations), dtype=object)
-#     gene_list = []
-#     for i in range(len(feature_selector)):
-#         feature_selector[i] = RFEExtraTrees(
-#             xd,
-#             xd.all_annotations[i],
-#             n_estimators=450,
-#             random_state=0,
-#         )
-#         feature_selector[i].load(
-#             os.path.join(
-#                 savedir, "xd_small", "feature_selectors", xd.all_annotations[i]
-#             )
-#         )
-#         gene_list += [
-#             xd.feature_names[idx_]
-#             for idx_ in feature_selector[i].current_feature_indices
-#         ]
-#
-#     feature_selector[0].plot()
-#
-#     xd.reduce_features(gene_list)
-#     xd.compute_normalization("log")
-#     xd.umap_plot("log")
-#
-#     xd.feature_plot(gene_list, "log")
-#     xd.feature_plot("ENSG00000168269.8")  # FOXI1
-#     xd.feature_plot("ENSG00000163435.14")  # ELF3
-#     xd.feature_plot("ENSG00000185633.9")  # NDUFA4L2
-#
-#     # Some of the most remarkable genes on this plot:
-#     # ENSG00000185633.9
-#     # ENSG00000168269.8 for KICH: FOXI1, known in
-#     # "Cell-Type-Specific Gene Programs of the Normal Human
-#     # Nephron Define Kidney Cancer Subtypes"
-#
-#     # For KIRP: ELF3 ENSG00000163435.14
-#     # Diagnostic
-#     # biomarkers
-#     # for renal cell carcinoma: selection
-#     # using
-#     # novel
-#     # bioinformatics
-#     # systems
-#     # for microarray data analysis
-#
-#     # The Gene ENSG00000185633.9 (NDUFA4L2) seems associated to KIRC
-#     # (Kidney Renal Clear Cell Carcinoma).
-#     # This is confirmed by the publication:
-#     # Role of NADH Dehydrogenase (Ubiquinone) 1 alpha subcomplex 4-like 2 in
-#     clear cell
-#     # renal cell carcinoma
-#     # xd.feature_plot("ENSG00000185633.9", "raw")
-#
-#
+
+
+"""
+STEP 7: Visualizing results.
+"""
+if step == 7:
+    xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
+
+    xaio.pl.function_scatter(
+        xd,
+        lambda idx: xd.var["mean_values"][idx],
+        lambda idx: xd.var["standard_deviations"][idx],
+        "var",
+        xlog_scale=True,
+        ylog_scale=True,
+    )
+
+    feature_selector = {}
+    gene_list = []
+    for label in xd.uns["all_labels"]:
+        feature_selector[label] = xaio.fs.load_RFEExtraTrees(
+            os.path.join(savedir, "xd_small", "feature_selectors", label),
+            xd,
+            label,
+            n_estimators=450,
+            random_state=0,
+        )
+        gene_list += [
+            xd.var_names[idx_]
+            for idx_ in feature_selector[label].current_feature_indices
+        ]
+
+    feature_selector["TCGA-KIRC"].plot()
+
+    xd = xd[:, gene_list]
+
+    xaio.pl.umap_plot(xd)
+
+    # Compute the set of feature (var) indices:
+    xd.uns["var_indices"] = xaio.tl.var_indices(xd)
+    xaio.pl.var_plot(xd, gene_list)
+
+    xaio.pl.var_plot(xd, "ENSG00000168269.8")  # FOXI1
+    # xaio.pl.var_plot(xd, "ENSG00000163435.14")  # ELF3
+    xaio.pl.var_plot(xd, "ENSG00000125872.7")  # ELF3
+    xaio.pl.var_plot(xd, "ENSG00000185633.9")  # NDUFA4L2
+
+    # Some of the most remarkable genes on this plot:
+    # ENSG00000185633.9
+    # ENSG00000168269.8 for KICH: FOXI1, known in
+    # "Cell-Type-Specific Gene Programs of the Normal Human
+    # Nephron Define Kidney Cancer Subtypes"
+
+    # For KIRP: ELF3 ENSG00000163435.14
+    # Diagnostic
+    # biomarkers
+    # for renal cell carcinoma: selection
+    # using
+    # novel
+    # bioinformatics
+    # systems
+    # for microarray data analysis
+
+    # The Gene ENSG00000185633.9 (NDUFA4L2) seems associated to KIRC
+    # (Kidney Renal Clear Cell Carcinoma).
+    # This is confirmed by the publication:
+    # Role of NADH Dehydrogenase (Ubiquinone) 1 alpha subcomplex 4-like 2 in clear cell
+    # renal cell carcinoma
+    # xd.feature_plot("ENSG00000185633.9", "raw")
+
+
 """
 INCREMENTING next_step.txt
 """
