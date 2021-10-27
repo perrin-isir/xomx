@@ -40,7 +40,7 @@ os.makedirs(savedir, exist_ok=True)
 # We use the file next_step.txt to know which step to execute next. 7 consecutive
 # executions of the code complete the 7 steps of the tutorial.
 # A specific step can also be chosen using an integer in argument
-# (e.g. `python kidney_classif.py 1` to execute step 1).
+# (e.g. `python xaio_kidney_classif.py 1` to execute step 1).
 if args.step is not None:
     assert 1 <= args.step <= 7
     step = args.step
@@ -102,8 +102,8 @@ if step == 2:
 
 
 """
-STEP 3: Gather all individual cases to create the data matrix, and save it in
-a folder named "xd".
+STEP 3: Gather all individual cases to create the data matrix, and save it
+as an AnnData object.
 After that, all the individual files imported with gdc-client are erased.
 """
 if step == 3:
@@ -117,6 +117,7 @@ if step == 3:
     # This dataframe does not follow the AnnData convention (rows = samples,
     # columns = features), so we transpose it when creating the AnnData object:
     xd = sc.AnnData(df.transpose())
+    xd.var_names_make_unique()
 
     # In order to improve cross-sample comparisons, we normalize the sequencing
     # depth to 1 million.

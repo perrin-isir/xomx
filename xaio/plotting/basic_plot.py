@@ -138,13 +138,13 @@ def function_scatter(
     (both functions must take indices in input)
     """
     assert obs_or_var == "obs" or obs_or_var == "var"
-    assert "obs_indices_per_label" in adata.uns and "all_labels" in adata.uns
     set_xticks = None
     set_xticks_text = None
     violinplots_done = False
     fig, ax = plt.subplots()
     if obs_or_var == "obs":
         if "all_labels" in adata.uns and function_plot_:
+            assert "obs_indices_per_label" in adata.uns
             (
                 list_samples,
                 set_xticks,
