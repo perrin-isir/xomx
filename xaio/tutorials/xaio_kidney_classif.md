@@ -8,12 +8,12 @@ types of kidney cancer: Kidney Renal Clear Cell Carcinoma (**KIRC**), Kidney Ren
 Papillary Cell Carcinoma (**KIRP**), and Kidney Renal Clear Cell Carcinoma (**KICH**).
 
 ### Running the tutorial:
-- **Repeated executions of the [kidney_classif.py](xaio/tutorials/kidney_classif.py) 
+- **Repeated executions of the [xaio_kidney_classif.py](xaio/tutorials/xaio_kidney_classif.py) 
 file perform each of the 7 steps of 
 the tutorial, one by one.**
 
 - A specific step can also be chosen using an integer
-argument. For instance, `python kidney_classif.py 1` executes the step 1.
+argument. For instance, `python xaio_kidney_classif.py 1` executes the step 1.
 
 ### Table of Contents:
 + [Step 1: Preparing the manifest](#s1)
@@ -26,7 +26,7 @@ argument. For instance, `python kidney_classif.py 1` executes the step 1.
 
 ### Saving results:
 
-In [kidney_classif.py](xaio/tutorials/kidney_classif.py), after the imports, the 
+In [xaio_kidney_classif.py](xaio/tutorials/xaio_kidney_classif.py), after the imports, the 
 following lines define the string variable `savedir`,  which determines the folder 
 in which data and outputs will be stored:
 ```python
@@ -34,7 +34,7 @@ args = get_args()
 savedir = args.savedir
 ```
 By default, `savedir` is `~/results/xaio/kidney_classif`, but it can be modified using a 
-`--savedir` argument in input (e.g. `python kidney_classif.py --savedir /tmp`).
+`--savedir` argument in input (e.g. `python xaio_kidney_classif.py --savedir /tmp`).
 
 <a name="s1"></a>
 ## Step 1: Preparing the manifest
@@ -96,7 +96,7 @@ This requires the `gdc-client`, which can be downloaded at:
 https://gdc.cancer.gov/access-data/gdc-data-transfer-tool
 
 On linux, the command `export PATH=$PATH:/path/to/gdc-client/folder` can be useful to make
-sure that the `gdc-client` is found during the execution of `kidney_classif.py`.
+sure that the `gdc-client` is found during the execution of `xaio_kidney_classif.py`.
 
 Remark: the execution of this step, i.e. the import of all samples,
 may take some time.
