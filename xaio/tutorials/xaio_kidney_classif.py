@@ -218,9 +218,7 @@ if step == 6:
                 feature_selector[label].target_test,
             )
             print("MCC score:", xaio.tl.matthews_coef(cm))
-        feature_selector[label].save(
-            os.path.join(savedir, "xd_small", "feature_selectors", label)
-        )
+        feature_selector[label].save(os.path.join(savedir, "feature_selectors", label))
         print("Done.")
 
     print("STEP 6: done")
@@ -245,11 +243,8 @@ if step == 7:
     gene_list = []
     for label in xd.uns["all_labels"]:
         feature_selector[label] = xaio.fs.load_RFEExtraTrees(
-            os.path.join(savedir, "xd_small", "feature_selectors", label),
+            os.path.join(savedir, "feature_selectors", label),
             xd,
-            label,
-            n_estimators=450,
-            random_state=0,
         )
         gene_list += [
             xd.var_names[idx_]

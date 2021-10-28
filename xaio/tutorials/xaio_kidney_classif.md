@@ -7,6 +7,11 @@ RNA-Seq data to identify gene biomarkers for the differential diagnosis of three
 types of kidney cancer: Kidney Renal Clear Cell Carcinoma (**KIRC**), Kidney Renal 
 Papillary Cell Carcinoma (**KIRP**), and Kidney Renal Clear Cell Carcinoma (**KICH**).
 
+The recursive feature elimination method is based on 
+the [Extra-Trees algorithm](https://link.springer.com/article/10.1007/s10994-006-6226-1)
+(and its implementation in 
+[scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html)).
+
 ### Running the tutorial:
 - **Repeated executions of the [xaio_kidney_classif.py](xaio/tutorials/xaio_kidney_classif.py) 
 file perform each of the 7 steps of 
@@ -232,11 +237,12 @@ xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 
 <a name="s5"></a>
 ## Step 5: Basic preprocessing
-Loading the object: 
+Loading the AnnData object: 
 ```
 xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 ```
-First, we logarithmize the data  with the following Scanpy function which applies X = log(1 + X):
+First, we logarithmize the data  with the following Scanpy function which applies
+the equation X = log(1 + X):
 ```
 sc.pp.log1p(xd)
 ```
@@ -253,14 +259,14 @@ We then randomly split the samples into training and test sets:
 ```
 xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
 ```
-This function requires `xd.uns["obs_indices_per_label"]`, which was computed in 
+The function `train_and_test_indices()` requires `xd.uns["obs_indices_per_label"]`, which was computed in 
 the previous step. With `test_train_ratio=0.25`, for every label 
-("TCGA-KIRC", "TCGA-KIRP" and "TCGA-KICH"), 25% of the samples are assigned to 
+("TCGA-KIRC", "TCGA-KIRP" or "TCGA-KICH"), 25% of the samples are assigned to 
 the test set, and 75% to the train set. It creates the following unstructured 
 annotations:
-- `xd.uns["train_indices"]`: the array of the indices of all the samples that belong 
+- `xd.uns["train_indices"]`: the array of the indices of all samples that belong 
 to the training set.
-- `xd.uns["test_indices"]`: the array of the indices of all the samples that belong 
+- `xd.uns["test_indices"]`: the array of the indices of all samples that belong 
 to the test set.
 - `xd.uns["train_indices_per_label"]`: the dictionary of sample indices in the 
 training set, per label. For instance, `xd.uns["train_indices_per_label"]["TCGA-KIRP"]` is the array

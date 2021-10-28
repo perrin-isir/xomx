@@ -24,7 +24,7 @@ class RFEExtraTrees:
     def __init__(
         self,
         adata: sc.AnnData,
-        label=None,
+        label,
         init_selection_size=None,
         n_estimators=450,
         random_state=None,
@@ -56,58 +56,37 @@ class RFEExtraTrees:
         self.log = []
 
     def init(self):
+
         if self.init_selection_size is not None:
             assert "rank_genes_groups" in self.adata.uns
-            list_features = self.adata.uns["rank_genes_groups"]["names"]["0"][
+            list_features = self.adata.uns["rank_genes_groups"]["names"][self.label][
                 : self.init_selection_size
             ]
             selected_feats = np.array(
                 [self.adata.uns["var_indices"][feat] for feat in list_features]
             )
             self.select_features(self.init_selection_size, selected_feats)
-
         else:
             self.select_features(
                 self.data_train.shape[1], np.arange(self.data_train.shape[1])
             )
-        # self.forest = ExtraTreesClassifier(
-        #     n_estimators=self.n_estimators, random_state=self.random_state
-        # )
-        # self.forest.fit(self.data_train, self.target_train)
-        # self.confusion_matrix = xaio.tl.confusion_matrix(
-        #     self.forest, self.data_test, self.target_test
-        # )
-        # self.log.append(
-        #     {
-        #         "feature_indices": self.current_feature_indices,
-        #         "confusion_matrix": self.confusion_matrix,
-        #     }
-        # )
-
-    # def naive_feature_importance(self):
-    #     nfi = np.empty(len(self.current_feature_indices))
-    #     nfi[i] = np.mean(self.data_train[self.target_train == 1, i])
-    #     np.mean(self.data_train[self.target_train == 0, i])
 
     def select_features(self, n, selected_feats=None):
-        if selected_feats is not None:
-            reduced_feats = selected_feats
-        else:
-            assert n <= self.data_train.shape[1]
-            sorted_feats = np.argsort(self.forest.feature_importances_)[::-1]
-            reduced_feats = list(sorted_feats[:n])
-        self.current_feature_indices = np.take(
-            self.current_feature_indices, reduced_feats, axis=0
-        )
-        # self.current_feature_indices = self.current_feature_indices[reduced_feats]
-        self.data_train = np.take(
-            self.data_train.transpose(), reduced_feats, axis=0
-        ).transpose()
-        # self.data_train = self.data_train[:, reduced_feats]
-        self.data_test = np.take(
-            self.data_test.transpose(), reduced_feats, axis=0
-        ).transpose()
-        # self.data_test = self.data_test[:, reduced_feats]
+        if n < self.data_train.shape[1]:
+            if selected_feats is not None:
+                reduced_feats = selected_feats
+            else:
+                sorted_feats = np.argsort(self.forest.feature_importances_)[::-1]
+                reduced_feats = list(sorted_feats[:n])
+            self.current_feature_indices = np.take(
+                self.current_feature_indices, reduced_feats, axis=0
+            )
+            self.data_train = np.take(
+                self.data_train.transpose(), reduced_feats, axis=0
+            ).transpose()
+            self.data_test = np.take(
+                self.data_test.transpose(), reduced_feats, axis=0
+            ).transpose()
         self.forest = ExtraTreesClassifier(
             n_estimators=self.n_estimators, random_state=self.random_state
         )
@@ -162,12 +141,10 @@ class RFEExtraTrees:
         dump(self.random_state, os.path.join(sdir, "random_state.joblib"))
 
     def load(self, fpath):
-        # The initialization before load() must be the same as the initialization of
-        # the RFEExtraTrees object that was saved (but init() does not need to be
-        # executed).
+        # load() does not load self.adata and self.label,
+        # so they must be given at __init__
         sdir = fpath
         if os.path.isfile(os.path.join(sdir, "forest.joblib")):
-            self.label = load(os.path.join(sdir, "label.joblib"))
             self.init_selection_size = load(
                 os.path.join(sdir, "init_selection_size.joblib")
             )
@@ -200,8 +177,10 @@ class RFEExtraTrees:
 
 
 def load_RFEExtraTrees(
-    fpath, adata: sc.AnnData, label, n_estimators=450, random_state=None
+    fpath,
+    adata: sc.AnnData,
 ) -> RFEExtraTrees:
-    rfeet = RFEExtraTrees(adata, label, n_estimators, random_state)
+    label = load(os.path.join(fpath, "label.joblib"))
+    rfeet = RFEExtraTrees(adata, label)
     rfeet.load(fpath)
     return rfeet

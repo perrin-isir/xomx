@@ -139,25 +139,18 @@ if step == 1:
     sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
     sc.tl.leiden(xd)
 
-    # Saving the AnnData object to the disk:
-    xd.write(os.path.join(savedir, "xaio_pbmc.h5ad"))
-    print("STEP 1: done")
-
-"""
-STEP 2: Normalizing the data
-"""
-if step == 2:
-    # Loading the AnnData object:
-    xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"))
-
-    # To find marker genes, we start by retrieving the unfiltered data:
+    # We now retrieve the unfiltered data:
     xd = xd.raw.to_adata()
+
+    from IPython import embed
+
+    embed()
+    quit()
 
     # Compute the dictionary of feature (var) indices:
     xd.uns["var_indices"] = xaio.tl.var_indices(xd)
 
-    # The "leiden" clusters define labels.
-    # XAIO uses labels stored in uns["labels"]:
+    # The "leiden" clusters define labels, and XAIO uses labels stored in obs["labels"]:
     xd.obs["labels"] = xd.obs["leiden"]
 
     # Several plotting functions require the list of all labels and the
@@ -166,22 +159,34 @@ if step == 2:
     xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
 
     # Plot the expression of the gene NKG7, and group samples by clusters:
-    # xaio.pl.var_plot(xd, "NKG7")
+    xaio.pl.var_plot(xd, "NKG7")
 
     # Compute training and test sets:
     xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
 
-    # Rank the genes for each cluster
+    # Rank the genes for each cluster with t-test:
     sc.tl.rank_genes_groups(xd, "leiden", method="t-test")
 
+    # Saving the AnnData object to the disk:
+    xd.write(os.path.join(savedir, "xaio_pbmc.h5ad"))
+    print("STEP 1: done")
+
+"""
+STEP 2: For every label, train a binary classifier with recursive feature
+elimination to determine a discriminative list of 10 features.
+"""
+if step == 2:
+    # Loading the AnnData object:
+    xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
+
     feature_selector = {}
-    gene_list = []
+    # gene_lists = {}
     for label in xd.uns["all_labels"]:
         print("Annotation: " + label)
         feature_selector[label] = xaio.fs.RFEExtraTrees(
             xd,
             label,
-            init_selection_size=None,
+            init_selection_size=8000,
             n_estimators=450,
             random_state=0,
         )
@@ -195,16 +200,61 @@ if step == 2:
                 feature_selector[label].target_test,
             )
             print("MCC score:", xaio.tl.matthews_coef(cm))
-        feature_selector[label].save(
-            os.path.join(savedir, "xd_small", "feature_selectors", label)
+        feature_selector[label].save(os.path.join(savedir, "feature_selectors", label))
+        # gene_lists[label] = [
+        #     xd.var_names[idx_]
+        #     for idx_ in feature_selector[label].current_feature_indices
+        # ]
+        print("Done.")
+
+    print("STEP 2: done")
+
+"""
+STEP 3: Normalizing the data
+"""
+if step == 3:
+    # Loading the AnnData object:
+    xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
+    print("done")
+    feature_selector = {}
+    gene_list = {}
+    for label in xd.uns["all_labels"]:
+        feature_selector[label] = xaio.fs.load_RFEExtraTrees(
+            os.path.join(savedir, "feature_selectors", label),
+            xd,
         )
-        gene_list += [
+        gene_list[label] = [
             xd.var_names[idx_]
             for idx_ in feature_selector[label].current_feature_indices
         ]
-        print("Done.")
+    sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selector)
 
-    print("STEP 6: done")
+    new_cluster_names = [
+        "CD4 T",
+        "CD14 Monocytes",
+        "B",
+        "CD8 T",
+        "NK",
+        "FCGR3A Monocytes",
+        "Dendritic",
+        "Megakaryocytes",
+    ]
+    xd.rename_categories("labels", new_cluster_names)
+
+    biomarkers = [
+        "IL7R",
+        "CD14",
+        "LYZ",
+        "MS4A1",
+        "CD8A",
+        "GNLY",
+        "NKG7",
+        "FCGR3A",
+        "MS4A7",
+        "FCER1A",
+        "CST3",
+        "PPBP",
+    ]
 
     e()
     quit()
