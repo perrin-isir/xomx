@@ -143,14 +143,71 @@ if step == 1:
     xd.write(os.path.join(savedir, "xaio_pbmc.h5ad"))
     print("STEP 1: done")
 
-# """
-# STEP 2: Normalizing the data
-# """
-# if step == 2:
-#     # Loading the AnnData object:
-#     xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"))
-#     e()
-#     quit()
+"""
+STEP 2: Normalizing the data
+"""
+if step == 2:
+    # Loading the AnnData object:
+    xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"))
+
+    # To find marker genes, we start by retrieving the unfiltered data:
+    xd = xd.raw.to_adata()
+
+    # Compute the dictionary of feature (var) indices:
+    xd.uns["var_indices"] = xaio.tl.var_indices(xd)
+
+    # The "leiden" clusters define labels.
+    # XAIO uses labels stored in uns["labels"]:
+    xd.obs["labels"] = xd.obs["leiden"]
+
+    # Several plotting functions require the list of all labels and the
+    # dictionary of sample indices per label:
+    xd.uns["all_labels"] = xaio.tl.all_labels(xd.obs["labels"])
+    xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
+
+    # Plot the expression of the gene NKG7, and group samples by clusters:
+    # xaio.pl.var_plot(xd, "NKG7")
+
+    # Compute training and test sets:
+    xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
+
+    # Rank the genes for each cluster
+    sc.tl.rank_genes_groups(xd, "leiden", method="t-test")
+
+    feature_selector = {}
+    gene_list = []
+    for label in xd.uns["all_labels"]:
+        print("Annotation: " + label)
+        feature_selector[label] = xaio.fs.RFEExtraTrees(
+            xd,
+            label,
+            init_selection_size=None,
+            n_estimators=450,
+            random_state=0,
+        )
+        feature_selector[label].init()
+        for siz in [100, 30, 20, 15, 10]:
+            print("Selecting", siz, "features...")
+            feature_selector[label].select_features(siz)
+            cm = xaio.tl.confusion_matrix(
+                feature_selector[label],
+                feature_selector[label].data_test,
+                feature_selector[label].target_test,
+            )
+            print("MCC score:", xaio.tl.matthews_coef(cm))
+        feature_selector[label].save(
+            os.path.join(savedir, "xd_small", "feature_selectors", label)
+        )
+        gene_list += [
+            xd.var_names[idx_]
+            for idx_ in feature_selector[label].current_feature_indices
+        ]
+        print("Done.")
+
+    print("STEP 6: done")
+
+    e()
+    quit()
 #
 #     # Look for mitochondrial genes (HGNC official symbol starting with "MT-") with
 #     # regex_search:

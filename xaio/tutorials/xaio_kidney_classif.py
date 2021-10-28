@@ -262,7 +262,7 @@ if step == 7:
 
     xaio.pl.umap_plot(xd)
 
-    # Compute the set of feature (var) indices:
+    # Compute the dictionary of feature (var) indices:
     xd.uns["var_indices"] = xaio.tl.var_indices(xd)
     xaio.pl.var_plot(xd, gene_list)
 

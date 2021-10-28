@@ -144,7 +144,6 @@ def function_scatter(
     fig, ax = plt.subplots()
     if obs_or_var == "obs":
         if "all_labels" in adata.uns and function_plot_:
-            assert "obs_indices_per_label" in adata.uns
             (
                 list_samples,
                 set_xticks,
