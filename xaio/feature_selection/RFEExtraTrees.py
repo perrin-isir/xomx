@@ -3,7 +3,6 @@ import numpy as np
 from sklearn.ensemble import ExtraTreesClassifier
 import xaio
 import scanpy as sc
-from scipy.sparse import issparse
 
 # from xaio.tools.basic_tools import (
 #     confusion_matrix,
@@ -11,13 +10,6 @@ from scipy.sparse import issparse
 #     plot_scores,
 # )
 from joblib import dump, load
-
-
-def _to_dense(x):
-    if issparse(x):
-        return x.todense()
-    else:
-        return x
 
 
 class RFEExtraTrees:
@@ -41,8 +33,10 @@ class RFEExtraTrees:
         self.n_estimators = n_estimators
         self.random_state = random_state
         self.current_feature_indices = np.arange(adata.n_vars)
-        self.data_train = _to_dense(adata[adata.uns["train_indices"], :].X).copy()
-        self.data_test = _to_dense(adata[adata.uns["test_indices"], :].X).copy()
+        self.data_train = xaio.tl._to_dense(
+            adata[adata.uns["train_indices"], :].X
+        ).copy()
+        self.data_test = xaio.tl._to_dense(adata[adata.uns["test_indices"], :].X).copy()
         self.target_train = np.zeros(adata.n_obs)
         self.target_train[adata.uns["train_indices_per_label"][label]] = 1.0
         self.target_train = np.take(

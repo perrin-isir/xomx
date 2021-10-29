@@ -4,4 +4,5 @@ from .basic_plot import (
     function_plot,
     var_plot,
     umap_plot,
+    plot2d,
 )

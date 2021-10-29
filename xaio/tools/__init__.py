@@ -1,4 +1,5 @@
 from .utils import (
+    _to_dense,
     var_mean_values,
     var_standard_deviations,
     var_indices,

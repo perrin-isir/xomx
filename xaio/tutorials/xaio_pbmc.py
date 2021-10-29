@@ -139,13 +139,10 @@ if step == 1:
     sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
     sc.tl.leiden(xd)
 
-    # We now retrieve the unfiltered data:
+    # We now retrieve the unfiltered data, and recover the .obsp annotations:
+    obsp = xd.obsp.copy()
     xd = xd.raw.to_adata()
-
-    from IPython import embed
-
-    embed()
-    quit()
+    xd.obsp = obsp
 
     # Compute the dictionary of feature (var) indices:
     xd.uns["var_indices"] = xaio.tl.var_indices(xd)
@@ -215,7 +212,7 @@ STEP 3: Normalizing the data
 if step == 3:
     # Loading the AnnData object:
     xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
-    print("done")
+
     feature_selector = {}
     gene_list = {}
     for label in xd.uns["all_labels"]:
@@ -229,17 +226,17 @@ if step == 3:
         ]
     sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selector)
 
-    new_cluster_names = [
-        "CD4 T",
-        "CD14 Monocytes",
-        "B",
-        "CD8 T",
-        "NK",
-        "FCGR3A Monocytes",
-        "Dendritic",
-        "Megakaryocytes",
-    ]
-    xd.rename_categories("labels", new_cluster_names)
+    # new_cluster_names = [
+    #     "CD4 T",
+    #     "CD14 Monocytes",
+    #     "B",
+    #     "CD8 T",
+    #     "NK",
+    #     "FCGR3A Monocytes",
+    #     "Dendritic",
+    #     "Megakaryocytes",
+    # ]
+    # xd.rename_categories("labels", new_cluster_names)
 
     biomarkers = [
         "IL7R",
@@ -255,6 +252,8 @@ if step == 3:
         "CST3",
         "PPBP",
     ]
+
+    sc.tl.umap(xd)
 
     e()
     quit()

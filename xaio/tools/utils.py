@@ -1,5 +1,13 @@
 import numpy as np
 import scanpy as sc
+from scipy.sparse import issparse
+
+
+def _to_dense(x):
+    if issparse(x):
+        return x.todense()
+    else:
+        return x
 
 
 def var_mean_values(adata: sc.AnnData) -> np.ndarray:
