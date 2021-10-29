@@ -214,31 +214,25 @@ if step == 3:
     xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
 
     feature_selector = {}
-    gene_list = {}
+    gene_dict = {}
     for label in xd.uns["all_labels"]:
         feature_selector[label] = xaio.fs.load_RFEExtraTrees(
             os.path.join(savedir, "feature_selectors", label),
             xd,
         )
-        gene_list[label] = [
+        gene_dict[label] = [
             xd.var_names[idx_]
             for idx_ in feature_selector[label].current_feature_indices
         ]
     sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selector)
 
-    # new_cluster_names = [
-    #     "CD4 T",
-    #     "CD14 Monocytes",
-    #     "B",
-    #     "CD8 T",
-    #     "NK",
-    #     "FCGR3A Monocytes",
-    #     "Dendritic",
-    #     "Megakaryocytes",
-    # ]
-    # xd.rename_categories("labels", new_cluster_names)
+    e()
+    quit()
+    xaio.pl.var_plot(xd, gene_dict["2"])
 
-    biomarkers = [
+    all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
+
+    biomarkers = {
         "IL7R",
         "CD14",
         "LYZ",
@@ -251,9 +245,15 @@ if step == 3:
         "FCER1A",
         "CST3",
         "PPBP",
-    ]
+    }
+
+    print(biomarkers.intersection(all_selected_genes))
 
     sc.tl.umap(xd)
+    xaio.pl.plot2d(xd, "X_umap")
+    xaio.pl.plot2d(xd, "X_umap", "NKG7")
+    xaio.pl.plot2d(xd, "X_pca", "CST3")
+    xaio.pl.plot2d(xd, "X_pca")
 
     e()
     quit()
