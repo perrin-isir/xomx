@@ -407,25 +407,46 @@ def plot2d(
     var_key=None,
     save_dir=None,
 ):
-    def hover_function(id_):
-        return "{}".format(adata.obs_names[id_] + ": " + str(adata.obs["labels"][id_]))
+    if "labels" in adata.obs:
 
-    # annot_idxs = {}
-    # for i, annot_ in enumerate(adata.uns["all_labels"]):
-    #     annot_idxs[annot_] = i
+        def hover_function(id_):
+            return "{}".format(
+                adata.obs_names[id_] + ": " + str(adata.obs["labels"][id_])
+            )
 
-    samples_color = np.empty(adata.n_obs)
-    for i in range(adata.n_obs):
-        # samples_color[i] = annot_idxs[adata.obs["labels"][i]]
-        samples_color[i] = float(xaio.tl._to_dense(adata[i, var_key].X.todense()))
+    else:
+
+        def hover_function(id_):
+            return "{}".format(adata.obs_names[id_])
+
+    if "labels" in adata.obs and "all_labels" in adata.uns:
+        annot_idxs = {}
+        for i, annot_ in enumerate(adata.uns["all_labels"]):
+            annot_idxs[annot_] = i
+
+        samples_color = np.empty(adata.n_obs)
+        for i in range(adata.n_obs):
+            samples_color[i] = annot_idxs[adata.obs["labels"][i]]
+
+        colorbar = False
+        cmap = "nipy_spectral"
+    else:
+        colorbar = True
+        cmap = "viridis"
+        if var_key is not None:
+            samples_color = np.squeeze(
+                np.asarray(xaio.tl._to_dense(adata[:, var_key].X))
+            )
+        else:
+            samples_color = np.zeros(adata.n_obs)
 
     fig, ax = plt.subplots()
 
     sctr = plt.scatter(
-        adata.obsm["obsm_key"][:, 0],
-        adata.obsm["obsm_key"][:, 1],
+        adata.obsm[obsm_key][:, 0],
+        adata.obsm[obsm_key][:, 1],
         c=samples_color,
-        cmap="nipy_spectral",
+        cmap=cmap,
         s=5,
     )
     plt.gca().set_aspect("equal", "datalim")
@@ -460,6 +481,9 @@ def plot2d(
                     fig.canvas.draw_idle()
 
     fig.canvas.mpl_connect("motion_notify_event", hover)
+
+    if colorbar:
+        plt.colorbar()
 
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
