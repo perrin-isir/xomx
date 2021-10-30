@@ -3,13 +3,34 @@ import numpy as np
 import xaio
 import scanpy as sc
 import umap
-
-# import re
 import matplotlib.pyplot as plt
 
 
+def _hover(event, fig, ax, ann, sctr, update_annot):
+    vis = ann.get_visible()
+    if event.inaxes == ax:
+        cont, ind = sctr.contains(event)
+        if cont:
+            update_annot(ind, sctr)
+            ann.set_visible(True)
+            fig.canvas.draw_idle()
+        else:
+            if vis:
+                ann.set_visible(False)
+                fig.canvas.draw_idle()
+
+
 def plot_scores(
-    adata: sc.AnnData, scores, score_threshold, indices, label=None, save_dir=None
+    adata: sc.AnnData,
+    scores,
+    score_threshold,
+    indices,
+    label=None,
+    save_dir=None,
+    text_complements=None,
+    lines=False,
+    yticks=None,
+    ylabel="",
 ):
     annot_colors = {}
     assert "all_labels" in adata.uns and "labels" in adata.obs
@@ -33,7 +54,18 @@ def plot_scores(
     else:
         cm = "nipy_spectral"
     sctr = ax.scatter(np.arange(len(indices)), scores, c=samples_color, cmap=cm, s=5)
-    ax.axhline(y=score_threshold, xmin=0, xmax=1, lw=1, ls="--", c="red")
+    if score_threshold is not None:
+        ax.axhline(y=score_threshold, xmin=0, xmax=1, lw=1, ls="--", c="red")
+    if lines:
+        for k_ in range(denom + 1):
+            ax.axhline(y=k_, xmin=0, xmax=1, lw=0.2, ls="-", c="gray")
+
+    if yticks is not None:
+        plt.yticks(
+            np.arange(len(yticks)) + 0.5,
+            yticks,
+        )
+
     ann = ax.annotate(
         "",
         xy=(0, 0),
@@ -51,33 +83,31 @@ def plot_scores(
             adata.obs_names[indices[ind["ind"][0]]],
             adata.obs["labels"][indices[ind["ind"][0]]],
         )
+        if text_complements is not None:
+            text += text_complements[ind["ind"][0]]
         ann.set_text(text)
 
-    def hover(event):
-        vis = ann.get_visible()
-        if event.inaxes == ax:
-            cont, ind = sctr.contains(event)
-            if cont:
-                update_annot(ind, sctr)
-                ann.set_visible(True)
-                fig.canvas.draw_idle()
-            else:
-                if vis:
-                    ann.set_visible(False)
-                    fig.canvas.draw_idle()
-        if event.inaxes == ax:
-            cont, ind = sctr.contains(event)
-            if cont:
-                update_annot(ind, sctr)
-                ann.set_visible(True)
-                fig.canvas.draw_idle()
-            else:
-                if vis:
-                    ann.set_visible(False)
-                    fig.canvas.draw_idle()
+    # def hover(event):
+    #     vis = ann.get_visible()
+    #     if event.inaxes == ax:
+    #         cont, ind = sctr.contains(event)
+    #         if cont:
+    #             update_annot(ind, sctr)
+    #             ann.set_visible(True)
+    #             fig.canvas.draw_idle()
+    #         else:
+    #             if vis:
+    #                 ann.set_visible(False)
+    #                 fig.canvas.draw_idle()
 
-    fig.canvas.mpl_connect("motion_notify_event", hover)
+    # fig.canvas.mpl_connect("motion_notify_event", hover)
+    fig.canvas.mpl_connect(
+        "motion_notify_event",
+        lambda event: _hover(event, fig, ax, ann, sctr, update_annot),
+    )
 
+    plt.ylabel(ylabel)
+    plt.xlabel("samples (test set)")
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
         plt.savefig(os.path.join(save_dir, "plot.png"), dpi=200)
@@ -219,16 +249,6 @@ def function_scatter(
 
     def hover(event):
         vis = ann.get_visible()
-        if event.inaxes == ax:
-            cont, ind = scax.contains(event)
-            if cont:
-                update_annot(ind, scax)
-                ann.set_visible(True)
-                fig.canvas.draw_idle()
-            else:
-                if vis:
-                    ann.set_visible(False)
-                    fig.canvas.draw_idle()
         if event.inaxes == ax:
             cont, ind = scax.contains(event)
             if cont:

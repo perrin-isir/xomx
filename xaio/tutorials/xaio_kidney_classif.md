@@ -1,11 +1,11 @@
-# XAIO - Biomarker Discovery Tutorial
+# *XAIO Tutorial:* constructing diagnostic biomarker signatures.
 
 -----
 
 The objective of this tutorial is to use a recursive feature elimination method on 
-RNA-Seq data to identify gene biomarkers for the differential diagnosis of three 
-types of kidney cancer: Kidney Renal Clear Cell Carcinoma (**KIRC**), Kidney Renal 
-Papillary Cell Carcinoma (**KIRP**), and Kidney Renal Clear Cell Carcinoma (**KICH**).
+RNA-Seq data to identify gene biomarker signatures for the differential diagnosis of three 
+types of kidney cancer: kidney renal clear cell carcinoma (**KIRC**), kidney renal 
+papillary cell carcinoma (**KIRP**), and chromophobe renal cell carcinoma (**KICH**).
 
 The recursive feature elimination method is based on 
 the [Extra-Trees algorithm](https://link.springer.com/article/10.1007/s10994-006-6226-1)
@@ -32,8 +32,8 @@ argument. For instance, `python xaio_kidney_classif.py 1` executes the step 1.
 ### Saving results:
 
 In [xaio_kidney_classif.py](xaio/tutorials/xaio_kidney_classif.py), after the imports, the 
-following lines define the string variable `savedir`,  which determines the folder 
-in which data and outputs will be stored:
+following lines define the string variable `savedir`: the folder 
+in which data and outputs will be stored.
 ```python
 args = get_args()
 savedir = args.savedir

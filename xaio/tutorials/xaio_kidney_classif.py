@@ -1,6 +1,5 @@
 import xaio
 import scanpy as sc
-import argparse
 import pandas as pd
 import numpy as np
 import os
@@ -15,25 +14,9 @@ See kidney_classif.md for detailed explanations.
 """
 
 
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "step", metavar="S", type=int, nargs="?", default=None, help="execute step S"
-    )
-    parser.add_argument(
-        "--savedir",
-        default=os.path.join(
-            os.path.expanduser("~"), "results", "xaio", "kidney_classif"
-        ),
-        help="directory in which data and outputs will be stored",
-    )
-    args_ = parser.parse_args()
-    return args_
-
-
 # Unless specified otherwise, the data and outputs will be saved in the
 # directory: ~/results/xaio/kidney_classif
-args = get_args()
+args = xaio.tt.get_args("kidney_classif")
 savedir = args.savedir
 os.makedirs(savedir, exist_ok=True)
 
@@ -41,15 +24,7 @@ os.makedirs(savedir, exist_ok=True)
 # executions of the code complete the 7 steps of the tutorial.
 # A specific step can also be chosen using an integer in argument
 # (e.g. `python xaio_kidney_classif.py 1` to execute step 1).
-if args.step is not None:
-    assert 1 <= args.step <= 7
-    step = args.step
-elif not os.path.exists(os.path.join(savedir, "next_step.txt")):
-    step = 1
-else:
-    step = np.loadtxt(os.path.join(savedir, "next_step.txt"), dtype="int")
-print("STEP", step)
-
+step = xaio.tt.step(args, 7)
 
 """
 STEP 1: Use the gdc_create_manifest function (from xaio/data_importation/gdc.py)
@@ -240,26 +215,31 @@ if step == 7:
     )
 
     feature_selector = {}
-    gene_list = []
+    gene_dict = {}
     for label in xd.uns["all_labels"]:
         feature_selector[label] = xaio.fs.load_RFEExtraTrees(
             os.path.join(savedir, "feature_selectors", label),
             xd,
         )
-        gene_list += [
+        gene_dict[label] = [
             xd.var_names[idx_]
             for idx_ in feature_selector[label].current_feature_indices
         ]
 
+    all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
+
     feature_selector["TCGA-KIRC"].plot()
 
-    xd = xd[:, gene_list]
+    xd = xd[:, all_selected_genes]
 
-    xaio.pl.umap_plot(xd)
+    # xaio.pl.umap_plot(xd)
 
     # Compute the dictionary of feature (var) indices:
     xd.uns["var_indices"] = xaio.tl.var_indices(xd)
-    xaio.pl.var_plot(xd, gene_list)
+    xaio.pl.var_plot(xd, all_selected_genes)
+
+    xd.var_names_make_unique()
+    sc.pl.stacked_violin(xd, gene_dict["TCGA-KIRP"], groupby="labels", rotation=90)
 
     xaio.pl.var_plot(xd, "ENSG00000168269.8")  # FOXI1
     # xaio.pl.var_plot(xd, "ENSG00000163435.14")  # ELF3
@@ -293,5 +273,4 @@ if step == 7:
 """
 INCREMENTING next_step.txt
 """
-# noinspection PyTypeChecker
-np.savetxt(os.path.join(savedir, "next_step.txt"), [min(step + 1, 7)], fmt="%u")
+xaio.tt.step_increment(args)

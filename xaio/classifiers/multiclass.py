@@ -16,33 +16,35 @@ class ScoreBasedMulticlass:
         predictions = np.argmax([scores[annot] for annot in self.annotations], axis=0)
         return np.array([self.annotations[i] for i in predictions])
 
-    def score(self, x):
+    def pred_score(self, x):
         scores = {}
         for annot in self.annotations:
             scores[annot] = self.binary_classifiers[annot].score(x)
         scores_list = [scores[annot] for annot in self.annotations]
-        predictions = np.argmax(scores_list, axis=0).astype(np.float)
+        predictions = np.argmax(scores_list, axis=0)
         add_score = np.max(scipy.special.softmax(scores_list, axis=0), axis=0).astype(
             np.float
         )
         maxas = max(add_score)
         minas = min(add_score)
-        add_score = (add_score - minas) / (maxas - minas)
-        return predictions + add_score
+        add_score = ((add_score - minas) / (maxas - minas),)
+        return predictions, predictions.astype(np.float) + add_score
 
     def plot(self, label=None, save_dir=None):
-        # res = self.predict(
-        #     xaio.tl._to_dense_to_dense(
-        #     self.adata[self.adata.uns["test_indices"], :].X)
-        # )
-        res = self.score(
+        predictions, res = self.pred_score(
             xaio.tl._to_dense(self.adata[self.adata.uns["test_indices"], :].X)
         )
         xaio.pl.plot_scores(
             self.adata,
             res.astype(np.float),
-            -0.5,
+            None,
             self.adata.uns["test_indices"],
             label,
             save_dir,
+            text_complements=[
+                " | prediction: " + str(att_) for att_ in self.annotations[predictions]
+            ],
+            lines=True,
+            yticks=self.annotations,
+            ylabel="predictions",
         )
