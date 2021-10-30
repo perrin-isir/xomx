@@ -140,7 +140,7 @@ if step == 4:
 
 
 """
-STEP 5: Keep only the top 4000 highly variable features,
+STEP 5: Keep only the top 8000 highly variable features,
 and randomly separate samples in training and test datasets.
 """
 if step == 5:
