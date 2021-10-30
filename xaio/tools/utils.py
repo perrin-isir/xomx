@@ -11,11 +11,11 @@ def _to_dense(x):
 
 
 def var_mean_values(adata: sc.AnnData) -> np.ndarray:
-    return np.array([np.mean(adata.X[:, i]) for i in range(adata.n_vars)])
+    return np.squeeze(np.array(np.mean(adata.X, axis=0)))
 
 
 def var_standard_deviations(adata: sc.AnnData) -> np.ndarray:
-    return np.array([np.std(adata.X[:, i]) for i in range(adata.n_vars)])
+    return np.squeeze(np.array(np.std(adata.X, axis=0)))
 
 
 def var_indices(adata: sc.AnnData) -> dict:

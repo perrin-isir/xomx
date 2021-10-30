@@ -29,7 +29,7 @@ os.makedirs(savedir, exist_ok=True)
 # executions of the code complete the 3 steps of the tutorial.
 # A specific step can also be chosen using an integer in argument
 # (e.g. `python xaio_pmbc.py 1` to execute step 1).
-step = xaio.tt.step(args, 3)
+step = xaio.tt.step_init(args, 3)
 
 """
 STEP 1: Load the data from the 10X Genomics website, store it as an AnnData object,
@@ -241,4 +241,4 @@ if step == 3:
 """
 INCREMENTING next_step.txt
 """
-xaio.tt.step_increment(args)
+xaio.tt.step_increment(step, args)

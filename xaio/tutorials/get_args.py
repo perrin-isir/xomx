@@ -25,7 +25,7 @@ def get_args(default_folder):
     return args_
 
 
-def step(args, n_total_steps):
+def step_init(args, n_total_steps):
     args.n_total_steps = n_total_steps
     if args.step is not None:
         assert 1 <= args.step <= n_total_steps
@@ -38,10 +38,10 @@ def step(args, n_total_steps):
     return stp
 
 
-def step_increment(args):
+def step_increment(stp, args):
     # noinspection PyTypeChecker
     np.savetxt(
         os.path.join(args.savedir, "next_step.txt"),
-        [min(step + 1, args.n_total_steps)],
+        [min(stp + 1, args.n_total_steps)],
         fmt="%u",
     )

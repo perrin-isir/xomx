@@ -24,7 +24,7 @@ os.makedirs(savedir, exist_ok=True)
 # executions of the code complete the 7 steps of the tutorial.
 # A specific step can also be chosen using an integer in argument
 # (e.g. `python xaio_kidney_classif.py 1` to execute step 1).
-step = xaio.tt.step(args, 7)
+step = xaio.tt.step_init(args, 7)
 
 """
 STEP 1: Use the gdc_create_manifest function (from xaio/data_importation/gdc.py)
@@ -92,6 +92,8 @@ if step == 3:
     # This dataframe does not follow the AnnData convention (rows = samples,
     # columns = features), so we transpose it when creating the AnnData object:
     xd = sc.AnnData(df.transpose())
+
+    # Make sure that the variable (feature) names are unique:
     xd.var_names_make_unique()
 
     # In order to improve cross-sample comparisons, we normalize the sequencing
@@ -99,10 +101,6 @@ if step == 3:
     # WARNING: basic pre-processing is used here for simplicity, but for more advanced
     # applications, a more sophisticated pre-processing may be required.
     sc.pp.normalize_total(xd, target_sum=1e6)
-
-    # We compute the mean and standard deviation (across samples) for all the features:
-    xd.var["mean_values"] = xaio.tl.var_mean_values(xd)
-    xd.var["standard_deviations"] = xaio.tl.var_standard_deviations(xd)
 
     # Saving the AnnData object to the disk:
     xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
@@ -148,12 +146,21 @@ and randomly separate samples in training and test datasets.
 if step == 5:
     xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 
+    # Compute the mean and standard deviation (across samples) for all the features:
+    xd.var["mean_values"] = xaio.tl.var_mean_values(xd)
+    xd.var["standard_deviations"] = xaio.tl.var_standard_deviations(xd)
+
     # Logarithmize the data
     sc.pp.log1p(xd)
-    # Compute the top 4000 highly variable features
-    sc.pp.highly_variable_genes(xd, n_top_genes=4000)
-    # Filter the data to keep only the 4000 highly variable features
+
+    # Compute the top 8000 highly variable features
+    sc.pp.highly_variable_genes(xd, n_top_genes=8000)
+
+    # Filter the data to keep only the 8000 highly variable features
     xd = xd[:, xd.var.highly_variable]
+
+    # Compute the dictionary of feature (var) indices:
+    xd.uns["var_indices"] = xaio.tl.var_indices(xd)
 
     # Randomly separate samples into train and test sets.
     xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
@@ -163,7 +170,7 @@ if step == 5:
     # xd.uns["train_indices"]
     # xd.uns["test_indices"]
 
-    # Saving the filtered data to a new file:
+    # Saving the data to a new file:
     xd.write(os.path.join(savedir, "xaio_k_c_small.h5ad"))
     print("STEP 5: done")
 
@@ -174,6 +181,7 @@ elimination to determine a discriminative list of 10 features.
 """
 if step == 6:
     xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
+
     feature_selector = {}
     for label in xd.uns["all_labels"]:
         print("Annotation: " + label)
@@ -230,21 +238,19 @@ if step == 7:
 
     feature_selector["TCGA-KIRC"].plot()
 
-    xd = xd[:, all_selected_genes]
+    # xd = xd[:, all_selected_genes]
 
     # xaio.pl.umap_plot(xd)
 
-    # Compute the dictionary of feature (var) indices:
-    xd.uns["var_indices"] = xaio.tl.var_indices(xd)
     xaio.pl.var_plot(xd, all_selected_genes)
 
     xd.var_names_make_unique()
     sc.pl.stacked_violin(xd, gene_dict["TCGA-KIRP"], groupby="labels", rotation=90)
 
-    xaio.pl.var_plot(xd, "ENSG00000168269.8")  # FOXI1
+    xaio.pl.var_plot(xd, "ENSG00000168269.8")  # FOXI1 (KICH)
     # xaio.pl.var_plot(xd, "ENSG00000163435.14")  # ELF3
     xaio.pl.var_plot(xd, "ENSG00000125872.7")  # ELF3
-    xaio.pl.var_plot(xd, "ENSG00000185633.9")  # NDUFA4L2
+    xaio.pl.var_plot(xd, "ENSG00000185633.9")  # NDUFA4L2 (KIRC)
 
     # Some of the most remarkable genes on this plot:
     # ENSG00000185633.9
@@ -273,4 +279,4 @@ if step == 7:
 """
 INCREMENTING next_step.txt
 """
-xaio.tt.step_increment(args)
+xaio.tt.step_increment(step, args)

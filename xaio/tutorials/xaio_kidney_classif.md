@@ -51,7 +51,7 @@ https://gdc.cancer.gov/access-data/gdc-data-transfer-tool
 to import data from the Cancer Genome Atlas (TCGA). 
 This involves creating a `manifest.txt` file that describes the files to be imported.
 
-The `xaio.di.gdc_create_manifest()` function
+The `gdc_create_manifest()` function
 facilitates the creation of this manifest. It is designed to import files of gene 
 expression counts obtained with [HTSeq](https://github.com/simon-anders/htseq). 
 You can have a look at its implementation in 
@@ -110,7 +110,7 @@ may take some time.
 ## Step 3: Creating and saving the AnnData object
 
 ```
-df = gdc_create_data_matrix(
+df = xaio.di.gdc_create_data_matrix(
     tmpdir,
     os.path.join(savedir, "manifest.txt"),
 )
@@ -134,15 +134,14 @@ and the rows correspond to different genes, identified by their
 Ensembl gene ID with a version number after the dot (see
 [https://www.ensembl.org/info/genome/stable_ids/index.html](https://www.ensembl.org/info/genome/stable_ids/index.html)).
 The integer values are the raw gene expression level measurements for all genes 
-and samples.
-
+and all samples.  
 Since the last 5 rows contain special information that we will not use, we drop them
 with the following command:
 ```
 df = df.drop(index=df.index[-5:])
 ```
 
-In the convention used by Scanpy, samples are stored as raws of the
+In the convention used by Scanpy (and various other tools), samples are stored as raws of the
 data matrix, therefore we transpose the dataframe when creating the AnnData object:
 
 ```
@@ -152,14 +151,12 @@ See this documentation for details on AnnData objects:
 [https://anndata.readthedocs.io](https://anndata.readthedocs.io).
 
 `xd.X[0, :]`, the first row, contains the expression levels of all genes for the 
-first sample. 
-
+first sample.  
 `xd.X[:, 0]`, the first column, contains the expression levels of
 the first gene for all samples.
 
 The feature names (gene IDs) are stored in `xd.var_names`, and the sample
-identifiers are stored in `xd.obs_names`.
-
+identifiers are stored in `xd.obs_names`.  
 In order to improve cross-sample comparisons, we normalize the sequencing
 depth to 1 million, with the following Scanpy command:
 ```
@@ -169,8 +166,8 @@ sc.pp.normalize_total(xd, target_sum=1e6)
 so that the sum of the feature values becomes equal to `target_sum`.  
 It is a very basic normalization that we use for simplicity in this tutorial, 
 but for more advanced applications, a more sophisticated preprocessing may be 
-required.
-This normalization is an in-place modification of the data, so after its 
+required.  
+`normalize_total()` is an in-place modification of the data, so after its 
 application, `xd.X` contains the modified data.
 
 For each feature, we compute both its mean value accross all samples, and its
@@ -181,8 +178,8 @@ xd.var["mean_values"] = xaio.tl.var_mean_values(xd)
 xd.var["standard_deviations"] = xaio.tl.var_standard_deviations(xd)
 ```
 
-Then, we save `xd` (as the file "xaio_kidney_classif.h5ad"
-in the `savedir` directory):
+Then, we save `xd` as the file **xaio_kidney_classif.h5ad**
+in the `savedir` directory:
 ```
 xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 ```
@@ -202,13 +199,15 @@ samples):
 xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 manifest = pd.read_table(os.path.join(savedir, "manifest.txt"), header=0)
 ```
-We create a dictionary of labels: `label_dict`.
+The manifest contains the labels (`"TCGA-KIRC"`, `"TCGA-KIRP"` or `"TCGA-KICH"`) of 
+every sample.  
+We use it create a dictionary of labels: `label_dict`.
 ```
 label_dict = {}
 for i in range(xd.n_obs):
     label_dict[manifest["id"][i]] = manifest["annotation"][i]
 ```
-Example: `label_dict['80c9e71b-7f2f-48cf-b3ef-f037660a4903']` is equal to `TCGA-KICH`.
+Example: `label_dict['80c9e71b-7f2f-48cf-b3ef-f037660a4903']` is equal to `"TCGA-KICH"`.
 
 Then we create the array of labels (considering samples in the same order as 
 `xd.obs_names`), and assign it to `xd.obs["labels"]`.
@@ -241,7 +240,7 @@ Loading the AnnData object:
 ```
 xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 ```
-First, we logarithmize the data  with the following Scanpy function which applies
+First, we logarithmize the data  with the following Scanpy function that applies
 the equation X = log(1 + X):
 ```
 sc.pp.log1p(xd)
