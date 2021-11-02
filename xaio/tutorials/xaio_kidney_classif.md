@@ -157,6 +157,11 @@ the first gene for all samples.
 
 The feature names (gene IDs) are stored in `xd.var_names`, and the sample
 identifiers are stored in `xd.obs_names`.  
+We make sure that the feature names are unique with the
+following command:
+```
+xd.var_names_make_unique()
+```
 In order to improve cross-sample comparisons, we normalize the sequencing
 depth to 1 million, with the following Scanpy command:
 ```
@@ -170,15 +175,7 @@ required.
 `normalize_total()` is an in-place modification of the data, so after its 
 application, `xd.X` contains the modified data.
 
-For each feature, we compute both its mean value accross all samples, and its
-standard deviation accross all samples. We save the results as annotations of 
-variables/features (var):
-```
-xd.var["mean_values"] = xaio.tl.var_mean_values(xd)
-xd.var["standard_deviations"] = xaio.tl.var_standard_deviations(xd)
-```
-
-Then, we save `xd` as the file **xaio_kidney_classif.h5ad**
+We save `xd` as the file **xaio_kidney_classif.h5ad**
 in the `savedir` directory:
 ```
 xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
@@ -209,8 +206,8 @@ for i in range(xd.n_obs):
 ```
 Example: `label_dict['80c9e71b-7f2f-48cf-b3ef-f037660a4903']` is equal to `"TCGA-KICH"`.
 
-Then we create the array of labels (considering samples in the same order as 
-`xd.obs_names`), and assign it to `xd.obs["labels"]`.
+Then we create the array of labels, considering samples in the same order as 
+`xd.obs_names`, and assign it to `xd.obs["labels"]`.
 
 ```
 label_array = np.array([label_dict[xd.obs_names[i]] for i in range(xd.n_obs)])
@@ -229,6 +226,10 @@ xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
 Example: `xd.uns["obs_indices_per_label"]["TCGA-KIRC"]` is the list of indices
 of the samples that are labelled as "TCGA-KIRC".
 
+It is important to use the keys "labels",
+"all_labels" and "obs_indices_per_label" as they
+are expected by some XAIO functions.
+
 We then save the modifications:
 ```
 xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
@@ -245,7 +246,7 @@ the equation X = log(1 + X):
 ```
 sc.pp.log1p(xd)
 ```
-We follow the Scanpy procedure to select the top 4000 highly variable genes:
+We then follow the Scanpy procedure to select the top 8000 highly variable genes:
 ```
 sc.pp.highly_variable_genes(xd, n_top_genes=4000)
 ```
@@ -253,6 +254,23 @@ And we perform the filtering to actually remove the non-highly variable genes:
 ```
 xd = xd[:, xd.var.highly_variable]
 ```
+The reason why we reduce the number of features
+is to speed up the process of feature elimination
+in Step 6, which can be relatively slow if it begins 
+with tens of thousands of features. Keeping 
+highly variable features is one possibility,
+but there are other options for the
+initial selection of features, see for instance 
+the [xaio_pbmc.md](xaio/tutorials/xaio_pbmc.md) tutorial.
+
+We compute the dictionary of feature indices,
+which is required by some XAIO functions:
+```
+xd.uns["var_indices"] = xaio.tl.var_indices(xd)
+```
+Example:  `xd.uns["var_indices"]['ENSG00000000005.5']`
+is equal to 0 because ENSG00000000005.5 is the first
+feature in `xd.var_names`.
 
 We then randomly split the samples into training and test sets:
 ```
@@ -263,9 +281,9 @@ the previous step. With `test_train_ratio=0.25`, for every label
 ("TCGA-KIRC", "TCGA-KIRP" or "TCGA-KICH"), 25% of the samples are assigned to 
 the test set, and 75% to the train set. It creates the following unstructured 
 annotations:
-- `xd.uns["train_indices"]`: the array of the indices of all samples that belong 
+- `xd.uns["train_indices"]`: the array of indices of all samples that belong 
 to the training set.
-- `xd.uns["test_indices"]`: the array of the indices of all samples that belong 
+- `xd.uns["test_indices"]`: the array of indices of all samples that belong 
 to the test set.
 - `xd.uns["train_indices_per_label"]`: the dictionary of sample indices in the 
 training set, per label. For instance, `xd.uns["train_indices_per_label"]["TCGA-KIRP"]` is the array

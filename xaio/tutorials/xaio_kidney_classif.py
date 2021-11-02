@@ -117,7 +117,7 @@ Labels (annotations) are fetched from the previously created file manifest.txt.
 if step == 4:
     # Loading the AnnData object:
     xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
-
+    # Loading the manifest:
     manifest = pd.read_table(os.path.join(savedir, "manifest.txt"), header=0)
 
     # Create a dictionary of labels:
@@ -181,6 +181,8 @@ elimination to determine a discriminative list of 10 features.
 """
 if step == 6:
     xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
+
+    xaio.tt.debug()
 
     feature_selector = {}
     for label in xd.uns["all_labels"]:
