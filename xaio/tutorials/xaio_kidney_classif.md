@@ -109,7 +109,7 @@ may take some time.
 <a name="s3"></a>
 ## Step 3: Creating and saving the AnnData object
 
-```
+```python
 df = xaio.di.gdc_create_data_matrix(
     tmpdir,
     os.path.join(savedir, "manifest.txt"),
@@ -137,14 +137,14 @@ The integer values are the raw gene expression level measurements for all genes
 and all samples.  
 Since the last 5 rows contain special information that we will not use, we drop them
 with the following command:
-```
+```python
 df = df.drop(index=df.index[-5:])
 ```
 
 In the convention used by Scanpy (and various other tools), samples are stored as raws of the
 data matrix, therefore we transpose the dataframe when creating the AnnData object:
 
-```
+```python
 xd = sc.AnnData(df.transpose())
 ```
 See this documentation for details on AnnData objects: 
@@ -159,12 +159,12 @@ The feature names (gene IDs) are stored in `xd.var_names`, and the sample
 identifiers are stored in `xd.obs_names`.  
 We make sure that the feature names are unique with the
 following command:
-```
+```python
 xd.var_names_make_unique()
 ```
 In order to improve cross-sample comparisons, we normalize the sequencing
 depth to 1 million, with the following Scanpy command:
-```
+```python
 sc.pp.normalize_total(xd, target_sum=1e6)
 ``` 
 `normalize_total()` performs a linear normalization for each sample 
@@ -177,13 +177,13 @@ application, `xd.X` contains the modified data.
 
 We save `xd` as the file **xaio_kidney_classif.h5ad**
 in the `savedir` directory:
-```
+```python
 xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 ```
 
 At the end of Step 3, we delete the individual sample files that were downloaded in
 Step 2:
-```
+```python
 shutil.rmtree(tmpdir, ignore_errors=True)
 ```
 
@@ -192,14 +192,14 @@ shutil.rmtree(tmpdir, ignore_errors=True)
 
 We load the AnnData object and the manifest (which will be used to assign labels to 
 samples):
-```
+```python
 xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 manifest = pd.read_table(os.path.join(savedir, "manifest.txt"), header=0)
 ```
 The manifest contains the labels (`"TCGA-KIRC"`, `"TCGA-KIRP"` or `"TCGA-KICH"`) of 
 every sample.  
 We use it create a dictionary of labels: `label_dict`.
-```
+```python
 label_dict = {}
 for i in range(xd.n_obs):
     label_dict[manifest["id"][i]] = manifest["annotation"][i]
@@ -209,18 +209,18 @@ Example: `label_dict['80c9e71b-7f2f-48cf-b3ef-f037660a4903']` is equal to `"TCGA
 Then we create the array of labels, considering samples in the same order as 
 `xd.obs_names`, and assign it to `xd.obs["labels"]`.
 
-```
+```python
 label_array = np.array([label_dict[xd.obs_names[i]] for i in range(xd.n_obs)])
 xd.obs["labels"] = label_array
 ```
 
 We compute the list of distinct labels, and assign it, as an unstructured annotation,
 to `xd.uns["all_labels"]`.
-```
+```python
 xd.uns["all_labels"] = xaio.tl.all_labels(xd.obs["labels"])
 ```
 We also compute the list of sample indices for every label:
-```
+```python
 xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
 ```
 Example: `xd.uns["obs_indices_per_label"]["TCGA-KIRC"]` is the list of indices
@@ -231,27 +231,35 @@ It is important to use the keys "labels",
 are expected by some XAIO functions.
 
 We then save the modifications:
-```
+```python
 xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 ```
 
 <a name="s5"></a>
 ## Step 5: Basic preprocessing
 Loading the AnnData object: 
-```
+```python
 xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 ```
-First, we logarithmize the data  with the following Scanpy function that applies
-the equation X = log(1 + X):
+First, we compute the mean and standard deviation (across samples) for all the features:
+```python
+xd.var["mean_values"] = xaio.tl.var_mean_values(xd)
+xd.var["standard_deviations"] = xaio.tl.var_standard_deviations(xd)
 ```
+`xd.var["mean_values"]` and 
+`xd.var["standard_deviations"]` will be used in Step 7 only.
+
+We logarithmize the data  with the following Scanpy function that applies
+the equation X = log(1 + X):
+```python
 sc.pp.log1p(xd)
 ```
 We then follow the Scanpy procedure to select the top 8000 highly variable genes:
-```
-sc.pp.highly_variable_genes(xd, n_top_genes=4000)
+```python
+sc.pp.highly_variable_genes(xd, n_top_genes=8000)
 ```
 And we perform the filtering to actually remove the non-highly variable genes:
-```
+```python
 xd = xd[:, xd.var.highly_variable]
 ```
 The reason why we reduce the number of features
@@ -261,19 +269,19 @@ with tens of thousands of features. Keeping
 highly variable features is one possibility,
 but there are other options for the
 initial selection of features, see for instance 
-the [xaio_pbmc.md](xaio/tutorials/xaio_pbmc.md) tutorial.
+the [xaio_pbmc.md](xaio_pbmc.md) tutorial.
 
 We compute the dictionary of feature indices,
 which is required by some XAIO functions:
-```
+```python
 xd.uns["var_indices"] = xaio.tl.var_indices(xd)
 ```
-Example:  `xd.uns["var_indices"]['ENSG00000000005.5']`
-is equal to 0 because ENSG00000000005.5 is the first
-feature in `xd.var_names`.
+Example:  `xd.uns["var_indices"]['ENSG00000281918.1']`
+is equal to 7999 because ENSG00000281918.1 is now
+the last of the 8000 features in `xd.var_names`.
 
 We then randomly split the samples into training and test sets:
-```
+```python
 xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
 ```
 The function `train_and_test_indices()` requires `xd.uns["obs_indices_per_label"]`, which was computed in 
@@ -291,59 +299,104 @@ of indices of all the samples labelled as "TCGA-KIRP" that belong to the trainin
 - `xd.uns["test_indices_per_label"]`: the dictionary of sample indices in the 
 test set, per label.
 
-We save the preprocessed and filtered data to a new file:
-```
+We save the logarithmized and filtered data to a new file:
+```python
 xd.write(os.path.join(savedir, "xaio_k_c_small.h5ad"))
 ```
 
 <a name="s6"></a>
 ## Step 6: Training binary classifiers and performing recursive feature elimination
 
-```
-    xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
-    feature_selector = {}
-    for label in xd.uns["all_labels"]:
-        print("Annotation: " + label)
-        feature_selector[label] = xaio.fs.RFEExtraTrees(
-            xd,
-            label,
-            n_estimators=450,
-            random_state=0,
-        )
-        feature_selector[label].init()
-        for siz in [100, 30, 20, 15, 10]:
-            print("Selecting", siz, "features...")
-            feature_selector[label].select_features(siz)
-            cm = xaio.tl.confusion_matrix(
-                feature_selector[label],
-                feature_selector[label].data_test,
-                feature_selector[label].target_test,
-            )
-            print("MCC score:", xaio.tl.matthews_coef(cm))
-        feature_selector[label].save(
-            os.path.join(
-                savedir, "xd_small", "feature_selectors", label
-            )
-        )
-        print("Done.")
+Loading: 
+```python
+xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
 ```
 
+We initialize an empty dictionary 
+of "feature selectors":
+```python
+feature_selectors = {}
+```
+There will be one feature selector per label.
+What we call feature selector here is a binary classifier
+trained with the Extra-Trees algorithm to
+distinguish samples with a given label from
+other types of samples. After training, features are
+ranked by a measure of importance known as the Gini importance, 
+and the 100 most important features are kept. 
+Then, the Extra-Trees algorithm is run again on the training
+data filtered to the 100 selected features, which leads to a 
+new measure of importance of the features. We repeat the 
+procedure to progressively select 30, then 20, 15 and finally 10
+features. At each iteration, we evaluate on the test set the 
+Matthews correlation coefficient (MCC score) of the 
+classifier to observe how the performance changes 
+when the number of features decreases.  
+The progression 100-30-20-15-10 is arbitrary, but 
+the most efficient strategies start by aggressively 
+reducing the number of features, and then slow down
+when the number of features becomes small.
+
+Here is the loop that trains all the classifiers and ends up 
+selecting 10 features for every label. 
+Each classifier is saved in the folder `feature_selectors/` in the
+`savedir` directory.
+
+```python
+for label in xd.uns["all_labels"]:
+    print("Annotation: " + label)
+    feature_selectors[label] = xaio.fs.RFEExtraTrees(
+        xd,
+        label,
+        n_estimators=450,
+        random_state=0,
+    )
+    feature_selectors[label].init()
+    for siz in [100, 30, 20, 15, 10]:
+        print("Selecting", siz, "features...")
+        feature_selectors[label].select_features(siz)
+        cm = xaio.tl.confusion_matrix(
+            feature_selectors[label],
+            feature_selectors[label].data_test,
+            feature_selectors[label].target_test,
+        )
+        print("MCC score:", xaio.tl.matthews_coef(cm))
+    feature_selectors[label].save(os.path.join(savedir, "feature_selectors", label))
+    print("Done.")
+```
 <a name="s7"></a>
 ## Step 7: Visualizing results
 
-+ Standard deviation vs. mean value for all features:
+Using the plotting function `function_scatter()`,
+we plot the standard deviation vs mean value for all the 
+genes (which were computed before logarithmizing the data).
+`function_scatter()` takes in input two functions, one for 
+the x-axis, and one for the y-axis. Each of these functions
+must take in input the feature index. By changing the 
+`obs_or_var` option tp "obs" instead of "var", we can use
+`function_scatter()` to make a scatter plot over the samples
+instead of over the features.
 
 ```python
-xdata.function_scatter(
-    lambda idx: xdata.feature_mean_values[idx],
-    lambda idx: xdata.feature_standard_deviations[idx],
-    "features",
+xaio.pl.function_scatter(
+    xd,
+    lambda idx: xd.var["mean_values"][idx],
+    lambda idx: xd.var["standard_deviations"][idx],
+    obs_or_var="var",
     xlog_scale=True,
     ylog_scale=True,
 )
 ```
 ![alt text](imgs/tuto1_mean_vs_std_deviation.png 
 "Standard deviation vs. mean value for all features")
+
+The plot is on the 8000 highly variable genes selected
+in Step 5, and we can observe the frontier that was used by 
+`sc.pp.highly_variable_genes()` to remove genes considered 
+less variable.
+
+Placing the cursor over points shows the names 
+of the corresponding genes.
 
 + Scores on the test dataset for the "TCGA-KIRC" binary classifier 
 (positive samples are above the y=0.5 line):

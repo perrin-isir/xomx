@@ -182,28 +182,26 @@ elimination to determine a discriminative list of 10 features.
 if step == 6:
     xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
 
-    xaio.tt.debug()
-
-    feature_selector = {}
+    feature_selectors = {}
     for label in xd.uns["all_labels"]:
         print("Annotation: " + label)
-        feature_selector[label] = xaio.fs.RFEExtraTrees(
+        feature_selectors[label] = xaio.fs.RFEExtraTrees(
             xd,
             label,
             n_estimators=450,
             random_state=0,
         )
-        feature_selector[label].init()
+        feature_selectors[label].init()
         for siz in [100, 30, 20, 15, 10]:
             print("Selecting", siz, "features...")
-            feature_selector[label].select_features(siz)
+            feature_selectors[label].select_features(siz)
             cm = xaio.tl.confusion_matrix(
-                feature_selector[label],
-                feature_selector[label].data_test,
-                feature_selector[label].target_test,
+                feature_selectors[label],
+                feature_selectors[label].data_test,
+                feature_selectors[label].target_test,
             )
             print("MCC score:", xaio.tl.matthews_coef(cm))
-        feature_selector[label].save(os.path.join(savedir, "feature_selectors", label))
+        feature_selectors[label].save(os.path.join(savedir, "feature_selectors", label))
         print("Done.")
 
     print("STEP 6: done")
@@ -219,26 +217,28 @@ if step == 7:
         xd,
         lambda idx: xd.var["mean_values"][idx],
         lambda idx: xd.var["standard_deviations"][idx],
-        "var",
+        obs_or_var="var",
         xlog_scale=True,
         ylog_scale=True,
     )
 
-    feature_selector = {}
+    xaio.tt.debug()
+
+    feature_selectors = {}
     gene_dict = {}
     for label in xd.uns["all_labels"]:
-        feature_selector[label] = xaio.fs.load_RFEExtraTrees(
+        feature_selectors[label] = xaio.fs.load_RFEExtraTrees(
             os.path.join(savedir, "feature_selectors", label),
             xd,
         )
         gene_dict[label] = [
             xd.var_names[idx_]
-            for idx_ in feature_selector[label].current_feature_indices
+            for idx_ in feature_selectors[label].current_feature_indices
         ]
 
     all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
 
-    feature_selector["TCGA-KIRC"].plot()
+    feature_selectors["TCGA-KIRC"].plot()
 
     # xd = xd[:, all_selected_genes]
 
