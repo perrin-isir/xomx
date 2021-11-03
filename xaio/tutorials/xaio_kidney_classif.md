@@ -395,12 +395,11 @@ xaio.pl.function_scatter(
 ![alt text](imgs/tuto1_mean_vs_std.gif 
 "Standard deviation vs. mean value for all features")
 
-The plot is on the 8000 highly variable genes selected
+This plot shows the 8000 highly variable genes selected
 in Step 5, and we can observe the frontier that was defined by 
 `sc.pp.highly_variable_genes()` to remove genes considered 
 less variable.
-
-Placing the cursor over points shows the identifiers 
+Hovering over points with the cursor shows the identifiers 
 of the corresponding genes.
 
 We then load the feature selectors trained in Step 6,
@@ -425,7 +424,78 @@ Example: `gene_dict['TCGA-KICH']` is equal to `['ENSG00000162399.6',
  'ENSG00000156284.5']`, the list of 10 genes that have been selected 
 by the feature selection process on "TCGA-KICH".
 
+For a given feature selector, for example `feature_selectors["TCGA-KIRP"]`,
+`plot()` displays results on the test set. The classifier uses only the selected 
+features, here the 10 features selected for the label "TCGA-KIRP".
+Points above the horizontal red line (score > 0.5) are classified as positives (the 
+prediction is "TCGA-KIRP"), and points below the horizontal line (score < 0.5)
+are classified as negatives (the prediction is "not TCGA-KIRP").
+```python
+feature_selectors["TCGA-KIRP"].plot()
+```
+![alt text](imgs/tuto1_KIRP.gif 
+"10-gene classifier for the TCGA-KIRP label")
 
+Hovering over a point with the cursor shows the identifier of the corresponding 
+sample and its true label.
+
+We can construct a multiclass classifier based on the 3 binary classifiers:
+```python
+sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
+```
+This multiclass classifier bases its predictions on 30 features (at most): the 
+union of the three 10-gene signatures (one per label). It simply computes the 3 
+scores of each of the binary classifiers, and returns the label that corresponds 
+to the highest score.  
+`plot()` displays results on the test set:
+```python
+sbm.plot()
+```
+![alt text](imgs/tuto1_multiclass.gif 
+"Multiclass classifier")
+
+Hovering over a point with the cursor shows the identifier of the corresponding 
+sample, its true label, and the predicted label.  
+For each of the 3 labels, points that are 
+higher in the horizontal band correspond to a 
+higher confidence in the prediction (but
+the very top of the band does not mean 100% 
+confidence).
+
+We gather the selected genes in a single list:
+```python
+all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
+```
+We can visualize these marker genes with `xaio.pl.var_plot()`:
+```python
+xaio.pl.var_plot(xd, all_selected_genes)
+```
+![alt text](imgs/tuto1_markers.gif 
+"Marker gene expressions")
+
+Interestingly, here, we observe that 
+
+Remark: the sets of genes have been selected to enable good 
+results in classification tasks, and most of the time, 
+several sets of few features may 
+lead to similarly good results.
+
+We filter and restrict the data to these genes:
+```python
+xd = xd[:, all_selected_genes]
+```
+We follow the Scanpy procedure to compute a 2D UMAP embedding:
+```python
+sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
+sc.tl.umap(xd)
+```
+We use `xaio.pl.plot2d()` to display an interactive plot:
+```
+xaio.pl.plot2d(xd, "X_umap")
+```
+
+
+The following line defines 
 
 + Scores on the test dataset for the "TCGA-KIRC" binary classifier 
 (positive samples are above the y=0.5 line):

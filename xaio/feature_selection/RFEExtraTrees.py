@@ -166,7 +166,13 @@ class RFEExtraTrees:
     def plot(self, label=None, save_dir=None):
         res = self.score(self.data_test)
         xaio.pl.plot_scores(
-            self.adata, res, 0.5, self.adata.uns["test_indices"], label, save_dir
+            self.adata,
+            res,
+            0.5,
+            self.adata.uns["test_indices"],
+            label,
+            save_dir,
+            ylabel="scores",
         )
 
 

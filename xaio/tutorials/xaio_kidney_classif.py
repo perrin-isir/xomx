@@ -234,19 +234,22 @@ if step == 7:
             for idx_ in feature_selectors[label].current_feature_indices
         ]
 
-    xaio.tt.debug()
+    feature_selectors["TCGA-KIRP"].plot()
+
+    sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
+    sbm.plot()
 
     all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
 
-    feature_selectors["TCGA-KIRC"].plot()
-
     # xd = xd[:, all_selected_genes]
-
-    # xaio.pl.umap_plot(xd)
+    # sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
+    # sc.tl.umap(xd)
+    # xaio.pl.plot2d(xd, "X_umap")
 
     xaio.pl.var_plot(xd, all_selected_genes)
 
-    xd.var_names_make_unique()
+    xaio.tt.debug()
+
     sc.pl.stacked_violin(xd, gene_dict["TCGA-KIRP"], groupby="labels", rotation=90)
 
     xaio.pl.var_plot(xd, "ENSG00000168269.8")  # FOXI1 (KICH)
