@@ -367,13 +367,18 @@ for label in xd.uns["all_labels"]:
 <a name="s7"></a>
 ## Step 7: Visualizing results
 
+Loading:
+```python
+xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
+```
+
 Using the plotting function `function_scatter()`,
 we plot the standard deviation vs mean value for all the 
 genes (which were computed before logarithmizing the data).
 `function_scatter()` takes in input two functions, one for 
 the x-axis, and one for the y-axis. Each of these functions
 must take in input the feature index. By changing the 
-`obs_or_var` option tp "obs" instead of "var", we can use
+`obs_or_var` option to "obs" instead of "var", we can use
 `function_scatter()` to make a scatter plot over the samples
 instead of over the features.
 
@@ -387,16 +392,40 @@ xaio.pl.function_scatter(
     ylog_scale=True,
 )
 ```
-![alt text](imgs/tuto1_mean_vs_std_deviation.png 
+![alt text](imgs/tuto1_mean_vs_std.gif 
 "Standard deviation vs. mean value for all features")
 
 The plot is on the 8000 highly variable genes selected
-in Step 5, and we can observe the frontier that was used by 
+in Step 5, and we can observe the frontier that was defined by 
 `sc.pp.highly_variable_genes()` to remove genes considered 
 less variable.
 
-Placing the cursor over points shows the names 
+Placing the cursor over points shows the identifiers 
 of the corresponding genes.
+
+We then load the feature selectors trained in Step 6,
+and create `gene-dict`, a dictionary of the 10-gene signatures for each label.
+```python
+feature_selectors = {}
+gene_dict = {}
+for label in xd.uns["all_labels"]:
+    feature_selectors[label] = xaio.fs.load_RFEExtraTrees(
+        os.path.join(savedir, "feature_selectors", label),
+        xd,
+    )
+    gene_dict[label] = [
+        xd.var_names[idx_]
+        for idx_ in feature_selectors[label].current_feature_indices
+    ]
+```
+Example: `gene_dict['TCGA-KICH']` is equal to `['ENSG00000162399.6',
+ 'ENSG00000168269.8',
+...
+ 'ENSG00000173253.13',
+ 'ENSG00000156284.5']`, the list of 10 genes that have been selected 
+by the feature selection process on "TCGA-KICH".
+
+
 
 + Scores on the test dataset for the "TCGA-KIRC" binary classifier 
 (positive samples are above the y=0.5 line):

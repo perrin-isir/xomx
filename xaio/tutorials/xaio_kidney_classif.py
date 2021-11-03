@@ -222,8 +222,6 @@ if step == 7:
         ylog_scale=True,
     )
 
-    xaio.tt.debug()
-
     feature_selectors = {}
     gene_dict = {}
     for label in xd.uns["all_labels"]:
@@ -235,6 +233,8 @@ if step == 7:
             xd.var_names[idx_]
             for idx_ in feature_selectors[label].current_feature_indices
         ]
+
+    xaio.tt.debug()
 
     all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
 
