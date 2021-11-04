@@ -37,10 +37,15 @@ pip install -e .
 Tutorials (in [xaio/tutorials/](xaio/tutorials/)) are the best way to learn to use
 the XAIO library.
 
-List of tutorials:
-* [xaio_kidney_classif.md](xaio/tutorials/xaio_kidney_classif.md) (*goal:*  use a recursive feature 
-elimination method on RNA-Seq data to identify gene biomarkers for the differential 
-diagnosis of three types of kidney cancer)
+*List of tutorials:*
+* [xaio_kidney_classif.md](xaio/tutorials/xaio_kidney_classif.md) (*goal:*  use a 
+recursive feature elimination method on RNA-seq data to identify gene 
+biomarkers for the differential diagnosis of three types of kidney cancer)
+* [xaio_pbmc.md](xaio/tutorials/xaio_pbmc.md) (*goal:* 
+follow the single cell RNA-seq [Scanpy tutorial on 3k PBMCs](
+https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html), except
+for the computation of biomarkers for which recursive feature elimination is used
+)
 
 -----
 ## Citing the project

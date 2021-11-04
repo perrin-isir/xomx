@@ -3,9 +3,10 @@
 -----
 
 The objective of this tutorial is to use a recursive feature elimination method on 
-RNA-Seq data to identify gene biomarker signatures for the differential diagnosis of three 
-types of kidney cancer: kidney renal clear cell carcinoma (**KIRC**), kidney renal 
-papillary cell carcinoma (**KIRP**), and chromophobe renal cell carcinoma (**KICH**).
+RNA-seq data from the Cancer Genome Atlas (TCGA) to identify gene biomarker signatures 
+for the differential diagnosis of three types of kidney cancer: kidney renal clear cell
+carcinoma (**KIRC**), kidney renal papillary cell carcinoma (**KIRP**), and chromophobe
+renal cell carcinoma (**KICH**).
 
 The recursive feature elimination method is based on 
 the [Extra-Trees algorithm](https://link.springer.com/article/10.1007/s10994-006-6226-1)

@@ -8,14 +8,18 @@ from IPython import embed as e
 assert e
 
 """
-TUTORIAL: PERIPHERAL BLOOD MONONUCLEAR CELLS ANALYSIS
+XAIO TUTORIAL: preprocessing and clustering 3k PBMCs
 
-This tutorial is similar to the following tutorial with the R package Seurat:
-https://satijalab.org/seurat/articles/pbmc3k_tutorial.html
+This tutorial follows the single cell RNA-seq Scanpy tutorial on 3k PBMCs:
+https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html
 
 The objective is to analyze a dataset of Peripheral Blood Mononuclear Cells (PBMC)
 freely available from 10X Genomics, composed of 2,700 single cells that were
 sequenced on the Illumina NextSeq 500.
+We replace some Scanpy plots by interactive XAIO plots, and modify the
+computation of marker genes. Instead of using a t-test, Wilcoxon-Mann-Whitney test
+or logistic regression, we perform recursive feature elimination with
+the Extra-Trees algorithm.
 """
 
 
@@ -208,6 +212,8 @@ if step == 3:
     sbm.plot()
 
     all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
+
+    xaio.tt.debug()
 
     sc.pl.dotplot(xd, gene_dict["NK"], groupby="leiden")
 

@@ -6,11 +6,14 @@ import os
 import shutil
 
 """
-TUTORIAL: KIDNEY CANCER CLASSIFICATION
+XAIO TUTORIAL: constructing diagnostic biomarker signatures.
 
-The objective of this tutorial is to create and test a classifier of different
-types of kidney cancers based on RNA-Seq data from the Cancer Genome Atlas (TCGA).
-See kidney_classif.md for detailed explanations.
+The objective of this tutorial is to use a recursive feature elimination method on
+RNA-seq data from the Cancer Genome Atlas (TCGA) to identify gene biomarker signatures
+for the differential diagnosis of three types of kidney cancer: kidney renal clear cell
+carcinoma (KIRC), kidney renal papillary cell carcinoma (KIRP), and chromophobe
+renal cell carcinoma (KICH).
+See xaio_kidney_classif.md for detailed explanations.
 """
 
 
