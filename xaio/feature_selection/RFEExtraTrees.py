@@ -3,12 +3,6 @@ import numpy as np
 from sklearn.ensemble import ExtraTreesClassifier
 import xaio
 import scanpy as sc
-
-# from xaio.tools.basic_tools import (
-#     confusion_matrix,
-#     naive_feature_selection,
-#     plot_scores,
-# )
 from joblib import dump, load
 
 

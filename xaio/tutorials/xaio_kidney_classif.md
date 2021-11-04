@@ -1,4 +1,4 @@
-# *XAIO Tutorial:* constructing diagnostic biomarker signatures.
+# *XAIO Tutorial:* constructing diagnostic biomarker signatures
 
 -----
 
@@ -92,6 +92,9 @@ df.to_csv(
 <a name="s2"></a>
 ## Step 2: Importing the data
 
+```python
+tmpdir = "tmpdir_GDCsamples"
+```
 Once the manifest is written, individual samples are downloaded to a local
 temporary folder (`tmpdir_GDCsamples/`) with the following command:
 
@@ -190,8 +193,7 @@ shutil.rmtree(tmpdir, ignore_errors=True)
 <a name="s4"></a>
 ## Step 4: Labelling the samples
 
-We load the AnnData object and the manifest (which will be used to assign labels to 
-samples):
+We load the AnnData object and the manifest:
 ```python
 xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 manifest = pd.read_table(os.path.join(savedir, "manifest.txt"), header=0)
@@ -224,10 +226,10 @@ We also compute the list of sample indices for every label:
 xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
 ```
 Example: `xd.uns["obs_indices_per_label"]["TCGA-KIRC"]` is the list of indices
-of the samples that are labelled as "TCGA-KIRC".
+of the samples that are labelled as `"TCGA-KIRC"`.
 
-It is important to use the keys "labels",
-"all_labels" and "obs_indices_per_label" as they
+It is important to use the keys `"labels"`,
+`"all_labels"` and `"obs_indices_per_label"` as they
 are expected by some XAIO functions.
 
 We then save the modifications:
@@ -246,11 +248,11 @@ First, we compute the mean and standard deviation (across samples) for all the f
 xd.var["mean_values"] = xaio.tl.var_mean_values(xd)
 xd.var["standard_deviations"] = xaio.tl.var_standard_deviations(xd)
 ```
-`xd.var["mean_values"]` and 
-`xd.var["standard_deviations"]` will be used in Step 7 only.
+Remark: `xd.var["mean_values"]` and 
+`xd.var["standard_deviations"]` will be used only in Step 7.
 
-We logarithmize the data  with the following Scanpy function that applies
-the equation X = log(1 + X):
+We logarithmize the data with the following Scanpy function that applies
+the transformation X = log(1 + X):
 ```python
 sc.pp.log1p(xd)
 ```
@@ -258,7 +260,7 @@ We then follow the Scanpy procedure to select the top 8000 highly variable genes
 ```python
 sc.pp.highly_variable_genes(xd, n_top_genes=8000)
 ```
-And we perform the filtering to actually remove the non-highly variable genes:
+We perform the filtering to actually remove the other features:
 ```python
 xd = xd[:, xd.var.highly_variable]
 ```
@@ -269,7 +271,7 @@ with tens of thousands of features. Keeping
 highly variable features is one possibility,
 but there are other options for the
 initial selection of features, see for instance 
-the [xaio_pbmc.md](xaio_pbmc.md) tutorial.
+the [xaio_pbmc.md](xaio_pbmc.md) tutorial (Step 2).
 
 We compute the dictionary of feature indices,
 which is required by some XAIO functions:
@@ -286,7 +288,7 @@ xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.2
 ```
 The function `train_and_test_indices()` requires `xd.uns["obs_indices_per_label"]`, which was computed in 
 the previous step. With `test_train_ratio=0.25`, for every label 
-("TCGA-KIRC", "TCGA-KIRP" or "TCGA-KICH"), 25% of the samples are assigned to 
+(`"TCGA-KIRC"`, `"TCGA-KIRP"` or `"TCGA-KICH"`), 25% of the samples are assigned to 
 the test set, and 75% to the train set. It creates the following unstructured 
 annotations:
 - `xd.uns["train_indices"]`: the array of indices of all samples that belong 
@@ -295,7 +297,7 @@ to the training set.
 to the test set.
 - `xd.uns["train_indices_per_label"]`: the dictionary of sample indices in the 
 training set, per label. For instance, `xd.uns["train_indices_per_label"]["TCGA-KIRP"]` is the array
-of indices of all the samples labelled as "TCGA-KIRP" that belong to the training set.
+of indices of all the samples labelled as `"TCGA-KIRP"` that belong to the training set.
 - `xd.uns["test_indices_per_label"]`: the dictionary of sample indices in the 
 test set, per label.
 
@@ -355,12 +357,9 @@ for label in xd.uns["all_labels"]:
     for siz in [100, 30, 20, 15, 10]:
         print("Selecting", siz, "features...")
         feature_selectors[label].select_features(siz)
-        cm = xaio.tl.confusion_matrix(
-            feature_selectors[label],
-            feature_selectors[label].data_test,
-            feature_selectors[label].target_test,
-        )
-        print("MCC score:", xaio.tl.matthews_coef(cm))
+        print("MCC score:", xaio.tl.matthews_coef(
+            feature_selectors[label].confusion_matrix
+        ))
     feature_selectors[label].save(os.path.join(savedir, "feature_selectors", label))
     print("Done.")
 ```
@@ -403,7 +402,7 @@ Hovering over points with the cursor shows the identifiers
 of the corresponding genes.
 
 We then load the feature selectors trained in Step 6,
-and create `gene-dict`, a dictionary of the 10-gene signatures for each label.
+and create `gene_dict`, a dictionary of the 10-gene signatures for each label.
 ```python
 feature_selectors = {}
 gene_dict = {}
@@ -422,14 +421,14 @@ Example: `gene_dict['TCGA-KICH']` is equal to `['ENSG00000162399.6',
 ...
  'ENSG00000173253.13',
  'ENSG00000156284.5']`, the list of 10 genes that have been selected 
-by the feature selection process on "TCGA-KICH".
+by the feature selection process on `"TCGA-KICH"`.
 
 For a given feature selector, for example `feature_selectors["TCGA-KIRP"]`,
 `plot()` displays results on the test set. The classifier uses only the selected 
-features, here the 10 features selected for the label "TCGA-KIRP".
+features, here the 10 features selected for the label `"TCGA-KIRP"`.
 Points above the horizontal red line (score > 0.5) are classified as positives (the 
-prediction is "TCGA-KIRP"), and points below the horizontal line (score < 0.5)
-are classified as negatives (the prediction is "not TCGA-KIRP").
+prediction is: `"TCGA-KIRP"`), and points below the horizontal line (score < 0.5)
+are classified as negatives (the prediction is: `not "TCGA-KIRP"`).
 ```python
 feature_selectors["TCGA-KIRP"].plot()
 ```
@@ -473,7 +472,7 @@ xaio.pl.var_plot(xd, all_selected_genes)
 ![alt text](imgs/tuto1_markers.png
 "Marker gene expressions")
 
-Interestingly, we observe here that, for the label "TCGA-KIRP",
+Interestingly, we observe here that, for the label `"TCGA-KIRP"`,
 the selected marker genes are mostly downregulated
 (which does not mean that upregulated marker genes cannot 
 lead to similarly good results).  
@@ -548,6 +547,7 @@ xaio.pl.plot2d(xd, "X_umap")
 ```
 ![alt text](imgs/tuto1_UMAP.gif
 "Interactive UMAP plot")
+
 Hovering the cursor over points shows sample identifiers and labels,
 which can be useful to find unusual or possibly mislabelled samples.
 

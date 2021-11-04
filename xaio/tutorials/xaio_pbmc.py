@@ -163,27 +163,25 @@ if step == 2:
     # Loading the AnnData object:
     xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
 
-    feature_selector = {}
+    feature_selectors = {}
     for label in xd.uns["all_labels"]:
         print("Label: " + label)
-        feature_selector[label] = xaio.fs.RFEExtraTrees(
+        feature_selectors[label] = xaio.fs.RFEExtraTrees(
             xd,
             label,
             init_selection_size=8000,
             n_estimators=450,
             random_state=0,
         )
-        feature_selector[label].init()
+        feature_selectors[label].init()
         for siz in [100, 30, 20, 15, 10]:
             print("Selecting", siz, "features...")
-            feature_selector[label].select_features(siz)
-            cm = xaio.tl.confusion_matrix(
-                feature_selector[label],
-                feature_selector[label].data_test,
-                feature_selector[label].target_test,
+            feature_selectors[label].select_features(siz)
+            print(
+                "MCC score:",
+                xaio.tl.matthews_coef(feature_selectors[label].confusion_matrix),
             )
-            print("MCC score:", xaio.tl.matthews_coef(cm))
-        feature_selector[label].save(os.path.join(savedir, "feature_selectors", label))
+        feature_selectors[label].save(os.path.join(savedir, "feature_selectors", label))
         print("Done.")
 
     print("STEP 2: done")
@@ -195,18 +193,18 @@ if step == 3:
     # Loading the AnnData object:
     xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
 
-    feature_selector = {}
+    feature_selectors = {}
     gene_dict = {}
     for label in xd.uns["all_labels"]:
-        feature_selector[label] = xaio.fs.load_RFEExtraTrees(
+        feature_selectors[label] = xaio.fs.load_RFEExtraTrees(
             os.path.join(savedir, "feature_selectors", label),
             xd,
         )
         gene_dict[label] = [
             xd.var_names[idx_]
-            for idx_ in feature_selector[label].current_feature_indices
+            for idx_ in feature_selectors[label].current_feature_indices
         ]
-    sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selector)
+    sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
     sbm.plot()
 
     all_selected_genes = np.asarray(list(gene_dict.values())).flatten()

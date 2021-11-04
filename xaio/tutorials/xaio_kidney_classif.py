@@ -63,8 +63,8 @@ https://gdc.cancer.gov/access-data/gdc-data-transfer-tool).
 If all downloads succeed, 465 directories are created in a temporary directory
 named tmpdir_GDCsamples.
 """
-tmpdir = "tmpdir_GDCsamples"
 if step == 2:
+    tmpdir = "tmpdir_GDCsamples"
     os.makedirs(tmpdir, exist_ok=True)
     commandstring = (
         "gdc-client download -d "
@@ -82,6 +82,7 @@ as an AnnData object.
 After that, all the individual files imported with gdc-client are erased.
 """
 if step == 3:
+    tmpdir = "tmpdir_GDCsamples"
     df = xaio.di.gdc_create_data_matrix(
         tmpdir,
         os.path.join(savedir, "manifest.txt"),
@@ -195,12 +196,10 @@ if step == 6:
         for siz in [100, 30, 20, 15, 10]:
             print("Selecting", siz, "features...")
             feature_selectors[label].select_features(siz)
-            cm = xaio.tl.confusion_matrix(
-                feature_selectors[label],
-                feature_selectors[label].data_test,
-                feature_selectors[label].target_test,
+            print(
+                "MCC score:",
+                xaio.tl.matthews_coef(feature_selectors[label].confusion_matrix),
             )
-            print("MCC score:", xaio.tl.matthews_coef(cm))
         feature_selectors[label].save(os.path.join(savedir, "feature_selectors", label))
         print("Done.")
 
@@ -213,6 +212,7 @@ STEP 7: Visualizing results.
 if step == 7:
     xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
 
+    # Plot standard deviation vs. mean value for all features:
     xaio.pl.function_scatter(
         xd,
         lambda idx: xd.var["mean_values"][idx],
@@ -220,8 +220,11 @@ if step == 7:
         obs_or_var="var",
         xlog_scale=True,
         ylog_scale=True,
+        xlabel="mean values",
+        ylabel="standard deviations",
     )
 
+    # Load feature selectors (binary classifiers on selected features)
     feature_selectors = {}
     gene_dict = {}
     for label in xd.uns["all_labels"]:
@@ -234,25 +237,35 @@ if step == 7:
             for idx_ in feature_selectors[label].current_feature_indices
         ]
 
+    # Plot results of feature_selectors["TCGA-KIRP"] on the test set:
     feature_selectors["TCGA-KIRP"].plot()
 
+    # Create a multiclass classifier based on the 3 binary classifiers:
     sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
     sbm.plot()
 
+    # Selected genes in a single list:
     all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
 
+    # Visualizing all genes:
     xaio.pl.var_plot(xd, all_selected_genes)
 
+    # Visualizing the 10-gene signature for "TCGA-KIRP":
     xaio.pl.var_plot(xd, gene_dict["TCGA-KIRP"])
 
+    # Stacked violin plot (using Scanpy):
     sc.pl.stacked_violin(xd, gene_dict["TCGA-KIRP"], groupby="labels", rotation=90)
 
+    # Visualizing the 10-gene signature for "TCGA-KICH":
     xaio.pl.var_plot(xd, gene_dict["TCGA-KICH"])
 
+    # A single feature:
     xaio.pl.var_plot(xd, "ENSG00000168269.8")
 
+    # Visualizing the 10-gene signature for "TCGA-KIRC":
     xaio.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
 
+    # Preparing and plotting a 2D UMAP embedding:
     xd = xd[:, all_selected_genes]
     xd.var_names_make_unique()
     sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
