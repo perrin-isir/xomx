@@ -470,112 +470,82 @@ We can visualize these marker genes with `xaio.pl.var_plot()`:
 ```python
 xaio.pl.var_plot(xd, all_selected_genes)
 ```
-![alt text](imgs/tuto1_markers.gif 
+![alt text](imgs/tuto1_markers.png
 "Marker gene expressions")
 
-Interestingly, here, we observe that 
-
-Remark: the sets of genes have been selected to enable good 
-results in classification tasks, and most of the time, 
-several sets of few features may 
-lead to similarly good results.
-
-We filter and restrict the data to these genes:
+Interestingly, we observe here that, for the label "TCGA-KIRP",
+the selected marker genes are mostly downregulated
+(which does not mean that upregulated marker genes cannot 
+lead to similarly good results).  
+Let us zoom on the marker genes for KIRP:
 ```python
-xd = xd[:, all_selected_genes]
+xaio.pl.var_plot(xd, all_selected_genes)
 ```
-We follow the Scanpy procedure to compute a 2D UMAP embedding:
+![alt text](imgs/tuto1_KIRPmarkers.png
+"Downregulated marker genes for TCGA-KIRP")
+
+Or, using the Scanpy function `stacked_violin()`:
 ```python
-sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
-sc.tl.umap(xd)
+sc.pl.stacked_violin(xd, gene_dict["TCGA-KIRP"], groupby="labels")
 ```
-We use `xaio.pl.plot2d()` to display an interactive plot:
-```
-xaio.pl.plot2d(xd, "X_umap")
-```
+![alt text](imgs/tuto1_stacked_violin.png
+"Mainly downregulated marker genes for TCGA-KIRP")
 
+We observe 3 significantly downregulated genes: 
+EBF2 (ENSG00000221818), PTGER3 (ENSG00000050628)
+and C6orf223 (ENSG00000181577).
 
-The following line defines 
-
-+ Scores on the test dataset for the "TCGA-KIRC" binary classifier 
-(positive samples are above the y=0.5 line):
+KICH markers:
 ```python
-feature_selector[0].plot()
+xaio.pl.var_plot(xd, gene_dict["TCGA-KICH"])
 ```
-![alt text](imgs/tuto1_KIRC_scores.png 
-"Scores on the test dataset for the 'TCGA-KIRC' binary classifier")
-
-
-+ 2D UMAP projection of the log-normalized data limited to the 30 selected features
-(10 for each type of cancer):
-
+![alt text](imgs/tuto1_KICHmarkers.png
+"Upregulated marker genes for TCGA-KIRC")
+We can also use `var_plot()` with a single gene:
 ```python
-xdata.reduce_features(gene_list)
-xdata.compute_normalization("log")
-xdata.umap_plot("log")
+xaio.pl.var_plot(xd, "ENSG00000168269.8")
 ```
-![alt text](imgs/tuto1_UMAP.png 
-"2D UMAP plot")
+![alt text](imgs/tuto1_FOXI1_KICH.png
+"Upregulated marker genes for TCGA-KICH")
+The FOXI1 (ENSG00000168269) transcription factor is known to 
+be drastically overexpressed in KICH. In fact, it has been argued that 
+the FOXI1-driven transcriptome that defines renal intercalated cells is retained 
+in KICH and implicates the intercalated cell type as the cell of origin 
+for KICH; see: 
+[D. Lindgren et al., *Cell-Type-Specific Gene Programs of the Normal Human 
+Nephron Define Kidney Cancer Subtypes*, Cell Reports 2017 Aug; 20(6): 1476-1489. 
+doi: [10.1016/j.celrep.2017.07.043](
+https://doi.org/10.1016/j.celrep.2017.07.043
+)]
 
-We observe 3 distinct clusters corresponding to the three categories
-KIRC, KIRP and KICH. Remark: it may be possible that some of the 
-samples have been miscategorized.
-
-+ Log-normalized values accross all samples, for the 30 genes that have been 
-selected:
+KIRC markers:
 ```python
-xdata.feature_plot(gene_list, "log")
+xaio.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
 ```
+![alt text](imgs/tuto1_KIRCmarkers.png
+"Upregulated marker genes for TCGA-KIRC")
 
-![alt text](imgs/tuto1_30features.png 
-"Log-normalized values accross all samples for the 30 selected features")
-
-The recursive feature elimination procedure returned 30 features whose combined values 
-allow us to distinguish the 3 categories of cancers. A strong contrast can also be 
-observed for some individual features. For example, in the figure above, 
-the features ENSG00000185633.9 (for KIRC), ENSG00000168269.8 (for KICH) and
-ENSG00000163435.14 (for KIRP) stand out.
-
-Let us plot the read counts accross all samples for each of these 3 features.
-
-+ ENSG00000185633.9 (NDUFA4L2 gene):
-```python
-xdata.feature_plot("ENSG00000185633.9", "raw")
-```
-![alt text](imgs/tuto1_NDUFA4L2_KIRC.png 
-"Read counts for ENSG00000185633.9")
-
-+ ENSG00000163435.14 (ELF3 gene):
-```python
-xdata.feature_plot("ENSG00000163435.14", "raw")
-```
-![alt text](imgs/tuto1_ELF3_KIRP.png 
-"Read counts for ENSG00000163435.14")
-
-+ ENSG00000168269.8 (FOXI1 gene):
-```python
-xdata.feature_plot("ENSG00000168269.8", "raw")
-```
-![alt text](imgs/tuto1_FOXI1_KICH.png 
-"Read counts for ENSG00000168269.8")
-
-Studies on the role of these genes in kidney cancers can be found in the literature:
-+ In the following publication, the gene NDUFA4L2 (ENSG00000185633.9) is analyzed as a 
-biomarker for KIRC:
+We can notice in particular the upregulation of NDUFA4L2 (ENSG00000185633.9),
+a gene that has been analyzed as a biomarker for KIRC in
 [D. R. Minton et al., *Role of NADH Dehydrogenase (Ubiquinone) 1 alpha subcomplex 4-like 
 2 in clear cell renal cell carcinoma*, 
 Clin Cancer Res. 2016 Jun 1;22(11):2791-801. doi: [10.1158/1078-0432.CCR-15-1511](
 https://doi.org/10.1158/1078-0432.CCR-15-1511
 )].
-+ In [A. O. Osunkoya et al., *Diagnostic biomarkers for renal cell carcinoma: selection 
-using novel bioinformatics systems for microarray data analysis*, 
-Hum Pathol. 2009 Dec; 40(12): 1671–1678. doi: [10.1016/j.humpath.2009.05.006](
-https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2783948/
-)], the gene ELF3 (ENSG00000163435.14) is verified as a biomarker for KIRP.
-+ Finally, [D. Lindgren et al., *Cell-Type-Specific Gene Programs of the Normal Human 
-Nephron Define Kidney Cancer Subtypes*, Cell Reports 2017 Aug; 20(6): 1476-1489. 
-doi: [10.1016/j.celrep.2017.07.043](
-https://doi.org/10.1016/j.celrep.2017.07.043
-)] identifies the transcription factor FOXI1 (ENSG00000168269.8) to be drastically 
-overexpressed in KICH.
+
+Finally, we filter and restrict the data to the selected genes, and follow 
+the Scanpy procedure to compute a 2D UMAP embedding:
+```python
+xd = xd[:, all_selected_genes]
+xd.var_names_make_unique()
+sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
+sc.tl.umap(xd)
+```
+`sc.tl.umap()` stores the embedding in `xd.obsm["X_umap"]`.  
+We use `xaio.pl.plot2d()` to display an interactive plot:
+```python
+xaio.pl.plot2d(xd, "X_umap")
+```
+Hovering the cursor over points shows sample identifiers and labels,
+which can be useful to find unusual or possibly mislabelled samples.
 

@@ -241,45 +241,23 @@ if step == 7:
 
     all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
 
-    # xd = xd[:, all_selected_genes]
-    # sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
-    # sc.tl.umap(xd)
-    # xaio.pl.plot2d(xd, "X_umap")
-
     xaio.pl.var_plot(xd, all_selected_genes)
 
-    xaio.tt.debug()
+    xaio.pl.var_plot(xd, gene_dict["TCGA-KIRP"])
 
     sc.pl.stacked_violin(xd, gene_dict["TCGA-KIRP"], groupby="labels", rotation=90)
 
-    xaio.pl.var_plot(xd, "ENSG00000168269.8")  # FOXI1 (KICH)
-    # xaio.pl.var_plot(xd, "ENSG00000163435.14")  # ELF3
-    xaio.pl.var_plot(xd, "ENSG00000125872.7")  # ELF3
-    xaio.pl.var_plot(xd, "ENSG00000185633.9")  # NDUFA4L2 (KIRC)
+    xaio.pl.var_plot(xd, gene_dict["TCGA-KICH"])
 
-    # Some of the most remarkable genes on this plot:
-    # ENSG00000185633.9
-    # ENSG00000168269.8 for KICH: FOXI1, known in
-    # "Cell-Type-Specific Gene Programs of the Normal Human
-    # Nephron Define Kidney Cancer Subtypes"
+    xaio.pl.var_plot(xd, "ENSG00000168269.8")
 
-    # For KIRP: ELF3 ENSG00000163435.14
-    # Diagnostic
-    # biomarkers
-    # for renal cell carcinoma: selection
-    # using
-    # novel
-    # bioinformatics
-    # systems
-    # for microarray data analysis
+    xaio.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
 
-    # The Gene ENSG00000185633.9 (NDUFA4L2) seems associated to KIRC
-    # (Kidney Renal Clear Cell Carcinoma).
-    # This is confirmed by the publication:
-    # Role of NADH Dehydrogenase (Ubiquinone) 1 alpha subcomplex 4-like 2 in clear cell
-    # renal cell carcinoma
-    # xd.feature_plot("ENSG00000185633.9", "raw")
-
+    xd = xd[:, all_selected_genes]
+    xd.var_names_make_unique()
+    sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
+    sc.tl.umap(xd)
+    xaio.pl.plot2d(xd, "X_umap")
 
 """
 INCREMENTING next_step.txt
