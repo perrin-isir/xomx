@@ -479,7 +479,7 @@ the selected marker genes are mostly downregulated
 lead to similarly good results).  
 Let us zoom on the marker genes for KIRP:
 ```python
-xaio.pl.var_plot(xd, all_selected_genes)
+xaio.pl.var_plot(xd, gene_dict["TCGA-KIRP"])
 ```
 ![alt text](imgs/tuto1_KIRPmarkers.png
 "Downregulated marker genes for TCGA-KIRP")
@@ -546,6 +546,8 @@ We use `xaio.pl.plot2d()` to display an interactive plot:
 ```python
 xaio.pl.plot2d(xd, "X_umap")
 ```
+![alt text](imgs/tuto1_UMAP.gif
+"Interactive UMAP plot")
 Hovering the cursor over points shows sample identifiers and labels,
 which can be useful to find unusual or possibly mislabelled samples.
 
