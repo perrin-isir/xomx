@@ -513,11 +513,11 @@ be drastically overexpressed in KICH. In fact, it has been argued that
 the FOXI1-driven transcriptome that defines renal intercalated cells is retained 
 in KICH and implicates the intercalated cell type as the cell of origin 
 for KICH; see: 
-[D. Lindgren et al., *Cell-Type-Specific Gene Programs of the Normal Human 
+**[D. Lindgren et al., *Cell-Type-Specific Gene Programs of the Normal Human 
 Nephron Define Kidney Cancer Subtypes*, Cell Reports 2017 Aug; 20(6): 1476-1489. 
 doi: [10.1016/j.celrep.2017.07.043](
 https://doi.org/10.1016/j.celrep.2017.07.043
-)]
+)]**
 
 KIRC markers:
 ```python
@@ -528,11 +528,11 @@ xaio.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
 
 We can notice in particular the upregulation of NDUFA4L2 (ENSG00000185633.9),
 a gene that has been analyzed as a biomarker for KIRC in
-[D. R. Minton et al., *Role of NADH Dehydrogenase (Ubiquinone) 1 alpha subcomplex 4-like 
+**[D. R. Minton et al., *Role of NADH Dehydrogenase (Ubiquinone) 1 alpha subcomplex 4-like 
 2 in clear cell renal cell carcinoma*, 
 Clin Cancer Res. 2016 Jun 1;22(11):2791-801. doi: [10.1158/1078-0432.CCR-15-1511](
 https://doi.org/10.1158/1078-0432.CCR-15-1511
-)].
+)]**.
 
 Finally, we filter and restrict the data to the selected genes, and follow 
 the Scanpy procedure to compute a 2D UMAP embedding:
