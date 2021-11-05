@@ -526,7 +526,7 @@ xaio.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
 ![alt text](imgs/tuto1_KIRCmarkers.png
 "Upregulated marker genes for TCGA-KIRC")
 
-We can notice in particular the upregulation of NDUFA4L2 (ENSG00000185633.9),
+We can notice in particular the upregulation of NDUFA4L2 (ENSG00000185633),
 a gene that has been analyzed as a biomarker for KIRC in
 **[D. R. Minton et al., *Role of NADH Dehydrogenase (Ubiquinone) 1 alpha subcomplex 4-like 
 2 in clear cell renal cell carcinoma*, 
