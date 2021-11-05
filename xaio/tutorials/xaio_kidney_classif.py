@@ -38,10 +38,10 @@ for each of them 150 samples corresponding to cases of adenocarcinomas.
 if step == 1:
     disease_type = "Adenomas and Adenocarcinomas"
     # The 3 categories of cancers studied in this tutorial correspond to the following
-    # TCGA projects, which are different types of adenocarcinomas:
+    # TCGA projects, which are different types of adenocarcinomas
     project_list = ["TCGA-KIRC", "TCGA-KIRP", "TCGA-KICH"]
-    # We fetch 200 cases of KIRC, 200 cases of KIRP, and 65 cases of KICH from the
-    # GDC database:
+    # Fetch 200 cases of KIRC, 200 cases of KIRP, and 65 cases of KICH from the
+    # GDC database
     case_numbers = [200, 200, 65]
     df_list = xaio.di.gdc_create_manifest(
         disease_type,
@@ -90,26 +90,26 @@ if step == 3:
         tmpdir,
         os.path.join(savedir, "manifest.txt"),
     )
-    # We drop the last 5 rows containing special information which we will not use:
+    # Drop the last 5 rows containing special information which we will not be used
     df = df.drop(index=df.index[-5:])
 
-    # This dataframe does not follow the AnnData convention (rows = samples,
-    # columns = features), so we transpose it when creating the AnnData object:
+    # The dataframe df does not follow the AnnData convention (rows = samples,
+    # columns = features), so we transpose it when creating the AnnData object
     xd = sc.AnnData(df.transpose())
 
-    # Make sure that the variable (feature) names are unique:
+    # Make sure that the variable (feature) names are unique
     xd.var_names_make_unique()
 
     # In order to improve cross-sample comparisons, we normalize the sequencing
     # depth to 1 million.
     # WARNING: basic pre-processing is used here for simplicity, but for more advanced
-    # applications, a more sophisticated pre-processing may be required.
+    # applications, a more sophisticated preprocessing may be required.
     sc.pp.normalize_total(xd, target_sum=1e6)
 
-    # Saving the AnnData object to the disk:
+    # Saving the AnnData object to the disk
     xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 
-    # We erase the individual sample directories downloaded with gdc-client:
+    # Erase the individual sample directories downloaded with gdc-client
     shutil.rmtree(tmpdir, ignore_errors=True)
     print("STEP 3: done")
 
@@ -119,12 +119,12 @@ STEP 4: Labelling samples.
 Labels (annotations) are fetched from the previously created file manifest.txt.
 """
 if step == 4:
-    # Loading the AnnData object:
+    # Loading the AnnData object
     xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
-    # Loading the manifest:
+    # Loading the manifest
     manifest = pd.read_table(os.path.join(savedir, "manifest.txt"), header=0)
 
-    # Create a dictionary of labels:
+    # Create a dictionary of labels
     label_dict = {}
     for i in range(xd.n_obs):
         label_dict[manifest["id"][i]] = manifest["annotation"][i]
@@ -132,13 +132,13 @@ if step == 4:
     label_array = np.array([label_dict[xd.obs_names[i]] for i in range(xd.n_obs)])
     xd.obs["labels"] = label_array
 
-    # Compute the list of different labels:
+    # Compute the list of different labels
     xd.uns["all_labels"] = xaio.tl.all_labels(xd.obs["labels"])
 
-    # Computing the list of sample (obs) indices for every label:
+    # Computing the list of sample (obs) indices for every label
     xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
 
-    # Saving the AnnData object to the disk:
+    # Saving the AnnData object to the disk
     xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
     print("STEP 4: done")
 
@@ -150,7 +150,7 @@ and randomly separate samples in training and test datasets.
 if step == 5:
     xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
 
-    # Compute the mean and standard deviation (across samples) for all the features:
+    # Compute the mean and standard deviation (across samples) for all the features
     xd.var["mean_values"] = xaio.tl.var_mean_values(xd)
     xd.var["standard_deviations"] = xaio.tl.var_standard_deviations(xd)
 
@@ -163,7 +163,7 @@ if step == 5:
     # Filter the data to keep only the 8000 highly variable features
     xd = xd[:, xd.var.highly_variable]
 
-    # Compute the dictionary of feature (var) indices:
+    # Compute the dictionary of feature (var) indices
     xd.uns["var_indices"] = xaio.tl.var_indices(xd)
 
     # Randomly separate samples into train and test sets.
@@ -174,7 +174,7 @@ if step == 5:
     # xd.uns["train_indices"]
     # xd.uns["test_indices"]
 
-    # Saving the data to a new file:
+    # Saving the data to a new file
     xd.write(os.path.join(savedir, "xaio_k_c_small.h5ad"))
     print("STEP 5: done")
 
@@ -184,8 +184,10 @@ STEP 6: For every label, train a binary classifier with recursive feature
 elimination to determine a discriminative list of 10 features.
 """
 if step == 6:
+    # Loading the AnnData object
     xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
 
+    # Training feature selectors
     feature_selectors = {}
     for label in xd.uns["all_labels"]:
         print("Label: " + label)
@@ -213,9 +215,10 @@ if step == 6:
 STEP 7: Visualizing results.
 """
 if step == 7:
+    # Loading the AnnData object
     xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
 
-    # Plot standard deviation vs. mean value for all features:
+    # Plot standard deviation vs mean value for all features
     xaio.pl.function_scatter(
         xd,
         lambda idx: xd.var["mean_values"][idx],
@@ -240,35 +243,35 @@ if step == 7:
             for idx_ in feature_selectors[label].current_feature_indices
         ]
 
-    # Plot results of feature_selectors["TCGA-KIRP"] on the test set:
+    # Plot results of feature_selectors["TCGA-KIRP"] on the test set
     feature_selectors["TCGA-KIRP"].plot()
 
-    # Create a multiclass classifier based on the 3 binary classifiers:
+    # Create a multiclass classifier based on the 3 binary classifiers
     sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
     sbm.plot()
 
-    # Selected genes in a single list:
+    # Selected genes in a single list
     all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
 
-    # Visualizing all genes:
+    # Visualizing all genes
     xaio.pl.var_plot(xd, all_selected_genes)
 
-    # Visualizing the 10-gene signature for "TCGA-KIRP":
+    # Visualizing the 10-gene signature for "TCGA-KIRP"
     xaio.pl.var_plot(xd, gene_dict["TCGA-KIRP"])
 
-    # Stacked violin plot (using Scanpy):
+    # Stacked violin plot (using Scanpy)
     sc.pl.stacked_violin(xd, gene_dict["TCGA-KIRP"], groupby="labels", rotation=90)
 
-    # Visualizing the 10-gene signature for "TCGA-KICH":
+    # Visualizing the 10-gene signature for "TCGA-KICH"
     xaio.pl.var_plot(xd, gene_dict["TCGA-KICH"])
 
-    # A single feature:
+    # A single feature
     xaio.pl.var_plot(xd, "ENSG00000168269.8")
 
-    # Visualizing the 10-gene signature for "TCGA-KIRC":
+    # Visualizing the 10-gene signature for "TCGA-KIRC"
     xaio.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
 
-    # Preparing and plotting a 2D UMAP embedding:
+    # Computing and plotting a 2D UMAP embedding
     xd = xd[:, all_selected_genes]
     xd.var_names_make_unique()
     sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)

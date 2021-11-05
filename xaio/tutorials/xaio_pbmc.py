@@ -65,7 +65,7 @@ if step == 1:
     )
 
     # The k-th element of the following array is the mean fraction of counts of the
-    # k-th gene in each single cell, across all cells:
+    # k-th gene in each single cell, across all cells
     mean_count_fractions = np.squeeze(
         np.asarray(
             np.mean(
@@ -75,7 +75,7 @@ if step == 1:
     )
 
     # Plot, for all genes, the mean fraction
-    # of counts in single cells, across all cells:
+    # of counts in single cells, across all cells
     xaio.pl.function_plot(
         xd,
         lambda idx: mean_count_fractions[idx],
@@ -86,7 +86,7 @@ if step == 1:
         ylabel="mean fractions of counts across all cells",
     )
 
-    # Plot the total counts per cell:
+    # Plot the total counts per cell
     xaio.pl.function_plot(
         xd,
         lambda idx: xd.obs["total_counts"][idx],
@@ -97,7 +97,7 @@ if step == 1:
         ylabel="total number of counts",
     )
 
-    # Plot mitochondrial count percentages vs total number of counts:
+    # Plot mitochondrial count percentages vs total number of counts
     xaio.pl.function_scatter(
         xd,
         lambda idx: xd.obs["total_counts"][idx],
@@ -110,7 +110,7 @@ if step == 1:
         ylabel="mitochondrial count percentages",
     )
 
-    # Preprocessing and clustering following the steps of the Scanpy tutorial.
+    # Preprocessing and clustering following the steps of the Scanpy tutorial
     xd = xd[xd.obs.n_genes_by_counts < 2500, :]
     xd = xd[xd.obs.pct_counts_mt < 5, :]
     sc.pp.normalize_total(xd, target_sum=1e4)
@@ -137,29 +137,29 @@ if step == 1:
     ]
     xd.rename_categories("leiden", new_cluster_names)
 
-    # We now retrieve the unfiltered data, and recover the .obsp annotations:
+    # We now retrieve the unfiltered data, and recover the .obsp annotations
     obsp = xd.obsp.copy()
     xd = xd.raw.to_adata()
     xd.obsp = obsp
 
-    # Compute the dictionary of feature (var) indices:
+    # Compute the dictionary of feature (var) indices
     xd.uns["var_indices"] = xaio.tl.var_indices(xd)
 
-    # The "leiden" clusters define labels, and XAIO uses labels stored in obs["labels"]:
+    # The "leiden" clusters define labels, and XAIO uses labels stored in obs["labels"]
     xd.obs["labels"] = xd.obs["leiden"]
 
     # Several XAIO functions require the list of all labels and the
-    # dictionary of sample indices per label:
+    # dictionary of sample indices per label
     xd.uns["all_labels"] = xaio.tl.all_labels(xd.obs["labels"])
     xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
 
-    # Compute training and test sets:
+    # Compute training and test sets
     xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
 
-    # Rank the genes for each cluster with t-test:
+    # Rank the genes for each cluster with t-test
     sc.tl.rank_genes_groups(xd, "leiden", method="t-test")
 
-    # Saving the AnnData object to the disk:
+    # Saving the AnnData object to the disk
     xd.write(os.path.join(savedir, "xaio_pbmc.h5ad"))
     print("STEP 1: done")
 
@@ -168,9 +168,10 @@ STEP 2: For every label, train a binary classifier with recursive feature
 elimination to determine a discriminative list of 10 features.
 """
 if step == 2:
-    # Loading the AnnData object:
+    # Loading the AnnData object
     xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
 
+    # Training feature selectors
     feature_selectors = {}
     for label in xd.uns["all_labels"]:
         print("Label: " + label)
@@ -198,9 +199,10 @@ if step == 2:
 STEP 3: Visualizing results
 """
 if step == 3:
-    # Loading the AnnData object:
+    # Loading the AnnData object
     xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
 
+    # Load feature selectors
     feature_selectors = {}
     gene_dict = {}
     for label in xd.uns["all_labels"]:
@@ -212,15 +214,22 @@ if step == 3:
             xd.var_names[idx_]
             for idx_ in feature_selectors[label].current_feature_indices
         ]
+
+    # Multiclass classifier
     sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
     sbm.plot()
 
+    # Visualizing 10-gene signatures for CD14 and FCGR3A Monocytes
+    sc.pl.dotplot(
+        xd,
+        gene_dict["CD14 Monocytes"] + gene_dict["FCGR3A Monocytes"],
+        groupby="labels",
+    )
+
+    # Selected genes in a single list
     all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
 
-    xaio.tt.debug()
-
-    sc.pl.dotplot(xd, gene_dict["NK"], groupby="leiden")
-
+    # Known biomarkers
     biomarkers = {
         "IL7R",
         "CD14",
@@ -236,13 +245,19 @@ if step == 3:
         "PPBP",
     }
 
+    # Interaction between selected genes and known biomarkers
     print(biomarkers.intersection(all_selected_genes))
 
+    # Compute UMAP embedding
     sc.tl.umap(xd)
+
+    # Interactive UMAP plots
     xaio.pl.plot2d(xd, "X_umap")
-    xaio.pl.plot2d(xd, "X_umap", "NKG7")
-    xaio.pl.plot2d(xd, "X_pca", "CST3")
+    xaio.pl.plot2d(xd, "X_umap", "CST3")
+
+    # Interactive PCA plots
     xaio.pl.plot2d(xd, "X_pca")
+    xaio.pl.plot2d(xd, "X_pca", "CST3")
 
     print("STEP 3: done")
 

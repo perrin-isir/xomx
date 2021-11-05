@@ -260,7 +260,7 @@ xaio_kidney_classif.md#s6),
 we use the Extra-Trees algorithms and run it several times per label to select
 100, then 30, 20, 15 and finally 10 marker genes for each label.  
 The only difference with the [Step 6 in xaio_kidney_classif.md](
-xaio_kidney_classif.md#6)
+xaio_kidney_classif.md#s6)
 is here the use of the option `init_selection_size=8000`. 
 This option speeds up the process of feature elimination by starting with an
 initial selection of features of size 8000, different for each label (while 
@@ -270,6 +270,10 @@ With the `init_selection_size` option, initial selections rely
 on `xd.uns["rank_genes_groups"]`, which must have been computed before.
 For each label, the initial selection coincides with the
 highest ranked features in `xd.uns["rank_genes_groups"]`.
+After the training, for each label, `feature_selectors[label]` is a
+binary classifier using only 10 features to discriminate samples with the label 
+from other samples.
+
 
 ```python
 feature_selectors = {}
@@ -296,3 +300,112 @@ for label in xd.uns["all_labels"]:
 
 <a name="s3"></a>
 ## Step 3: Visualizing results
+Loading the AnnData object:
+```python
+xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
+```
+
+Loading the binary classifiers, and creating `gene_dict`, a dictionary of the 10-gene
+signatures for each label:
+```python
+feature_selectors = {}
+gene_dict = {}
+for label in xd.uns["all_labels"]:
+    feature_selectors[label] = xaio.fs.load_RFEExtraTrees(
+        os.path.join(savedir, "feature_selectors", label),
+        xd,
+    )
+    gene_dict[label] = [
+        xd.var_names[idx_]
+        for idx_ in feature_selectors[label].current_feature_indices
+    ]
+```
+
+We construct a multiclass classifier based on the 3 binary classifiers:
+```python
+sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
+```
+This multiclass classifier bases its predictions on the union of the 10-gene 
+signatures for each label. It simply computes the scores of each of the binary
+classifiers, and returns the label that corresponds to the highest score.  
+`plot()` displays results on the test set:
+```python
+sbm.plot()
+```
+![alt text](imgs/tuto2_multiclass.gif 
+"Multiclass classifier")
+
+With the Scanpy function `dotplot()`, we visualize the 10-gene signatures 
+of CD14 Monocytes and FCGR3A Monocytes:
+```python
+sc.pl.dotplot(xd, gene_dict["CD14 Monocytes"] + gene_dict["FCGR3A Monocytes"], groupby="labels")
+```
+![alt text](imgs/tuto2_Monocytes.gif 
+"10-gene signatures for CD14 Monocytes and FCGR3A Monocytes")
+
+We gather all the selected genes in a single list:
+```python
+all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
+```
+
+For comparison, we define a list of known biomarkers as suggested in the 
+[Scanpy tutorial](
+https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html):
+```python
+biomarkers = {
+    "IL7R",
+    "CD14",
+    "LYZ",
+    "MS4A1",
+    "CD8A",
+    "GNLY",
+    "NKG7",
+    "FCGR3A",
+    "MS4A7",
+    "FCER1A",
+    "CST3",
+    "PPBP",
+}
+```
+
+By computing the intersection with the selected genes, we observe that the 
+known biomarkers are all present in the union of the 10-gene signatures 
+obtained with the Extra-Trees + Recursive Feature Elimination approach:
+```
+In [1]: print(biomarkers.intersection(all_selected_genes))
+{'FCER1A', 'MS4A7', 'FCGR3A', 'GNLY', 'CD14', 'PPBP', 'LYZ', 'CST3', 'MS4A1', 'NKG7', 'CD8A', 'IL7R'}
+```
+
+We use Scanpy to create a UMAP embedding, stored in `.obsm["X_umap"]`: 
+```python
+sc.tl.umap(xd)
+```
+
+Using `xaio.pl.plot2d()`, we get an interactive plot of this embedding:
+```python
+xaio.pl.plot2d(xd, "X_umap")
+```
+![alt text](imgs/tuto2_UMAP.gif 
+"Interactive UMAP plot")
+
+By default, different colors correspond to the different labels, but 
+we can also specify a feature:
+```python
+xaio.pl.plot2d(xd, "X_umap", "CST3")
+```
+![alt text](imgs/tuto2_UMAP_CST3.gif 
+"Interactive UMAP plot")
+
+We can also use `xaio.pl.plot2d()` to get an interactive plot of the 
+first 2 PCA components of the data (computed in Step 1):
+```python
+xaio.pl.plot2d(xd, "X_pca")
+```
+![alt text](imgs/tuto2_PCA.png 
+"First 2 PCA components")
+
+```python
+xaio.pl.plot2d(xd, "X_pca", "CST3")
+```
+![alt text](imgs/tuto2_PCA_CST3.png 
+"First 2 PCA components")
