@@ -11,7 +11,7 @@ assert e
 XAIO TUTORIAL: preprocessing and clustering 3k PBMCs
 
 This tutorial follows the single cell RNA-seq Scanpy tutorial on 3k PBMCs:
-https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html
+https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html.
 
 The objective is to analyze a dataset of Peripheral Blood Mononuclear Cells (PBMC)
 freely available from 10X Genomics, composed of 2,700 single cells that were
@@ -49,7 +49,6 @@ if step == 1:
     os.popen(
         "tar -xzf " + os.path.join(savedir, "pbmc3k.tar.gz") + " -C " + savedir
     ).read()
-
     xd = sc.read_10x_mtx(
         os.path.join(savedir, "filtered_gene_bc_matrices", "hg19"),
         var_names="gene_symbols",
@@ -75,6 +74,8 @@ if step == 1:
         )
     )
 
+    # Plot, for all genes, the mean fraction
+    # of counts in single cells, across all cells:
     xaio.pl.function_plot(
         xd,
         lambda idx: mean_count_fractions[idx],
@@ -85,6 +86,7 @@ if step == 1:
         ylabel="mean fractions of counts across all cells",
     )
 
+    # Plot the total counts per cell:
     xaio.pl.function_plot(
         xd,
         lambda idx: xd.obs["total_counts"][idx],
@@ -95,7 +97,7 @@ if step == 1:
         ylabel="total number of counts",
     )
 
-    # Plot mitochondrial count percentages vs. total number number of counts:
+    # Plot mitochondrial count percentages vs total number of counts:
     xaio.pl.function_scatter(
         xd,
         lambda idx: xd.obs["total_counts"][idx],
@@ -108,6 +110,7 @@ if step == 1:
         ylabel="mitochondrial count percentages",
     )
 
+    # Preprocessing and clustering following the steps of the Scanpy tutorial.
     xd = xd[xd.obs.n_genes_by_counts < 2500, :]
     xd = xd[xd.obs.pct_counts_mt < 5, :]
     sc.pp.normalize_total(xd, target_sum=1e4)
@@ -120,6 +123,7 @@ if step == 1:
     sc.tl.pca(xd, svd_solver="arpack")
     sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
     sc.tl.leiden(xd)
+
     # Rename the "leiden" clusters
     new_cluster_names = [
         "CD4 T",
@@ -144,7 +148,7 @@ if step == 1:
     # The "leiden" clusters define labels, and XAIO uses labels stored in obs["labels"]:
     xd.obs["labels"] = xd.obs["leiden"]
 
-    # Several plotting functions require the list of all labels and the
+    # Several XAIO functions require the list of all labels and the
     # dictionary of sample indices per label:
     xd.uns["all_labels"] = xaio.tl.all_labels(xd.obs["labels"])
     xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
@@ -191,7 +195,7 @@ if step == 2:
     print("STEP 2: done")
 
 """
-STEP 3: Normalizing the data
+STEP 3: Visualizing results
 """
 if step == 3:
     # Loading the AnnData object:

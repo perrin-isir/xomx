@@ -188,7 +188,7 @@ if step == 6:
 
     feature_selectors = {}
     for label in xd.uns["all_labels"]:
-        print("Annotation: " + label)
+        print("Label: " + label)
         feature_selectors[label] = xaio.fs.RFEExtraTrees(
             xd,
             label,

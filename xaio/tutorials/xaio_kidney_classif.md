@@ -14,10 +14,9 @@ the [Extra-Trees algorithm](https://link.springer.com/article/10.1007/s10994-006
 [scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html)).
 
 ### Running the tutorial:
-- **Repeated executions of the [xaio_kidney_classif.py](xaio/tutorials/xaio_kidney_classif.py) 
+- **Repeated executions of the [xaio_kidney_classif.py](xaio_kidney_classif.py) 
 file perform each of the 7 steps of 
 the tutorial, one by one.**
-
 - A specific step can also be chosen using an integer
 argument. For instance, `python xaio_kidney_classif.py 1` executes the step 1.
 
@@ -31,12 +30,11 @@ argument. For instance, `python xaio_kidney_classif.py 1` executes the step 1.
 + [Step 7: Visualizing results](#s7)
 
 ### Saving results:
-
-In [xaio_kidney_classif.py](xaio/tutorials/xaio_kidney_classif.py), after the imports, the 
+In [xaio_kidney_classif.py](xaio_kidney_classif.py), after the imports, the 
 following lines define the string variable `savedir`: the folder 
 in which data and outputs will be stored.
 ```python
-args = get_args()
+args = xaio.tt.get_args("kidney_classif")
 savedir = args.savedir
 ```
 By default, `savedir` is `~/results/xaio/kidney_classif`, but it can be modified using a 
@@ -56,7 +54,7 @@ The `gdc_create_manifest()` function
 facilitates the creation of this manifest. It is designed to import files of gene 
 expression counts obtained with [HTSeq](https://github.com/simon-anders/htseq). 
 You can have a look at its implementation in 
-[xaio/data_importation/gdc.py](xaio/data_importation/gdc.py) to adapt it to your own
+[xaio/data_importation/gdc.py](../data_importation/gdc.py) to adapt it to your own
 needs if you want to import other types of data.
 
 `gdc_create_manifest()` takes in input the disease type (in our case "Adenomas and 
@@ -104,7 +102,7 @@ temporary folder (`tmpdir_GDCsamples/`) with the following command:
 This requires the `gdc-client`, which can be downloaded at: 
 https://gdc.cancer.gov/access-data/gdc-data-transfer-tool
 
-On linux, the command `export PATH=$PATH:/path/to/gdc-client/folder` can be useful to make
+On a UNIX system, the command `export PATH=$PATH:/path/to/gdc-client/folder` can be useful to make
 sure that the `gdc-client` is found during the execution of `xaio_kidney_classif.py`.
 
 Remark: the execution of this step, i.e. the import of all samples,
@@ -120,7 +118,7 @@ df = xaio.di.gdc_create_data_matrix(
 )
 ```
 First, the `gdc_create_data_matrix()` function (implemented in
-[xaio/data_importation/gdc.py](xaio/data_importation/gdc.py)
+[xaio/data_importation/gdc.py](../data_importation/gdc.py)
 ) is used to create a Pandas dataframe with all the individual samples.
 
 The content of the dataframe `df` looks like this:
@@ -347,7 +345,7 @@ Each classifier is saved in the folder `feature_selectors/` in the
 
 ```python
 for label in xd.uns["all_labels"]:
-    print("Annotation: " + label)
+    print("Label: " + label)
     feature_selectors[label] = xaio.fs.RFEExtraTrees(
         xd,
         label,
@@ -358,9 +356,10 @@ for label in xd.uns["all_labels"]:
     for siz in [100, 30, 20, 15, 10]:
         print("Selecting", siz, "features...")
         feature_selectors[label].select_features(siz)
-        print("MCC score:", xaio.tl.matthews_coef(
-            feature_selectors[label].confusion_matrix
-        ))
+        print(
+            "MCC score:",
+            xaio.tl.matthews_coef(feature_selectors[label].confusion_matrix),
+        )
     feature_selectors[label].save(os.path.join(savedir, "feature_selectors", label))
     print("Done.")
 ```
@@ -491,7 +490,7 @@ sc.pl.stacked_violin(xd, gene_dict["TCGA-KIRP"], groupby="labels")
 ![alt text](imgs/tuto1_stacked_violin.png
 "Mainly downregulated marker genes for TCGA-KIRP")
 
-We observe 3 significantly downregulated genes: 
+We observe 3 significantly downregulated genes for KIRP: 
 EBF2 (ENSG00000221818), PTGER3 (ENSG00000050628)
 and C6orf223 (ENSG00000181577).
 
