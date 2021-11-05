@@ -407,5 +407,5 @@ xaio.pl.plot2d(xd, "X_pca")
 ```python
 xaio.pl.plot2d(xd, "X_pca", "CST3")
 ```
-![alt text](imgs/tuto2_PCA_CST3.png 
+![alt text](imgs/tuto2_PCA_CST3.gif 
 "First 2 PCA components")
