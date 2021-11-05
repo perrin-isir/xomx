@@ -126,6 +126,7 @@ xaio.pl.function_plot(
 ```
 ![alt text](imgs/tuto2_total_counts.gif 
 "Total counts per cell")
+
 Hovering over points with the cursor shows the identifiers 
 of the corresponding cells.
 
