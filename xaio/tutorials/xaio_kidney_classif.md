@@ -389,6 +389,8 @@ xaio.pl.function_scatter(
     obs_or_var="var",
     xlog_scale=True,
     ylog_scale=True,
+    xlabel="mean values",
+    ylabel="standard deviations",
 )
 ```
 ![alt text](imgs/tuto1_mean_vs_std.gif 
