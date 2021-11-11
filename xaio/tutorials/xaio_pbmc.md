@@ -322,7 +322,7 @@ for label in xd.uns["all_labels"]:
     ]
 ```
 
-We construct a multiclass classifier based on the 3 binary classifiers:
+We construct a multiclass classifier based on the binary classifiers:
 ```python
 sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
 ```
