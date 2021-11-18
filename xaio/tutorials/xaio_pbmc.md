@@ -341,7 +341,7 @@ of CD14 Monocytes and FCGR3A Monocytes:
 ```python
 sc.pl.dotplot(xd, gene_dict["CD14 Monocytes"] + gene_dict["FCGR3A Monocytes"], groupby="labels")
 ```
-![alt text](imgs/tuto2_Monocytes.gif 
+![alt text](imgs/tuto2_Monocytes.png
 "10-gene signatures for CD14 Monocytes and FCGR3A Monocytes")
 
 We gather all the selected genes in a single list:
