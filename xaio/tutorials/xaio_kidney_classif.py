@@ -278,6 +278,8 @@ if step == 7:
     sc.tl.umap(xd)
     xaio.pl.plot2d(xd, "X_umap")
 
+    print("STEP 7: done")
+
 """
 INCREMENTING next_step.txt
 """

@@ -3,9 +3,6 @@ import numpy as np
 import scanpy as sc
 import os
 import requests
-from IPython import embed as e
-
-assert e
 
 """
 XAIO TUTORIAL: preprocessing and clustering 3k PBMCs
