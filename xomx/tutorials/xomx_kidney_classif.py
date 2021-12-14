@@ -1,4 +1,4 @@
-import xaio
+import xomx
 import scanpy as sc
 import pandas as pd
 import numpy as np
@@ -6,31 +6,31 @@ import os
 import shutil
 
 """
-XAIO TUTORIAL: constructing diagnostic biomarker signatures.
+XOMX TUTORIAL: constructing diagnostic biomarker signatures.
 
 The objective of this tutorial is to use a recursive feature elimination method on
 RNA-seq data from the Cancer Genome Atlas (TCGA) to identify gene biomarker signatures
 for the differential diagnosis of three types of kidney cancer: kidney renal clear cell
 carcinoma (KIRC), kidney renal papillary cell carcinoma (KIRP), and chromophobe
 renal cell carcinoma (KICH).
-See xaio_kidney_classif.md for detailed explanations.
+See xomx_kidney_classif.md for detailed explanations.
 """
 
 
 # Unless specified otherwise, the data and outputs will be saved in the
-# directory: ~/results/xaio/kidney_classif
-args = xaio.tt.get_args("kidney_classif")
+# directory: ~/results/xomx/kidney_classif
+args = xomx.tt.get_args("kidney_classif")
 savedir = args.savedir
 os.makedirs(savedir, exist_ok=True)
 
 # We use the file next_step.txt to know which step to execute next. 7 consecutive
 # executions of the code complete the 7 steps of the tutorial.
 # A specific step can also be chosen using an integer in argument
-# (e.g. `python xaio_kidney_classif.py 1` to execute step 1).
-step = xaio.tt.step_init(args, 7)
+# (e.g. `python xomx_kidney_classif.py 1` to execute step 1).
+step = xomx.tt.step_init(args, 7)
 
 """
-STEP 1: Use the gdc_create_manifest function (from xaio/data_importation/gdc.py)
+STEP 1: Use the gdc_create_manifest function (from xomx/data_importation/gdc.py)
 to create a manifest.txt file that will be used to import data with the GDC
 Data Transfer Tool (gdc-client). 10 types of cancers are considered, with
 for each of them 150 samples corresponding to cases of adenocarcinomas.
@@ -43,7 +43,7 @@ if step == 1:
     # Fetch 200 cases of KIRC, 200 cases of KIRP, and 65 cases of KICH from the
     # GDC database
     case_numbers = [200, 200, 65]
-    df_list = xaio.di.gdc_create_manifest(
+    df_list = xomx.di.gdc_create_manifest(
         disease_type,
         project_list,
         case_numbers,
@@ -86,7 +86,7 @@ After that, all the individual files imported with gdc-client are erased.
 """
 if step == 3:
     tmpdir = "tmpdir_GDCsamples"
-    df = xaio.di.gdc_create_data_matrix(
+    df = xomx.di.gdc_create_data_matrix(
         tmpdir,
         os.path.join(savedir, "manifest.txt"),
     )
@@ -107,7 +107,7 @@ if step == 3:
     sc.pp.normalize_total(xd, target_sum=1e6)
 
     # Saving the AnnData object to the disk
-    xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
+    xd.write(os.path.join(savedir, "xomx_kidney_classif.h5ad"))
 
     # Erase the individual sample directories downloaded with gdc-client
     shutil.rmtree(tmpdir, ignore_errors=True)
@@ -120,7 +120,7 @@ Labels (annotations) are fetched from the previously created file manifest.txt.
 """
 if step == 4:
     # Loading the AnnData object
-    xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
+    xd = sc.read(os.path.join(savedir, "xomx_kidney_classif.h5ad"))
     # Loading the manifest
     manifest = pd.read_table(os.path.join(savedir, "manifest.txt"), header=0)
 
@@ -133,13 +133,13 @@ if step == 4:
     xd.obs["labels"] = label_array
 
     # Compute the list of different labels
-    xd.uns["all_labels"] = xaio.tl.all_labels(xd.obs["labels"])
+    xd.uns["all_labels"] = xomx.tl.all_labels(xd.obs["labels"])
 
     # Computing the list of sample (obs) indices for every label
-    xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
+    xd.uns["obs_indices_per_label"] = xomx.tl.indices_per_label(xd.obs["labels"])
 
     # Saving the AnnData object to the disk
-    xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
+    xd.write(os.path.join(savedir, "xomx_kidney_classif.h5ad"))
     print("STEP 4: done")
 
 
@@ -148,11 +148,11 @@ STEP 5: Keep only the top 8000 highly variable features,
 and randomly separate samples in training and test datasets.
 """
 if step == 5:
-    xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
+    xd = sc.read(os.path.join(savedir, "xomx_kidney_classif.h5ad"))
 
     # Compute the mean and standard deviation (across samples) for all the features
-    xd.var["mean_values"] = xaio.tl.var_mean_values(xd)
-    xd.var["standard_deviations"] = xaio.tl.var_standard_deviations(xd)
+    xd.var["mean_values"] = xomx.tl.var_mean_values(xd)
+    xd.var["standard_deviations"] = xomx.tl.var_standard_deviations(xd)
 
     # Logarithmize the data
     sc.pp.log1p(xd)
@@ -164,10 +164,10 @@ if step == 5:
     xd = xd[:, xd.var.highly_variable]
 
     # Compute the dictionary of feature (var) indices
-    xd.uns["var_indices"] = xaio.tl.var_indices(xd)
+    xd.uns["var_indices"] = xomx.tl.var_indices(xd)
 
     # Randomly separate samples into train and test sets.
-    xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
+    xomx.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
     # New annotations after this call:
     # xd.uns["train_indices_per_label"]
     # xd.uns["test_indices_per_label"]
@@ -175,7 +175,7 @@ if step == 5:
     # xd.uns["test_indices"]
 
     # Saving the data to a new file
-    xd.write(os.path.join(savedir, "xaio_k_c_small.h5ad"))
+    xd.write(os.path.join(savedir, "xomx_k_c_small.h5ad"))
     print("STEP 5: done")
 
 
@@ -185,13 +185,13 @@ elimination to determine a discriminative list of 10 features.
 """
 if step == 6:
     # Loading the AnnData object
-    xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
+    xd = sc.read(os.path.join(savedir, "xomx_k_c_small.h5ad"))
 
     # Training feature selectors
     feature_selectors = {}
     for label in xd.uns["all_labels"]:
         print("Label: " + label)
-        feature_selectors[label] = xaio.fs.RFEExtraTrees(
+        feature_selectors[label] = xomx.fs.RFEExtraTrees(
             xd,
             label,
             n_estimators=450,
@@ -203,7 +203,7 @@ if step == 6:
             feature_selectors[label].select_features(siz)
             print(
                 "MCC score:",
-                xaio.tl.matthews_coef(feature_selectors[label].confusion_matrix),
+                xomx.tl.matthews_coef(feature_selectors[label].confusion_matrix),
             )
         feature_selectors[label].save(os.path.join(savedir, "feature_selectors", label))
         print("Done.")
@@ -216,10 +216,10 @@ STEP 7: Visualizing results.
 """
 if step == 7:
     # Loading the AnnData object
-    xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
+    xd = sc.read(os.path.join(savedir, "xomx_k_c_small.h5ad"))
 
     # Plot standard deviation vs mean value for all features
-    xaio.pl.function_scatter(
+    xomx.pl.function_scatter(
         xd,
         lambda idx: xd.var["mean_values"][idx],
         lambda idx: xd.var["standard_deviations"][idx],
@@ -234,7 +234,7 @@ if step == 7:
     feature_selectors = {}
     gene_dict = {}
     for label in xd.uns["all_labels"]:
-        feature_selectors[label] = xaio.fs.load_RFEExtraTrees(
+        feature_selectors[label] = xomx.fs.load_RFEExtraTrees(
             os.path.join(savedir, "feature_selectors", label),
             xd,
         )
@@ -247,40 +247,40 @@ if step == 7:
     feature_selectors["TCGA-KIRP"].plot()
 
     # Create a multiclass classifier based on the 3 binary classifiers
-    sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
+    sbm = xomx.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
     sbm.plot()
 
     # Selected genes in a single list
     all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
 
     # Visualizing all genes
-    xaio.pl.var_plot(xd, all_selected_genes)
+    xomx.pl.var_plot(xd, all_selected_genes)
 
     # Visualizing the 10-gene signature for "TCGA-KIRP"
-    xaio.pl.var_plot(xd, gene_dict["TCGA-KIRP"])
+    xomx.pl.var_plot(xd, gene_dict["TCGA-KIRP"])
 
     # Stacked violin plot (using Scanpy)
     sc.pl.stacked_violin(xd, gene_dict["TCGA-KIRP"], groupby="labels", rotation=90)
 
     # Visualizing the 10-gene signature for "TCGA-KICH"
-    xaio.pl.var_plot(xd, gene_dict["TCGA-KICH"])
+    xomx.pl.var_plot(xd, gene_dict["TCGA-KICH"])
 
     # A single feature
-    xaio.pl.var_plot(xd, "ENSG00000168269.8")
+    xomx.pl.var_plot(xd, "ENSG00000168269.8")
 
     # Visualizing the 10-gene signature for "TCGA-KIRC"
-    xaio.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
+    xomx.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
 
     # Computing and plotting a 2D UMAP embedding
     xd = xd[:, all_selected_genes]
     xd.var_names_make_unique()
     sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
     sc.tl.umap(xd)
-    xaio.pl.plot2d(xd, "X_umap")
+    xomx.pl.plot2d(xd, "X_umap")
 
     print("STEP 7: done")
 
 """
 INCREMENTING next_step.txt
 """
-xaio.tt.step_increment(step, args)
+xomx.tt.step_increment(step, args)
