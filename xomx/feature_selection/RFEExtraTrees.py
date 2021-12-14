@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from sklearn.ensemble import ExtraTreesClassifier
-import xaio
+import xomx
 import scanpy as sc
 from joblib import dump, load
 
@@ -27,10 +27,10 @@ class RFEExtraTrees:
         self.n_estimators = n_estimators
         self.random_state = random_state
         self.current_feature_indices = np.arange(adata.n_vars)
-        self.data_train = xaio.tl._to_dense(
+        self.data_train = xomx.tl._to_dense(
             adata[adata.uns["train_indices"], :].X
         ).copy()
-        self.data_test = xaio.tl._to_dense(adata[adata.uns["test_indices"], :].X).copy()
+        self.data_test = xomx.tl._to_dense(adata[adata.uns["test_indices"], :].X).copy()
         self.target_train = np.zeros(adata.n_obs)
         self.target_train[adata.uns["train_indices_per_label"][label]] = 1.0
         self.target_train = np.take(
@@ -79,7 +79,7 @@ class RFEExtraTrees:
             n_estimators=self.n_estimators, random_state=self.random_state
         )
         self.forest.fit(self.data_train, self.target_train)
-        self.confusion_matrix = xaio.tl.confusion_matrix(
+        self.confusion_matrix = xomx.tl.confusion_matrix(
             self.forest, self.data_test, self.target_test
         )
         self.log.append(
@@ -159,7 +159,7 @@ class RFEExtraTrees:
 
     def plot(self, label=None, save_dir=None):
         res = self.score(self.data_test)
-        xaio.pl.plot_scores(
+        xomx.pl.plot_scores(
             self.adata,
             res,
             0.5,

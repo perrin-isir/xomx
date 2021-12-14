@@ -1,5 +1,5 @@
 import numpy as np
-import xaio
+import xomx
 import scipy
 
 
@@ -32,9 +32,9 @@ class ScoreBasedMulticlass:
 
     def plot(self, label=None, save_dir=None):
         predictions, res = self.pred_score(
-            xaio.tl._to_dense(self.adata[self.adata.uns["test_indices"], :].X)
+            xomx.tl._to_dense(self.adata[self.adata.uns["test_indices"], :].X)
         )
-        xaio.pl.plot_scores(
+        xomx.pl.plot_scores(
             self.adata,
             res.astype(np.float),
             None,

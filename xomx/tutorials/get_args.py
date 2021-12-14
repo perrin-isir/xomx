@@ -17,7 +17,7 @@ def get_args(default_folder):
     parser.add_argument(
         "--savedir",
         default=os.path.join(
-            os.path.expanduser("~"), "results", "xaio", default_folder
+            os.path.expanduser("~"), "results", "xomx", default_folder
         ),
         help="directory in which data and outputs will be stored",
     )
