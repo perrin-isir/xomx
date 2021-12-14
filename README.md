@@ -1,4 +1,4 @@
-# XOMX
+# ![alt text](logo.png "logo") XOMX
 
 ![version](https://img.shields.io/badge/version-0.1.0-blue)
 [![codestyle](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
