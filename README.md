@@ -21,7 +21,7 @@ fully compatible with [Scanpy](https://scanpy.readthedocs.io).
 
 Recommended installation steps (with conda): 
 ```
-git clone git@github.com:perrin-isir/XOMX.git
+git clone https://github.com/perrin-isir/xomx.git
 cd xomx
 conda env create -f environment.yaml
 conda activate xomxv
