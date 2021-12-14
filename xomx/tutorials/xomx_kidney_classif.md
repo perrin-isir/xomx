@@ -1,4 +1,4 @@
-# *XOMX Tutorial:* constructing diagnostic biomarker signatures
+# *xomx Tutorial:* constructing diagnostic biomarker signatures
 
 -----
 
@@ -229,7 +229,7 @@ of the samples that are labelled as `"TCGA-KIRC"`.
 
 It is important to use the keys `"labels"`,
 `"all_labels"` and `"obs_indices_per_label"` as they
-are expected by some XOMX functions.
+are expected by some *xomx* functions.
 
 We then save the modifications:
 ```python
@@ -273,7 +273,7 @@ initial selection of features, see for instance
 the [xomx_pbmc.md](xomx_pbmc.md) tutorial (Step 2).
 
 We compute the dictionary of feature indices,
-which is required by some XOMX functions:
+which is required by some *xomx* functions:
 ```python
 xd.uns["var_indices"] = xomx.tl.var_indices(xd)
 ```

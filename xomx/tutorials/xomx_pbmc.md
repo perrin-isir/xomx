@@ -1,4 +1,4 @@
-# *XOMX Tutorial:* preprocessing and clustering 3k PBMCs
+# *xomx tutorial:* preprocessing and clustering 3k PBMCs
 
 -----
 
@@ -8,7 +8,7 @@ https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html).
 The objective is to analyze a dataset of Peripheral Blood Mononuclear Cells (PBMC)
 freely available from 10X Genomics, composed of 2,700 single cells that were
 sequenced on the Illumina NextSeq 500.  
-We replace some Scanpy plots by interactive XOMX plots, and modify the
+We replace some Scanpy plots by interactive *xomx* plots, and modify the
 computation of marker genes. Instead of using a t-test, Wilcoxon-Mann-Whitney test 
 or logistic regression, we perform recursive feature elimination with 
 the [Extra-Trees algorithm](
@@ -88,7 +88,7 @@ mean_count_fractions = np.squeeze(
 The k-th element of `mean_count_fractions` is the mean fraction of counts of the k-th 
 gene in each single cell, across all cells.
 
-3 interactive plots with XOMX functions:
+3 interactive plots with *xomx* functions:
 
 + Plot, for all genes, the mean fraction of counts in single cells, across all cells.
 
@@ -192,20 +192,20 @@ xd.obsp = obsp
 ```
 The copy of `xd.obsp` is necessary as it is not restored by `xd.raw.to_adata()`.
 
-We compute the dictionary of feature indices, which is required by some XOMX functions:
+We compute the dictionary of feature indices, which is required by some *xomx* functions:
 ```python
 xd.uns["var_indices"] = xomx.tl.var_indices(xd)
 ```
 Example:  `xd.uns["var_indices"]["MALAT1"]` is 7854 and `xd.var_names[7854]` is 
 `"MALAT1"`.
 
-The "leiden" clusters define labels, but XOMX uses labels stored in `.obs["labels"]`, so
+The "leiden" clusters define labels, but *xomx* uses labels stored in `.obs["labels"]`, so
 we make the following copy:
 ```python
 xd.obs["labels"] = xd.obs["leiden"]
 ```
 
-Several XOMX functions require the list of all labels and the 
+Several *xomx* functions require the list of all labels and the 
 dictionary of sample indices per label:
 ```python
 xd.uns["all_labels"] = xomx.tl.all_labels(xd.obs["labels"])

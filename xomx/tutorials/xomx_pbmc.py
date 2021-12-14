@@ -5,7 +5,7 @@ import os
 import requests
 
 """
-XOMX TUTORIAL: preprocessing and clustering 3k PBMCs
+xomx tutorial: preprocessing and clustering 3k PBMCs
 
 This tutorial follows the single cell RNA-seq Scanpy tutorial on 3k PBMCs:
 https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html.
@@ -13,7 +13,7 @@ https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html.
 The objective is to analyze a dataset of Peripheral Blood Mononuclear Cells (PBMC)
 freely available from 10X Genomics, composed of 2,700 single cells that were
 sequenced on the Illumina NextSeq 500.
-We replace some Scanpy plots by interactive XOMX plots, and modify the
+We replace some Scanpy plots by interactive xomx plots, and modify the
 computation of marker genes. Instead of using a t-test, Wilcoxon-Mann-Whitney test
 or logistic regression, we perform recursive feature elimination with
 the Extra-Trees algorithm.
@@ -142,10 +142,10 @@ if step == 1:
     # Compute the dictionary of feature (var) indices
     xd.uns["var_indices"] = xomx.tl.var_indices(xd)
 
-    # The "leiden" clusters define labels, and XOMX uses labels stored in obs["labels"]
+    # The "leiden" clusters define labels, and xomx uses labels stored in obs["labels"]
     xd.obs["labels"] = xd.obs["leiden"]
 
-    # Several XOMX functions require the list of all labels and the
+    # Several xomx functions require the list of all labels and the
     # dictionary of sample indices per label
     xd.uns["all_labels"] = xomx.tl.all_labels(xd.obs["labels"])
     xd.uns["obs_indices_per_label"] = xomx.tl.indices_per_label(xd.obs["labels"])

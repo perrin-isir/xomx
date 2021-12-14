@@ -8,7 +8,7 @@ import subprocess
 import shutil
 
 """
-XOMX TUTORIAL: constructing diagnostic biomarker signatures.
+xomx tutorial: constructing diagnostic biomarker signatures.
 
 The objective of this tutorial is to use a recursive feature elimination method on
 RNA-seq data from the Cancer Genome Atlas (TCGA) to identify gene biomarker signatures

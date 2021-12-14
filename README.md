@@ -11,7 +11,7 @@ particular emphasis on explainability.
 It relies on [AnnData](https://anndata.readthedocs.io) objects, which makes it
 fully compatible with [Scanpy](https://scanpy.readthedocs.io).
 
-*XOMX is currently in beta version.*
+*xomx is currently in beta version.*
 
 -----
 
@@ -35,7 +35,7 @@ pip install -e .
 ## Tutorials
 
 Tutorials (in [xomx/tutorials/](xomx/tutorials/)) are the best way to learn to use
-XOMX.
+*xomx*.
 
 *List of tutorials:*
 * [xomx_kidney_classif.md](xomx/tutorials/xomx_kidney_classif.md) (*goal:*  use a 
@@ -54,7 +54,7 @@ To cite this repository in publications:
 ```bibtex
 @misc{xomx,
   author = {Perrin-Gilbert, Nicolas and Vibert, Julien and Vandenbogaert, Mathias and Waterfall, Joshua J.},
-  title = {XOMX},
+  title = {xomx},
   year = {2021},
   publisher = {GitHub},
   journal = {GitHub repository},
