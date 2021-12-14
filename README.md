@@ -35,7 +35,7 @@ pip install -e .
 ## Tutorials
 
 Tutorials (in [xomx/tutorials/](xomx/tutorials/)) are the best way to learn to use
-the XOMX library.
+XOMX.
 
 *List of tutorials:*
 * [xomx_kidney_classif.md](xomx/tutorials/xomx_kidney_classif.md) (*goal:*  use a 
