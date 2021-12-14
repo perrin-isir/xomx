@@ -2,7 +2,9 @@ import xomx
 import scanpy as sc
 import pandas as pd
 import numpy as np
+import sys
 import os
+import subprocess
 import shutil
 
 """
@@ -75,7 +77,12 @@ if step == 2:
         + " -m "
         + os.path.join(savedir, "manifest.txt")
     )
-    os.system(commandstring)
+    try:
+        subprocess.check_call(commandstring, shell=True)
+    except subprocess.CalledProcessError:
+       print("ERROR: make sure you have downloaded gdc-client" + \
+             " and that it is accessible (see xomx_kidney_classif.md)")
+       sys.exit()
     print("STEP 2: done")
 
 
