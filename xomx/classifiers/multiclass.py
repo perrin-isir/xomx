@@ -32,7 +32,7 @@ class ScoreBasedMulticlass:
 
     def plot(self, label=None, save_dir=None):
         predictions, res = self.pred_score(
-            xomx.tl._to_dense(self.adata[self.adata.uns["test_indices"], :].X)
+            np.asarray(xomx.tl._to_dense(self.adata[self.adata.uns["test_indices"], :].X))
         )
         xomx.pl.plot_scores(
             self.adata,
