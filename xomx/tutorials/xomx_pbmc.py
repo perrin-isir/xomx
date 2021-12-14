@@ -1,11 +1,11 @@
-import xaio
+import xomx
 import numpy as np
 import scanpy as sc
 import os
 import requests
 
 """
-XAIO TUTORIAL: preprocessing and clustering 3k PBMCs
+XOMX TUTORIAL: preprocessing and clustering 3k PBMCs
 
 This tutorial follows the single cell RNA-seq Scanpy tutorial on 3k PBMCs:
 https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html.
@@ -13,7 +13,7 @@ https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html.
 The objective is to analyze a dataset of Peripheral Blood Mononuclear Cells (PBMC)
 freely available from 10X Genomics, composed of 2,700 single cells that were
 sequenced on the Illumina NextSeq 500.
-We replace some Scanpy plots by interactive XAIO plots, and modify the
+We replace some Scanpy plots by interactive XOMX plots, and modify the
 computation of marker genes. Instead of using a t-test, Wilcoxon-Mann-Whitney test
 or logistic regression, we perform recursive feature elimination with
 the Extra-Trees algorithm.
@@ -21,16 +21,16 @@ the Extra-Trees algorithm.
 
 
 # Unless specified otherwise, the data and outputs will be saved in the
-# directory: ~/results/xaio/pbmc
-args = xaio.tt.get_args("pbmc")
+# directory: ~/results/xomx/pbmc
+args = xomx.tt.get_args("pbmc")
 savedir = args.savedir
 os.makedirs(savedir, exist_ok=True)
 
 # We use the file next_step.txt to know which step to execute next. 3 consecutive
 # executions of the code complete the 3 steps of the tutorial.
 # A specific step can also be chosen using an integer in argument
-# (e.g. `python xaio_pmbc.py 1` to execute step 1).
-step = xaio.tt.step_init(args, 3)
+# (e.g. `python xomx_pmbc.py 1` to execute step 1).
+step = xomx.tt.step_init(args, 3)
 
 """
 STEP 1: Load the data from the 10X Genomics website, store it as an AnnData object,
@@ -73,7 +73,7 @@ if step == 1:
 
     # Plot, for all genes, the mean fraction
     # of counts in single cells, across all cells
-    xaio.pl.function_plot(
+    xomx.pl.function_plot(
         xd,
         lambda idx: mean_count_fractions[idx],
         obs_or_var="var",
@@ -84,7 +84,7 @@ if step == 1:
     )
 
     # Plot the total counts per cell
-    xaio.pl.function_plot(
+    xomx.pl.function_plot(
         xd,
         lambda idx: xd.obs["total_counts"][idx],
         obs_or_var="obs",
@@ -95,7 +95,7 @@ if step == 1:
     )
 
     # Plot mitochondrial count percentages vs total number of counts
-    xaio.pl.function_scatter(
+    xomx.pl.function_scatter(
         xd,
         lambda idx: xd.obs["total_counts"][idx],
         lambda idx: xd.obs["pct_counts_mt"][idx],
@@ -140,24 +140,24 @@ if step == 1:
     xd.obsp = obsp
 
     # Compute the dictionary of feature (var) indices
-    xd.uns["var_indices"] = xaio.tl.var_indices(xd)
+    xd.uns["var_indices"] = xomx.tl.var_indices(xd)
 
-    # The "leiden" clusters define labels, and XAIO uses labels stored in obs["labels"]
+    # The "leiden" clusters define labels, and XOMX uses labels stored in obs["labels"]
     xd.obs["labels"] = xd.obs["leiden"]
 
-    # Several XAIO functions require the list of all labels and the
+    # Several XOMX functions require the list of all labels and the
     # dictionary of sample indices per label
-    xd.uns["all_labels"] = xaio.tl.all_labels(xd.obs["labels"])
-    xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
+    xd.uns["all_labels"] = xomx.tl.all_labels(xd.obs["labels"])
+    xd.uns["obs_indices_per_label"] = xomx.tl.indices_per_label(xd.obs["labels"])
 
     # Compute training and test sets
-    xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
+    xomx.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
 
     # Rank the genes for each cluster with t-test
     sc.tl.rank_genes_groups(xd, "leiden", method="t-test")
 
     # Saving the AnnData object to the disk
-    xd.write(os.path.join(savedir, "xaio_pbmc.h5ad"))
+    xd.write(os.path.join(savedir, "xomx_pbmc.h5ad"))
     print("STEP 1: done")
 
 """
@@ -166,13 +166,13 @@ elimination to determine a discriminative list of 10 features.
 """
 if step == 2:
     # Loading the AnnData object
-    xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
+    xd = sc.read(os.path.join(savedir, "xomx_pbmc.h5ad"), cache=True)
 
     # Training feature selectors
     feature_selectors = {}
     for label in xd.uns["all_labels"]:
         print("Label: " + label)
-        feature_selectors[label] = xaio.fs.RFEExtraTrees(
+        feature_selectors[label] = xomx.fs.RFEExtraTrees(
             xd,
             label,
             init_selection_size=8000,
@@ -185,7 +185,7 @@ if step == 2:
             feature_selectors[label].select_features(siz)
             print(
                 "MCC score:",
-                xaio.tl.matthews_coef(feature_selectors[label].confusion_matrix),
+                xomx.tl.matthews_coef(feature_selectors[label].confusion_matrix),
             )
         feature_selectors[label].save(os.path.join(savedir, "feature_selectors", label))
         print("Done.")
@@ -197,13 +197,13 @@ STEP 3: Visualizing results
 """
 if step == 3:
     # Loading the AnnData object
-    xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
+    xd = sc.read(os.path.join(savedir, "xomx_pbmc.h5ad"), cache=True)
 
     # Load feature selectors
     feature_selectors = {}
     gene_dict = {}
     for label in xd.uns["all_labels"]:
-        feature_selectors[label] = xaio.fs.load_RFEExtraTrees(
+        feature_selectors[label] = xomx.fs.load_RFEExtraTrees(
             os.path.join(savedir, "feature_selectors", label),
             xd,
         )
@@ -213,7 +213,7 @@ if step == 3:
         ]
 
     # Multiclass classifier
-    sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
+    sbm = xomx.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
     sbm.plot()
 
     # Visualizing 10-gene signatures for CD14 and FCGR3A Monocytes
@@ -249,16 +249,16 @@ if step == 3:
     sc.tl.umap(xd)
 
     # Interactive UMAP plots
-    xaio.pl.plot2d(xd, "X_umap")
-    xaio.pl.plot2d(xd, "X_umap", "CST3")
+    xomx.pl.plot2d(xd, "X_umap")
+    xomx.pl.plot2d(xd, "X_umap", "CST3")
 
     # Interactive PCA plots
-    xaio.pl.plot2d(xd, "X_pca")
-    xaio.pl.plot2d(xd, "X_pca", "CST3")
+    xomx.pl.plot2d(xd, "X_pca")
+    xomx.pl.plot2d(xd, "X_pca", "CST3")
 
     print("STEP 3: done")
 
 """
 INCREMENTING next_step.txt
 """
-xaio.tt.step_increment(step, args)
+xomx.tt.step_increment(step, args)
