@@ -26,7 +26,7 @@ cd xomx
 conda env create -f environment.yaml
 conda activate xomxv
 ```
-Then, use the following command to install the xaio library within the xaiov virtual
+Then, use the following command to install the xomx library within the xomxv virtual
 environment: 
 ```
 pip install -e .

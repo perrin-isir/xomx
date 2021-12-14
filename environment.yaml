@@ -1,4 +1,4 @@
-name: xaiov
+name: xomxv
 channels:
 - defaults
 - conda-forge
@@ -12,7 +12,6 @@ dependencies:
     - numpy>=1.21.1
     - matplotlib>=3.4.2
     - torch>=1.7.1
-    - umap-learn>=0.5.1
     - scikit-learn>=0.24.2
     - joblib>=1.0.1
     - requests>=2.25.1
