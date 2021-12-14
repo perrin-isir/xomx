@@ -27,10 +27,10 @@ class RFEExtraTrees:
         self.n_estimators = n_estimators
         self.random_state = random_state
         self.current_feature_indices = np.arange(adata.n_vars)
-        self.data_train = xomx.tl._to_dense(
+        self.data_train = np.asarray(xomx.tl._to_dense(
             adata[adata.uns["train_indices"], :].X
-        ).copy()
-        self.data_test = xomx.tl._to_dense(adata[adata.uns["test_indices"], :].X).copy()
+        ).copy())
+        self.data_test = np.asarray(xomx.tl._to_dense(adata[adata.uns["test_indices"], :].X).copy())
         self.target_train = np.zeros(adata.n_obs)
         self.target_train[adata.uns["train_indices_per_label"][label]] = 1.0
         self.target_train = np.take(
