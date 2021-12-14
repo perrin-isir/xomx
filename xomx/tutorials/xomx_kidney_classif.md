@@ -1,4 +1,4 @@
-# *xomx Tutorial:* constructing diagnostic biomarker signatures
+# *xomx tutorial:* constructing diagnostic biomarker signatures
 
 -----
 
