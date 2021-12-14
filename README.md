@@ -4,7 +4,7 @@
 [![codestyle](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 
-XOMX is a python library providing data processing and 
+*xomx* is a python library providing data processing and 
 machine learning tools for computational omics, with a 
 particular emphasis on explainability.
 
