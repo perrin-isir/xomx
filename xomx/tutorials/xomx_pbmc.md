@@ -1,4 +1,4 @@
-# *XAIO Tutorial:* preprocessing and clustering 3k PBMCs
+# *XOMX Tutorial:* preprocessing and clustering 3k PBMCs
 
 -----
 
@@ -8,18 +8,18 @@ https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html).
 The objective is to analyze a dataset of Peripheral Blood Mononuclear Cells (PBMC)
 freely available from 10X Genomics, composed of 2,700 single cells that were
 sequenced on the Illumina NextSeq 500.  
-We replace some Scanpy plots by interactive XAIO plots, and modify the
+We replace some Scanpy plots by interactive XOMX plots, and modify the
 computation of marker genes. Instead of using a t-test, Wilcoxon-Mann-Whitney test 
 or logistic regression, we perform recursive feature elimination with 
 the [Extra-Trees algorithm](
 https://link.springer.com/article/10.1007/s10994-006-6226-1).
 
 ### Running the tutorial:
-- **Repeated executions of the [xaio_pbmc.py](xaio_pbmc.py) 
+- **Repeated executions of the [xomx_pbmc.py](xomx_pbmc.py) 
 file perform each of the 3 steps of 
 the tutorial, one by one.**
 - A specific step can also be chosen using an integer
-argument. For instance, `python xaio_kidney_classif.py 1` executes the step 1.
+argument. For instance, `python xomx_kidney_classif.py 1` executes the step 1.
 
 ### Table of Contents:
 + [Step 1: Data importation, preprocessing and clustering](#s1)
@@ -27,15 +27,15 @@ argument. For instance, `python xaio_kidney_classif.py 1` executes the step 1.
 + [Step 3: Visualizing results](#s3)
 
 ### Saving results:
-In [xaio_pbmc.py](xaio_pbmc.py), after the imports, the 
+In [xomx_pbmc.py](xomx_pbmc.py), after the imports, the 
 following lines define the string variable `savedir`: the folder 
 in which data and outputs will be stored.
 ```python
-args = xaio.tt.get_args("pbmc")
+args = xomx.tt.get_args("pbmc")
 savedir = args.savedir
 ```
-By default, `savedir` is `~/results/xaio/pbmc`, but it can be modified using a 
-`--savedir` argument in input (e.g. `python xaio_pbmc.py --savedir /tmp`).
+By default, `savedir` is `~/results/xomx/pbmc`, but it can be modified using a 
+`--savedir` argument in input (e.g. `python xomx_pbmc.py --savedir /tmp`).
 
 <a name="s1"></a>
 ## Step 1: Data importation, preprocessing and clustering
@@ -88,15 +88,15 @@ mean_count_fractions = np.squeeze(
 The k-th element of `mean_count_fractions` is the mean fraction of counts of the k-th 
 gene in each single cell, across all cells.
 
-3 interactive plots with XAIO functions:
+3 interactive plots with XOMX functions:
 
 + Plot, for all genes, the mean fraction of counts in single cells, across all cells.
 
-We use `xaio.pl.function_plot()`. Besides the AnnData object, it takes in input a 
+We use `xomx.pl.function_plot()`. Besides the AnnData object, it takes in input a 
 function (here `lambda idx: mean_count_fractions[idx]`) which itself takes as input 
 the index of a feature (if `obs_or_var="var"`) or a sample (if `obs_or_var="obs"`). 
 ```python
-xaio.pl.function_plot(
+xomx.pl.function_plot(
     xd,
     lambda idx: mean_count_fractions[idx],
     obs_or_var="var",
@@ -114,7 +114,7 @@ of the corresponding genes.
 
 + Plot the total counts per cell.
 ```python
-xaio.pl.function_plot(
+xomx.pl.function_plot(
     xd,
     lambda idx: xd.obs["total_counts"][idx],
     obs_or_var="obs",
@@ -132,10 +132,10 @@ of the corresponding cells.
 
 + Plot mitochondrial count percentages vs total number of counts.
 
-We use `xaio.pl.function_scatter()` which takes in input two functions, one for 
+We use `xomx.pl.function_scatter()` which takes in input two functions, one for 
 the x-axis, and one for the y-axis.
 ```python
-xaio.pl.function_scatter(
+xomx.pl.function_scatter(
     xd,
     lambda idx: xd.obs["total_counts"][idx],
     lambda idx: xd.obs["pct_counts_mt"][idx],
@@ -192,31 +192,31 @@ xd.obsp = obsp
 ```
 The copy of `xd.obsp` is necessary as it is not restored by `xd.raw.to_adata()`.
 
-We compute the dictionary of feature indices, which is required by some XAIO functions:
+We compute the dictionary of feature indices, which is required by some XOMX functions:
 ```python
-xd.uns["var_indices"] = xaio.tl.var_indices(xd)
+xd.uns["var_indices"] = xomx.tl.var_indices(xd)
 ```
 Example:  `xd.uns["var_indices"]["MALAT1"]` is 7854 and `xd.var_names[7854]` is 
 `"MALAT1"`.
 
-The "leiden" clusters define labels, but XAIO uses labels stored in `.obs["labels"]`, so
+The "leiden" clusters define labels, but XOMX uses labels stored in `.obs["labels"]`, so
 we make the following copy:
 ```python
 xd.obs["labels"] = xd.obs["leiden"]
 ```
 
-Several XAIO functions require the list of all labels and the 
+Several XOMX functions require the list of all labels and the 
 dictionary of sample indices per label:
 ```python
-xd.uns["all_labels"] = xaio.tl.all_labels(xd.obs["labels"])
-xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
+xd.uns["all_labels"] = xomx.tl.all_labels(xd.obs["labels"])
+xd.uns["obs_indices_per_label"] = xomx.tl.indices_per_label(xd.obs["labels"])
 ```
 Example: `xd.uns["obs_indices_per_label"]["Megakaryocytes"]` is the list of indices
 of the samples that are labelled as `"Megakaryocytes"`.
 
 We then randomly split the samples into training and test sets:
 ```python
-xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
+xomx.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
 ```
 With `test_train_ratio=0.25`, for every label, 25% of the samples are assigned to 
 the test set, and 75% to the train set. It creates the following unstructured 
@@ -243,29 +243,29 @@ After that, the ranking information is contained in
 `xd.uns["rank_genes_groups"]["names"]["Megakaryocytes"]` is the list of genes 
 ordered from highest to lowest rank for the label `"Megakaryocytes"`.
 
-We save `xd` as the file **xaio_pbmc.h5ad**
+We save `xd` as the file **xomx_pbmc.h5ad**
 in the `savedir` directory:
 ```python
-xd.write(os.path.join(savedir, "xaio_pbmc.h5ad"))
+xd.write(os.path.join(savedir, "xomx_pbmc.h5ad"))
 ```
 
 <a name="s2"></a>
 ## Step 2:  Training binary classifiers and performing recursive feature elimination
 Loading the AnnData object:
 ```python
-xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
+xd = sc.read(os.path.join(savedir, "xomx_pbmc.h5ad"), cache=True)
 ```
 
-Just like in the [Step 6 of the xaio_kidney_classif.md tutorial](
-xaio_kidney_classif.md#s6),
+Just like in the [Step 6 of the xomx_kidney_classif.md tutorial](
+xomx_kidney_classif.md#s6),
 we use the Extra-Trees algorithms and run it several times per label to select
 100, then 30, 20, 15 and finally 10 marker genes for each label.  
-The only difference with the [Step 6 in xaio_kidney_classif.md](
-xaio_kidney_classif.md#s6)
+The only difference with the [Step 6 in xomx_kidney_classif.md](
+xomx_kidney_classif.md#s6)
 is here the use of the option `init_selection_size=8000`. 
 This option speeds up the process of feature elimination by starting with an
 initial selection of features of size 8000, different for each label (while 
-in [xaio_kidney_classif.md](xaio_kidney_classif.md), a global filtering was applied
+in [xomx_kidney_classif.md](xomx_kidney_classif.md), a global filtering was applied
 to start with a common initial selection of 8000 highly variable genes). 
 With the `init_selection_size` option, initial selections rely 
 on `xd.uns["rank_genes_groups"]`, which must have been computed before.
@@ -280,7 +280,7 @@ from other samples.
 feature_selectors = {}
 for label in xd.uns["all_labels"]:
     print("Label: " + label)
-    feature_selectors[label] = xaio.fs.RFEExtraTrees(
+    feature_selectors[label] = xomx.fs.RFEExtraTrees(
         xd,
         label,
         init_selection_size=8000,
@@ -293,7 +293,7 @@ for label in xd.uns["all_labels"]:
         feature_selectors[label].select_features(siz)
         print(
             "MCC score:",
-            xaio.tl.matthews_coef(feature_selectors[label].confusion_matrix),
+            xomx.tl.matthews_coef(feature_selectors[label].confusion_matrix),
         )
     feature_selectors[label].save(os.path.join(savedir, "feature_selectors", label))
     print("Done.")
@@ -303,7 +303,7 @@ for label in xd.uns["all_labels"]:
 ## Step 3: Visualizing results
 Loading the AnnData object:
 ```python
-xd = sc.read(os.path.join(savedir, "xaio_pbmc.h5ad"), cache=True)
+xd = sc.read(os.path.join(savedir, "xomx_pbmc.h5ad"), cache=True)
 ```
 
 Loading the binary classifiers, and creating `gene_dict`, a dictionary of the 10-gene
@@ -312,7 +312,7 @@ signatures for each label:
 feature_selectors = {}
 gene_dict = {}
 for label in xd.uns["all_labels"]:
-    feature_selectors[label] = xaio.fs.load_RFEExtraTrees(
+    feature_selectors[label] = xomx.fs.load_RFEExtraTrees(
         os.path.join(savedir, "feature_selectors", label),
         xd,
     )
@@ -324,7 +324,7 @@ for label in xd.uns["all_labels"]:
 
 We construct a multiclass classifier based on the binary classifiers:
 ```python
-sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
+sbm = xomx.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
 ```
 This multiclass classifier bases its predictions on the union of the 10-gene 
 signatures for each label. It simply computes the scores of each of the binary
@@ -382,9 +382,9 @@ We use Scanpy to create a UMAP embedding, stored in `.obsm["X_umap"]`:
 sc.tl.umap(xd)
 ```
 
-Using `xaio.pl.plot2d()`, we get an interactive plot of this embedding:
+Using `xomx.pl.plot2d()`, we get an interactive plot of this embedding:
 ```python
-xaio.pl.plot2d(xd, "X_umap")
+xomx.pl.plot2d(xd, "X_umap")
 ```
 ![alt text](imgs/tuto2_UMAP.gif 
 "Interactive UMAP plot")
@@ -392,21 +392,21 @@ xaio.pl.plot2d(xd, "X_umap")
 By default, different colors correspond to the different labels, but 
 we can also specify a feature:
 ```python
-xaio.pl.plot2d(xd, "X_umap", "CST3")
+xomx.pl.plot2d(xd, "X_umap", "CST3")
 ```
 ![alt text](imgs/tuto2_UMAP_CST3.gif 
 "Interactive UMAP plot")
 
-We can also use `xaio.pl.plot2d()` to get an interactive plot of the 
+We can also use `xomx.pl.plot2d()` to get an interactive plot of the 
 first 2 PCA components of the data (computed in Step 1):
 ```python
-xaio.pl.plot2d(xd, "X_pca")
+xomx.pl.plot2d(xd, "X_pca")
 ```
 ![alt text](imgs/tuto2_PCA.png 
 "First 2 PCA components")
 
 ```python
-xaio.pl.plot2d(xd, "X_pca", "CST3")
+xomx.pl.plot2d(xd, "X_pca", "CST3")
 ```
 ![alt text](imgs/tuto2_PCA_CST3.gif 
 "First 2 PCA components")
