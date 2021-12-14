@@ -1,4 +1,4 @@
-# *XAIO Tutorial:* constructing diagnostic biomarker signatures
+# *XOMX Tutorial:* constructing diagnostic biomarker signatures
 
 -----
 
@@ -14,11 +14,11 @@ the [Extra-Trees algorithm](https://link.springer.com/article/10.1007/s10994-006
 [scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html)).
 
 ### Running the tutorial:
-- **Repeated executions of the [xaio_kidney_classif.py](xaio_kidney_classif.py) 
+- **Repeated executions of the [xomx_kidney_classif.py](xomx_kidney_classif.py) 
 file perform each of the 7 steps of 
 the tutorial, one by one.**
 - A specific step can also be chosen using an integer
-argument. For instance, `python xaio_kidney_classif.py 1` executes the step 1.
+argument. For instance, `python xomx_kidney_classif.py 1` executes the step 1.
 
 ### Table of Contents:
 + [Step 1: Preparing the manifest](#s1)
@@ -30,15 +30,15 @@ argument. For instance, `python xaio_kidney_classif.py 1` executes the step 1.
 + [Step 7: Visualizing results](#s7)
 
 ### Saving results:
-In [xaio_kidney_classif.py](xaio_kidney_classif.py), after the imports, the 
+In [xomx_kidney_classif.py](xomx_kidney_classif.py), after the imports, the 
 following lines define the string variable `savedir`: the folder 
 in which data and outputs will be stored.
 ```python
-args = xaio.tt.get_args("kidney_classif")
+args = xomx.tt.get_args("kidney_classif")
 savedir = args.savedir
 ```
-By default, `savedir` is `~/results/xaio/kidney_classif`, but it can be modified using a 
-`--savedir` argument in input (e.g. `python xaio_kidney_classif.py --savedir /tmp`).
+By default, `savedir` is `~/results/xomx/kidney_classif`, but it can be modified using a 
+`--savedir` argument in input (e.g. `python xomx_kidney_classif.py --savedir /tmp`).
 
 <a name="s1"></a>
 ## Step 1: Preparing the manifest
@@ -54,7 +54,7 @@ The `gdc_create_manifest()` function
 facilitates the creation of this manifest. It is designed to import files of gene 
 expression counts obtained with [HTSeq](https://github.com/simon-anders/htseq). 
 You can have a look at its implementation in 
-[xaio/data_importation/gdc.py](../data_importation/gdc.py) to adapt it to your own
+[xomx/data_importation/gdc.py](../data_importation/gdc.py) to adapt it to your own
 needs if you want to import other types of data.
 
 `gdc_create_manifest()` takes in input the disease type (in our case "Adenomas and 
@@ -72,7 +72,7 @@ https://portal.gdc.cancer.gov/
 disease_type = "Adenomas and Adenocarcinomas"
 project_list = ["TCGA-KIRC", "TCGA-KIRP", "TCGA-KICH"]
 case_numbers = [200, 200, 66]
-df_list = xaio.di.gdc_create_manifest(disease_type, project_list, case_numbers)
+df_list = xomx.di.gdc_create_manifest(disease_type, project_list, case_numbers)
 ```
 
 The Pandas library (imported as `pd`) is used to write the concatenation of the
@@ -103,7 +103,7 @@ This requires the `gdc-client`, which can be downloaded at:
 https://gdc.cancer.gov/access-data/gdc-data-transfer-tool
 
 On a UNIX system, the command `export PATH=$PATH:/path/to/gdc-client/folder` can be useful to make
-sure that the `gdc-client` is found during the execution of `xaio_kidney_classif.py`.
+sure that the `gdc-client` is found during the execution of `xomx_kidney_classif.py`.
 
 Remark: the execution of this step, i.e. the import of all samples,
 may take some time.
@@ -112,13 +112,13 @@ may take some time.
 ## Step 3: Creating and saving the AnnData object
 
 ```python
-df = xaio.di.gdc_create_data_matrix(
+df = xomx.di.gdc_create_data_matrix(
     tmpdir,
     os.path.join(savedir, "manifest.txt"),
 )
 ```
 First, the `gdc_create_data_matrix()` function (implemented in
-[xaio/data_importation/gdc.py](../data_importation/gdc.py)
+[xomx/data_importation/gdc.py](../data_importation/gdc.py)
 ) is used to create a Pandas dataframe with all the individual samples.
 
 The content of the dataframe `df` looks like this:
@@ -177,10 +177,10 @@ required.
 `normalize_total()` is an in-place modification of the data, so after its 
 application, `xd.X` contains the modified data.
 
-We save `xd` as the file **xaio_kidney_classif.h5ad**
+We save `xd` as the file **xomx_kidney_classif.h5ad**
 in the `savedir` directory:
 ```python
-xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
+xd.write(os.path.join(savedir, "xomx_kidney_classif.h5ad"))
 ```
 
 At the end of Step 3, we delete the individual sample files that were downloaded in
@@ -194,7 +194,7 @@ shutil.rmtree(tmpdir, ignore_errors=True)
 
 We load the AnnData object and the manifest:
 ```python
-xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
+xd = sc.read(os.path.join(savedir, "xomx_kidney_classif.h5ad"))
 manifest = pd.read_table(os.path.join(savedir, "manifest.txt"), header=0)
 ```
 The manifest contains the labels (`"TCGA-KIRC"`, `"TCGA-KIRP"` or `"TCGA-KICH"`) of 
@@ -218,34 +218,34 @@ xd.obs["labels"] = label_array
 We compute the list of distinct labels, and assign it, as an unstructured annotation,
 to `xd.uns["all_labels"]`.
 ```python
-xd.uns["all_labels"] = xaio.tl.all_labels(xd.obs["labels"])
+xd.uns["all_labels"] = xomx.tl.all_labels(xd.obs["labels"])
 ```
 We also compute the list of sample indices for every label:
 ```python
-xd.uns["obs_indices_per_label"] = xaio.tl.indices_per_label(xd.obs["labels"])
+xd.uns["obs_indices_per_label"] = xomx.tl.indices_per_label(xd.obs["labels"])
 ```
 Example: `xd.uns["obs_indices_per_label"]["TCGA-KIRC"]` is the list of indices
 of the samples that are labelled as `"TCGA-KIRC"`.
 
 It is important to use the keys `"labels"`,
 `"all_labels"` and `"obs_indices_per_label"` as they
-are expected by some XAIO functions.
+are expected by some XOMX functions.
 
 We then save the modifications:
 ```python
-xd.write(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
+xd.write(os.path.join(savedir, "xomx_kidney_classif.h5ad"))
 ```
 
 <a name="s5"></a>
 ## Step 5: Basic preprocessing
 Loading the AnnData object: 
 ```python
-xd = sc.read(os.path.join(savedir, "xaio_kidney_classif.h5ad"))
+xd = sc.read(os.path.join(savedir, "xomx_kidney_classif.h5ad"))
 ```
 First, we compute the mean and standard deviation (across samples) for all the features:
 ```python
-xd.var["mean_values"] = xaio.tl.var_mean_values(xd)
-xd.var["standard_deviations"] = xaio.tl.var_standard_deviations(xd)
+xd.var["mean_values"] = xomx.tl.var_mean_values(xd)
+xd.var["standard_deviations"] = xomx.tl.var_standard_deviations(xd)
 ```
 Remark: `xd.var["mean_values"]` and 
 `xd.var["standard_deviations"]` will be used only in Step 7.
@@ -270,12 +270,12 @@ with tens of thousands of features. Keeping
 highly variable features is one possibility,
 but there are other options for the
 initial selection of features, see for instance 
-the [xaio_pbmc.md](xaio_pbmc.md) tutorial (Step 2).
+the [xomx_pbmc.md](xomx_pbmc.md) tutorial (Step 2).
 
 We compute the dictionary of feature indices,
-which is required by some XAIO functions:
+which is required by some XOMX functions:
 ```python
-xd.uns["var_indices"] = xaio.tl.var_indices(xd)
+xd.uns["var_indices"] = xomx.tl.var_indices(xd)
 ```
 Example:  `xd.uns["var_indices"]['ENSG00000281918.1']`
 is equal to 7999 because ENSG00000281918.1 is now
@@ -283,7 +283,7 @@ the last of the 8000 features in `xd.var_names`.
 
 We then randomly split the samples into training and test sets:
 ```python
-xaio.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
+xomx.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
 ```
 The function `train_and_test_indices()` requires `xd.uns["obs_indices_per_label"]`, which was computed in 
 the previous step. With `test_train_ratio=0.25`, for every label 
@@ -302,7 +302,7 @@ test set, per label.
 
 We save the logarithmized and filtered data to a new file:
 ```python
-xd.write(os.path.join(savedir, "xaio_k_c_small.h5ad"))
+xd.write(os.path.join(savedir, "xomx_k_c_small.h5ad"))
 ```
 
 <a name="s6"></a>
@@ -310,7 +310,7 @@ xd.write(os.path.join(savedir, "xaio_k_c_small.h5ad"))
 
 Loading: 
 ```python
-xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
+xd = sc.read(os.path.join(savedir, "xomx_k_c_small.h5ad"))
 ```
 
 We initialize an empty dictionary 
@@ -346,7 +346,7 @@ Each classifier is saved in the folder `feature_selectors/` in the
 ```python
 for label in xd.uns["all_labels"]:
     print("Label: " + label)
-    feature_selectors[label] = xaio.fs.RFEExtraTrees(
+    feature_selectors[label] = xomx.fs.RFEExtraTrees(
         xd,
         label,
         n_estimators=450,
@@ -358,7 +358,7 @@ for label in xd.uns["all_labels"]:
         feature_selectors[label].select_features(siz)
         print(
             "MCC score:",
-            xaio.tl.matthews_coef(feature_selectors[label].confusion_matrix),
+            xomx.tl.matthews_coef(feature_selectors[label].confusion_matrix),
         )
     feature_selectors[label].save(os.path.join(savedir, "feature_selectors", label))
     print("Done.")
@@ -368,7 +368,7 @@ for label in xd.uns["all_labels"]:
 
 Loading:
 ```python
-xd = sc.read(os.path.join(savedir, "xaio_k_c_small.h5ad"))
+xd = sc.read(os.path.join(savedir, "xomx_k_c_small.h5ad"))
 ```
 
 Using the plotting function `function_scatter()`,
@@ -382,7 +382,7 @@ must take in input the feature index. By changing the
 instead of over the features.
 
 ```python
-xaio.pl.function_scatter(
+xomx.pl.function_scatter(
     xd,
     lambda idx: xd.var["mean_values"][idx],
     lambda idx: xd.var["standard_deviations"][idx],
@@ -409,7 +409,7 @@ and create `gene_dict`, a dictionary of the 10-gene signatures for each label.
 feature_selectors = {}
 gene_dict = {}
 for label in xd.uns["all_labels"]:
-    feature_selectors[label] = xaio.fs.load_RFEExtraTrees(
+    feature_selectors[label] = xomx.fs.load_RFEExtraTrees(
         os.path.join(savedir, "feature_selectors", label),
         xd,
     )
@@ -442,7 +442,7 @@ sample and its true label.
 
 We can construct a multiclass classifier based on the 3 binary classifiers:
 ```python
-sbm = xaio.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
+sbm = xomx.cl.ScoreBasedMulticlass(xd, xd.uns["all_labels"], feature_selectors)
 ```
 This multiclass classifier bases its predictions on 30 features (at most): the 
 union of the three 10-gene signatures (one per label). It simply computes the 3 
@@ -467,9 +467,9 @@ We gather the selected genes in a single list:
 ```python
 all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
 ```
-We can visualize these marker genes with `xaio.pl.var_plot()`:
+We can visualize these marker genes with `xomx.pl.var_plot()`:
 ```python
-xaio.pl.var_plot(xd, all_selected_genes)
+xomx.pl.var_plot(xd, all_selected_genes)
 ```
 ![alt text](imgs/tuto1_markers.png
 "Marker gene expressions")
@@ -480,7 +480,7 @@ the selected marker genes are mostly downregulated
 lead to similarly good results).  
 Let us zoom on the marker genes for KIRP:
 ```python
-xaio.pl.var_plot(xd, gene_dict["TCGA-KIRP"])
+xomx.pl.var_plot(xd, gene_dict["TCGA-KIRP"])
 ```
 ![alt text](imgs/tuto1_KIRPmarkers.png
 "Downregulated marker genes for TCGA-KIRP")
@@ -498,13 +498,13 @@ and C6orf223 (ENSG00000181577).
 
 KICH markers:
 ```python
-xaio.pl.var_plot(xd, gene_dict["TCGA-KICH"])
+xomx.pl.var_plot(xd, gene_dict["TCGA-KICH"])
 ```
 ![alt text](imgs/tuto1_KICHmarkers.png
 "Upregulated marker genes for TCGA-KIRC")
 We can also use `var_plot()` with a single gene:
 ```python
-xaio.pl.var_plot(xd, "ENSG00000168269.8")
+xomx.pl.var_plot(xd, "ENSG00000168269.8")
 ```
 ![alt text](imgs/tuto1_FOXI1_KICH.png
 "Upregulated marker genes for TCGA-KICH")
@@ -521,7 +521,7 @@ https://doi.org/10.1016/j.celrep.2017.07.043
 
 KIRC markers:
 ```python
-xaio.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
+xomx.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
 ```
 ![alt text](imgs/tuto1_KIRCmarkers.png
 "Upregulated marker genes for TCGA-KIRC")
@@ -543,9 +543,9 @@ sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
 sc.tl.umap(xd)
 ```
 `sc.tl.umap()` stores the embedding in `xd.obsm["X_umap"]`.  
-We use `xaio.pl.plot2d()` to display an interactive plot:
+We use `xomx.pl.plot2d()` to display an interactive plot:
 ```python
-xaio.pl.plot2d(xd, "X_umap")
+xomx.pl.plot2d(xd, "X_umap")
 ```
 ![alt text](imgs/tuto1_UMAP.gif
 "Interactive UMAP plot")
