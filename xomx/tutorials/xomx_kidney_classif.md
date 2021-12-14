@@ -60,7 +60,7 @@ needs if you want to import other types of data.
 `gdc_create_manifest()` takes in input the disease type (in our case "Adenomas and 
 Adenocarcinomas"), the list of project names ("TCGA-KIRC", "TCGA-KIRP", "TCGA-KICH"), 
 and the numbers of samples desired for each of these projects (remark: for "TCGA-KICH", 
-there are only 66 samples available). It returns a list of Pandas dataframes, one for 
+there are only 65 samples available). It returns a list of Pandas dataframes, one for 
 each project.
 
 More information on GDC data can be found on the [GDC Data Portal](
@@ -71,7 +71,7 @@ https://portal.gdc.cancer.gov/
 ```python
 disease_type = "Adenomas and Adenocarcinomas"
 project_list = ["TCGA-KIRC", "TCGA-KIRP", "TCGA-KICH"]
-case_numbers = [200, 200, 66]
+case_numbers = [200, 200, 65]
 df_list = xomx.di.gdc_create_manifest(disease_type, project_list, case_numbers)
 ```
 
