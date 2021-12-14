@@ -1,9 +1,6 @@
 import argparse
 import os
 import numpy as np
-from IPython import embed
-
-debug = embed
 
 
 def get_args(default_folder):

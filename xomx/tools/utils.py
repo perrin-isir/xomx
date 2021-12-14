@@ -56,7 +56,6 @@ def train_and_test_indices(
         train_indices_per_label[annot] = idxs[cut:]
     train_indices = np.concatenate(list(train_indices_per_label.values()))
     test_indices = np.concatenate(list(test_indices_per_label.values()))
-    # from IPython import embed as e; e() ; quit()
     adata.uns["train_indices_per_label"] = train_indices_per_label
     adata.uns["test_indices_per_label"] = test_indices_per_label
     adata.uns["train_indices"] = train_indices
