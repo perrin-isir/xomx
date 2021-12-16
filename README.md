@@ -38,15 +38,15 @@ Tutorials (in [xomx/tutorials/](xomx/tutorials/)) are the best way to learn to u
 *xomx*.
 
 *List of tutorials:*
-* [xomx_kidney_classif.md](xomx/tutorials/xomx_kidney_classif.md), and a shorter notebook version: [xomx_kidney_classif.ipynb](xomx/tutorials/xomx_kidney_classif.ipynb)
-
-*goal:*  use a 
+- [xomx_kidney_classif.md](xomx/tutorials/xomx_kidney_classif.md), 
+and a shorter notebook version: [xomx_kidney_classif.ipynb](xomx/tutorials/xomx_kidney_classif.ipynb)  
+**goal:**  use a 
 recursive feature elimination method on RNA-seq data to identify gene 
 biomarkers for the differential diagnosis of three types of kidney cancer
 
-* [xomx_pbmc.md](xomx/tutorials/xomx_pbmc.md) 
-*goal:* 
-follow the single cell RNA-seq [Scanpy tutorial on 3k PBMCs](
+
+- [xomx_pbmc.md](xomx/tutorials/xomx_pbmc.md)  
+**goal:** follow the single cell RNA-seq [Scanpy tutorial on 3k PBMCs](
 https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html), except
 for the computation of biomarkers for which recursive feature elimination is used
 
