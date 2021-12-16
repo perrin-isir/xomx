@@ -41,7 +41,9 @@ By default, `savedir` is `~/results/xomx/kidney_classif`, but it can be modified
 `--savedir` argument in input (e.g. `python xomx_kidney_classif.py --savedir /tmp`).
 
 ### Setting the pseudo-random number generator
+```python
 rng = np.random.RandomState(0)
+```
 
 <a name="s1"></a>
 ## Step 1: Preparing the manifest

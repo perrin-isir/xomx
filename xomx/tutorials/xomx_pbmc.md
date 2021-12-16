@@ -38,7 +38,9 @@ By default, `savedir` is `~/results/xomx/pbmc`, but it can be modified using a
 `--savedir` argument in input (e.g. `python xomx_pbmc.py --savedir /tmp`).
 
 ### Setting the pseudo-random number generator
+```python
 rng = np.random.RandomState(0)
+```
 
 <a name="s1"></a>
 ## Step 1: Data importation, preprocessing and clustering
