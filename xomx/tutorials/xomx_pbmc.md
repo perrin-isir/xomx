@@ -37,6 +37,9 @@ savedir = args.savedir
 By default, `savedir` is `~/results/xomx/pbmc`, but it can be modified using a 
 `--savedir` argument in input (e.g. `python xomx_pbmc.py --savedir /tmp`).
 
+### Setting the pseudo-random number generator
+rng = np.random.RandomState(0)
+
 <a name="s1"></a>
 ## Step 1: Data importation, preprocessing and clustering
 
@@ -216,7 +219,7 @@ of the samples that are labelled as `"Megakaryocytes"`.
 
 We then randomly split the samples into training and test sets:
 ```python
-xomx.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
+xomx.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25, rng=rng)
 ```
 With `test_train_ratio=0.25`, for every label, 25% of the samples are assigned to 
 the test set, and 75% to the train set. It creates the following unstructured 
@@ -285,7 +288,7 @@ for label in xd.uns["all_labels"]:
         label,
         init_selection_size=8000,
         n_estimators=450,
-        random_state=0,
+        random_state=rng,
     )
     feature_selectors[label].init()
     for siz in [100, 30, 20, 15, 10]:

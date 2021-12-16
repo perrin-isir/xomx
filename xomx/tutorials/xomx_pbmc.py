@@ -32,6 +32,9 @@ os.makedirs(savedir, exist_ok=True)
 # (e.g. `python xomx_pmbc.py 1` to execute step 1).
 step = xomx.tt.step_init(args, 3)
 
+# Setting the pseudo-random number generator
+rng = np.random.RandomState(0)
+
 """
 STEP 1: Load the data from the 10X Genomics website, store it as an AnnData object,
 and apply the preprocessing workflow and clustering.
@@ -117,9 +120,9 @@ if step == 1:
     xd = xd[:, xd.var.highly_variable]
     sc.pp.regress_out(xd, ["total_counts", "pct_counts_mt"])
     sc.pp.scale(xd, max_value=10)
-    sc.tl.pca(xd, svd_solver="arpack")
-    sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
-    sc.tl.leiden(xd)
+    sc.tl.pca(xd, svd_solver="arpack", random_state=rng)
+    sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40, random_state=rng)
+    sc.tl.leiden(xd, random_state=rng)
 
     # Rename the "leiden" clusters
     new_cluster_names = [
@@ -151,7 +154,10 @@ if step == 1:
     xd.uns["obs_indices_per_label"] = xomx.tl.indices_per_label(xd.obs["labels"])
 
     # Compute training and test sets
-    xomx.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
+    xomx.tl.train_and_test_indices(xd,
+                                   "obs_indices_per_label",
+                                   test_train_ratio=0.25,
+                                   rng=rng)
 
     # Rank the genes for each cluster with t-test
     sc.tl.rank_genes_groups(xd, "leiden", method="t-test")
@@ -177,7 +183,7 @@ if step == 2:
             label,
             init_selection_size=8000,
             n_estimators=450,
-            random_state=0,
+            random_state=rng,
         )
         feature_selectors[label].init()
         for siz in [100, 30, 20, 15, 10]:
@@ -246,7 +252,7 @@ if step == 3:
     print(biomarkers.intersection(all_selected_genes))
 
     # Compute UMAP embedding
-    sc.tl.umap(xd)
+    sc.tl.umap(xd, random_state=rng)
 
     # Interactive UMAP plots
     xomx.pl.plot2d(xd, "X_umap")
