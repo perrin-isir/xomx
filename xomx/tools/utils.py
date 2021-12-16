@@ -45,12 +45,15 @@ def indices_per_label(labels) -> dict:
 
 
 def train_and_test_indices(
-    adata: sc.AnnData, indices_per_label_key, test_train_ratio=0.25
+        adata: sc.AnnData,
+        indices_per_label_key,
+        test_train_ratio=0.25,
+        rng=np.random.default_rng()
 ):
     train_indices_per_label = {}
     test_indices_per_label = {}
     for annot in adata.uns[indices_per_label_key]:
-        idxs = np.random.permutation(adata.uns[indices_per_label_key][annot])
+        idxs = rng.permutation(adata.uns[indices_per_label_key][annot])
         cut = np.floor(len(idxs) * test_train_ratio).astype("int") + 1
         test_indices_per_label[annot] = idxs[:cut]
         train_indices_per_label[annot] = idxs[cut:]

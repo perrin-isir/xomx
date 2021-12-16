@@ -31,6 +31,9 @@ os.makedirs(savedir, exist_ok=True)
 # (e.g. `python xomx_kidney_classif.py 1` to execute step 1).
 step = xomx.tt.step_init(args, 7)
 
+# Setting the pseudo-random number generator
+rng = np.random.RandomState(0)
+
 """
 STEP 1: Use the gdc_create_manifest function (from xomx/data_importation/gdc.py)
 to create a manifest.txt file that will be used to import data with the GDC
@@ -173,8 +176,11 @@ if step == 5:
     # Compute the dictionary of feature (var) indices
     xd.uns["var_indices"] = xomx.tl.var_indices(xd)
 
-    # Randomly separate samples into train and test sets.
-    xomx.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
+    # Randomly separate samples into training and test sets.
+    xomx.tl.train_and_test_indices(xd,
+                                   "obs_indices_per_label",
+                                   test_train_ratio=0.25,
+                                   rng=rng)
     # New annotations after this call:
     # xd.uns["train_indices_per_label"]
     # xd.uns["test_indices_per_label"]
@@ -202,7 +208,7 @@ if step == 6:
             xd,
             label,
             n_estimators=450,
-            random_state=0,
+            random_state=rng,
         )
         feature_selectors[label].init()
         for siz in [100, 30, 20, 15, 10]:
@@ -281,8 +287,8 @@ if step == 7:
     # Computing and plotting a 2D UMAP embedding
     xd = xd[:, all_selected_genes]
     xd.var_names_make_unique()
-    sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
-    sc.tl.umap(xd)
+    sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40, random_state=rng)
+    sc.tl.umap(xd, random_state=rng)
     xomx.pl.plot2d(xd, "X_umap")
 
     print("STEP 7: done")

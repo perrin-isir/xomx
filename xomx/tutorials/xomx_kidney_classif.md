@@ -40,6 +40,9 @@ savedir = args.savedir
 By default, `savedir` is `~/results/xomx/kidney_classif`, but it can be modified using a 
 `--savedir` argument in input (e.g. `python xomx_kidney_classif.py --savedir /tmp`).
 
+### Setting the pseudo-random number generator
+rng = np.random.RandomState(0)
+
 <a name="s1"></a>
 ## Step 1: Preparing the manifest
 
@@ -283,12 +286,12 @@ the last of the 8000 features in `xd.var_names`.
 
 We then randomly split the samples into training and test sets:
 ```python
-xomx.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25)
+xomx.tl.train_and_test_indices(xd, "obs_indices_per_label", test_train_ratio=0.25, rng=rng)
 ```
 The function `train_and_test_indices()` requires `xd.uns["obs_indices_per_label"]`, which was computed in 
 the previous step. With `test_train_ratio=0.25`, for every label 
 (`"TCGA-KIRC"`, `"TCGA-KIRP"` or `"TCGA-KICH"`), 25% of the samples are assigned to 
-the test set, and 75% to the train set. It creates the following unstructured 
+the test set, and 75% to the training set. It creates the following unstructured 
 annotations:
 - `xd.uns["train_indices"]`: the array of indices of all samples that belong 
 to the training set.
@@ -350,7 +353,7 @@ for label in xd.uns["all_labels"]:
         xd,
         label,
         n_estimators=450,
-        random_state=0,
+        random_state=rng,
     )
     feature_selectors[label].init()
     for siz in [100, 30, 20, 15, 10]:
@@ -428,9 +431,9 @@ by the feature selection process on `"TCGA-KICH"`.
 For a given feature selector, for example `feature_selectors["TCGA-KIRP"]`,
 `plot()` displays results on the test set. The classifier uses only the selected 
 features, here the 10 features selected for the label `"TCGA-KIRP"`.
-Points above the horizontal red line (score > 0.5) are classified as positives (the 
-prediction is: `"TCGA-KIRP"`), and points below the horizontal line (score < 0.5)
-are classified as negatives (the prediction is: `not "TCGA-KIRP"`).
+Points above the horizontal red line (score > 0.5) are classified as positives 
+(prediction: `"TCGA-KIRP"`), and points below the horizontal line (score < 0.5)
+are classified as negatives (prediction: `not "TCGA-KIRP"`).
 ```python
 feature_selectors["TCGA-KIRP"].plot()
 ```
@@ -492,9 +495,8 @@ sc.pl.stacked_violin(xd, gene_dict["TCGA-KIRP"], groupby="labels")
 ![alt text](imgs/tuto1_stacked_violin.png
 "Mainly downregulated marker genes for TCGA-KIRP")
 
-We observe 3 significantly downregulated genes for KIRP: 
-EBF2 (ENSG00000221818), PTGER3 (ENSG00000050628)
-and C6orf223 (ENSG00000181577).
+We observe at least 2 significantly downregulated genes for KIRP: 
+PTGER3 (ENSG00000050628) and EBF2 (ENSG00000221818).
 
 KICH markers:
 ```python
@@ -539,8 +541,8 @@ the Scanpy procedure to compute a 2D UMAP embedding:
 ```python
 xd = xd[:, all_selected_genes]
 xd.var_names_make_unique()
-sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40)
-sc.tl.umap(xd)
+sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40, random_state=rng)
+sc.tl.umap(xd, random_state=rng)
 ```
 `sc.tl.umap()` stores the embedding in `xd.obsm["X_umap"]`.  
 We use `xomx.pl.plot2d()` to display an interactive plot:
