@@ -157,6 +157,7 @@ def function_scatter(
     set_xticks = None
     set_xticks_text = None
     violinplots_done = False
+    samples_color = None
     fig, ax = plt.subplots()
     if obs_or_var == "obs":
         if "all_labels" in adata.uns and function_plot_:
@@ -188,6 +189,14 @@ def function_scatter(
         else:
             y = [func2_(i) for i in range(adata.n_obs)]
             x = [func1_(i) for i in range(adata.n_obs)]
+            if "all_labels" in adata.uns:
+                annot_colors = {}
+                denom = len(adata.uns["all_labels"])
+                for i, val in enumerate(adata.uns["all_labels"]):
+                    annot_colors[val] = i / denom
+                samples_color = np.zeros(adata.n_obs)
+                for i in range(adata.n_obs):
+                    samples_color[i] = annot_colors[adata.obs["labels"][i]]
     else:
         y = [func2_(i) for i in range(adata.n_vars)]
         x = [func1_(i) for i in range(adata.n_vars)]
@@ -208,7 +217,11 @@ def function_scatter(
             pc.set_facecolor("#D43F3A")
             pc.set_edgecolor("grey")
             pc.set_alpha(0.5)
-    scax = ax.scatter(x, y, s=1)
+    if samples_color is None:
+        scax = ax.scatter(x, y, s=1)
+    else:
+        scax = ax.scatter(x, y, c=samples_color, cmap="nipy_spectral", s=1)
+
     ann = ax.annotate(
         "",
         xy=(0, 0),
@@ -226,7 +239,13 @@ def function_scatter(
             if "all_labels" in adata.uns and function_plot_:
                 text = "{}".format(adata.obs_names[list_samples[ind["ind"][0]]])
             else:
-                text = "{}".format(adata.obs_names[ind["ind"][0]])
+                if samples_color is None:
+                    text = "{}".format(adata.obs_names[ind["ind"][0]])
+                else:
+                    text = "{}: {}".format(
+                        adata.obs_names[ind["ind"][0]],
+                        str(adata.obs["labels"][ind["ind"][0]])
+                    )
 
         else:
             text = "{}".format(adata.var_names[ind["ind"][0]])
