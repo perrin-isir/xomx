@@ -2,6 +2,7 @@ import os
 import numpy as np
 import xomx
 import scanpy as sc
+import umap
 import matplotlib.pyplot as plt
 
 
@@ -400,6 +401,82 @@ def plot2d(
     plt.gca().set_aspect("equal", "datalim")
     if colorbar:
         plt.colorbar(location="left", aspect=50)
+
+    ann = ax.annotate(
+        "",
+        xy=(0, 0),
+        xytext=(20, 20),
+        textcoords="offset points",
+        bbox=dict(boxstyle="round", fc="w"),
+        arrowprops=dict(arrowstyle="->"),
+    )
+    ann.set_visible(False)
+
+    def update_annot(ind):
+        pos = sctr.get_offsets()[ind["ind"][0]]
+        ann.xy = pos
+        text = hover_function(ind["ind"][0])
+        ann.set_text(text)
+
+    def hover(event):
+        vis = ann.get_visible()
+        if event.inaxes == ax:
+            cont, ind = sctr.contains(event)
+            if cont:
+                update_annot(ind)
+                ann.set_visible(True)
+                fig.canvas.draw_idle()
+            else:
+                if vis:
+                    ann.set_visible(False)
+                    fig.canvas.draw_idle()
+
+    fig.canvas.mpl_connect("motion_notify_event", hover)
+
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+        plt.savefig(os.path.join(save_dir, "plot.png"), dpi=200)
+    else:
+        plt.show()
+
+
+def umap_plot(
+    adata: sc.AnnData,
+    save_dir=None,
+    metric="cosine",
+    min_dist=0.0,
+    n_neighbors=30,
+    random_state=None,
+):
+    assert "labels" in adata.obs and "all_labels" in adata.uns
+    reducer = umap.UMAP(
+        metric=metric,
+        min_dist=min_dist,
+        n_neighbors=n_neighbors,
+        random_state=random_state,
+    )
+    print("Starting UMAP reduction...")
+    reducer.fit(adata.X)
+    embedding = reducer.transform(adata.X)
+    print("Done.")
+
+    def hover_function(id_):
+        return "{}".format(adata.obs_names[id_] + ": " + str(adata.obs["labels"][id_]))
+
+    annot_idxs = {}
+    for i, annot_ in enumerate(adata.uns["all_labels"]):
+        annot_idxs[annot_] = i
+
+    samples_color = np.empty(adata.n_obs)
+    for i in range(adata.n_obs):
+        samples_color[i] = annot_idxs[adata.obs["labels"][i]]
+
+    fig, ax = plt.subplots()
+
+    sctr = plt.scatter(
+        embedding[:, 0], embedding[:, 1], c=samples_color, cmap="nipy_spectral", s=5
+    )
+    plt.gca().set_aspect("equal", "datalim")
 
     ann = ax.annotate(
         "",
