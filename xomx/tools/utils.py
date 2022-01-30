@@ -46,9 +46,10 @@ def indices_per_label(labels) -> dict:
 
 def train_and_test_indices(
         adata: sc.AnnData,
-        indices_per_label_key,
-        test_train_ratio=0.25,
-        rng=np.random.default_rng()
+        indices_per_label_key: dict,
+        test_train_ratio: float = 0.25,
+        rng=np.random.default_rng(),
+        shuffle: bool = True
 ):
     train_indices_per_label = {}
     test_indices_per_label = {}
@@ -59,6 +60,9 @@ def train_and_test_indices(
         train_indices_per_label[annot] = idxs[cut:]
     train_indices = np.concatenate(list(train_indices_per_label.values()))
     test_indices = np.concatenate(list(test_indices_per_label.values()))
+    if shuffle:
+        rng.shuffle(train_indices)
+        rng.shuffle(test_indices)
     adata.uns["train_indices_per_label"] = train_indices_per_label
     adata.uns["test_indices_per_label"] = test_indices_per_label
     adata.uns["train_indices"] = train_indices
