@@ -91,13 +91,22 @@ class RFEExtraTrees:
         return self.confusion_matrix
 
     def predict(self, x):
-        if len(x.shape) > 0:
-            if x.shape[1] == self.adata.n_vars:
-                x_tmp = np.take(
-                    x.transpose(), self.current_feature_indices, axis=0
-                ).transpose()
-                return self.forest.predict(x_tmp)
-        return self.forest.predict(x)
+        if len(x.shape) < 2:
+            x_tmp = np.expand_dims(x, axis=0)
+        else:
+            x_tmp = x
+        if x_tmp.shape[1] == self.adata.n_vars:
+            x_tmp = np.take(
+                x_tmp.transpose(), self.current_feature_indices, axis=0
+            ).transpose()
+        return self.forest.predict(x_tmp)
+        # if len(x.shape) > 0:
+        #     if x.shape[1] == self.adata.n_vars:
+        #         x_tmp = np.take(
+        #             x.transpose(), self.current_feature_indices, axis=0
+        #         ).transpose()
+        #         return self.forest.predict(x_tmp)
+        # return self.forest.predict(x)
 
     def score(self, x):
         if len(x.shape) < 2:
@@ -157,13 +166,21 @@ class RFEExtraTrees:
         else:
             return False
 
-    def plot(self, label=None, save_dir=None):
-        res = self.score(self.data_test)
+    def plot(self, label=None, save_dir=None, random_subset_size=None, rng=None):
+        if random_subset_size is None:
+            res = self.score(self.data_test)
+            indices = self.adata.uns["test_indices"]
+        else:
+            idxs = rng.choice(len(self.adata.uns["test_indices"]),
+                              random_subset_size,
+                              replace=False)
+            res = self.score(self.data_test[idxs])
+            indices = self.adata.uns["test_indices"][idxs]
         xomx.pl.plot_scores(
             self.adata,
             res,
             0.5,
-            self.adata.uns["test_indices"],
+            indices,
             label,
             save_dir,
             ylabel="scores",

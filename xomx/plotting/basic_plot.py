@@ -101,7 +101,7 @@ def plot_scores(
         plt.show()
 
 
-def _samples_by_labels(adata: sc.AnnData, sort_annot=False):
+def _samples_by_labels(adata: sc.AnnData, sort_annot=False, subset_indices=None):
     assert "obs_indices_per_label" in adata.uns and "all_labels" in adata.uns
     if sort_annot:
         argsort_labels = np.argsort(
@@ -112,19 +112,31 @@ def _samples_by_labels(adata: sc.AnnData, sort_annot=False):
         )[::-1]
     else:
         argsort_labels = np.arange(len(adata.uns["all_labels"]))
+
+    if subset_indices is None:
+        i_per_label = adata.uns["obs_indices_per_label"]
+    else:
+        i_per_label = {}
+        for lbl in adata.uns["all_labels"]:
+            i_per_label[lbl] = []
+        for i, annot in enumerate(adata.obs['labels'][subset_indices]):
+            i_per_label[annot].append(int(subset_indices[i]))
+
     list_samples = np.concatenate(
         [
-            adata.uns["obs_indices_per_label"][adata.uns["all_labels"][i]]
+            i_per_label[adata.uns["all_labels"][i]]
             for i in argsort_labels
         ]
-    )
+    ).astype('int')
+
     boundaries = np.cumsum(
         [0]
         + [
-            len(adata.uns["obs_indices_per_label"][adata.uns["all_labels"][i]])
+            len(i_per_label[adata.uns["all_labels"][i]])
             for i in argsort_labels
         ]
     )
+
     set_xticks2 = (boundaries[1:] + boundaries[:-1]) // 2
     set_xticks = list(np.sort(np.concatenate((boundaries, set_xticks2))))
     set_xticks_text = ["|"] + list(
@@ -148,6 +160,7 @@ def function_scatter(
     xlabel="",
     ylabel="",
     function_plot_=False,
+    subset_indices=None
 ):
     """Displays a scatter plot, with coordinates computed by applying two
     functions (func1_ and func2_) to every sample or every feature, depending
@@ -167,9 +180,10 @@ def function_scatter(
                 set_xticks,
                 set_xticks_text,
                 boundaries,
-            ) = _samples_by_labels(adata, sort_annot=True)
+            ) = _samples_by_labels(adata, sort_annot=True,
+                                   subset_indices=subset_indices)
             y = [func2_(i) for i in list_samples]
-            x = [i for i in range(adata.n_obs)]
+            x = [i for i in range(len(y))]
             if violinplot:
                 for i in range(len(boundaries) - 1):
                     parts = ax.violinplot(
@@ -188,19 +202,33 @@ def function_scatter(
                         pc.set_alpha(0.5)
             violinplots_done = True
         else:
-            y = [func2_(i) for i in range(adata.n_obs)]
-            x = [func1_(i) for i in range(adata.n_obs)]
+            if subset_indices is None:
+                y = [func2_(i) for i in range(adata.n_obs)]
+                x = [func1_(i) for i in range(adata.n_obs)]
+            else:
+                y = [func2_(i) for i in subset_indices]
+                x = [func1_(i) for i in subset_indices]
             if "all_labels" in adata.uns:
                 annot_colors = {}
                 denom = len(adata.uns["all_labels"])
                 for i, val in enumerate(adata.uns["all_labels"]):
                     annot_colors[val] = i / denom
-                samples_color = np.zeros(adata.n_obs)
-                for i in range(adata.n_obs):
-                    samples_color[i] = annot_colors[adata.obs["labels"][i]]
+                # samples_color = np.zeros(adata.n_obs)
+                samples_color = np.zeros_like(x)
+                if subset_indices is None:
+                    for i in range(adata.n_obs):
+                        samples_color[i] = annot_colors[adata.obs["labels"][i]]
+                else:
+                    for i in range(len(subset_indices)):
+                        samples_color[i] = annot_colors[
+                            adata.obs["labels"][subset_indices[i]]]
     else:
-        y = [func2_(i) for i in range(adata.n_vars)]
-        x = [func1_(i) for i in range(adata.n_vars)]
+        if subset_indices is None:
+            y = [func2_(i) for i in range(adata.n_vars)]
+            x = [func1_(i) for i in range(adata.n_vars)]
+        else:
+            y = [func2_(i) for i in subset_indices]
+            x = [func1_(i) for i in subset_indices]
     xmax = np.max(x)
     xmin = np.min(x)
     if violinplot and not violinplots_done:
@@ -237,19 +265,31 @@ def function_scatter(
         pos = scax_.get_offsets()[ind["ind"][0]]
         ann.xy = pos
         if obs_or_var == "obs":
-            if "all_labels" in adata.uns and function_plot_:
+            if "all_labels" in adata.uns and function_plot_ and subset_indices is None:
                 text = "{}".format(adata.obs_names[list_samples[ind["ind"][0]]])
             else:
                 if samples_color is None:
-                    text = "{}".format(adata.obs_names[ind["ind"][0]])
+                    if subset_indices is None:
+                        text = "{}".format(adata.obs_names[ind["ind"][0]])
+                    else:
+                        text = "{}".format(adata.obs_names[
+                                               subset_indices[ind["ind"][0]]])
                 else:
-                    text = "{}: {}".format(
-                        adata.obs_names[ind["ind"][0]],
-                        str(adata.obs["labels"][ind["ind"][0]])
-                    )
-
+                    if subset_indices is None:
+                        text = "{}: {}".format(
+                            adata.obs_names[ind["ind"][0]],
+                            str(adata.obs["labels"][ind["ind"][0]])
+                        )
+                    else:
+                        text = "{}: {}".format(
+                            adata.obs_names[subset_indices[ind["ind"][0]]],
+                            str(adata.obs["labels"][subset_indices[ind["ind"][0]]])
+                        )
         else:
-            text = "{}".format(adata.var_names[ind["ind"][0]])
+            if subset_indices is None:
+                text = "{}".format(adata.var_names[ind["ind"][0]])
+            else:
+                text = "{}".format(adata.var_names[subset_indices[ind["ind"][0]]])
         ann.set_text(text)
 
     def hover(event):
@@ -286,6 +326,7 @@ def function_plot(
     ylog_scale=False,
     xlabel="",
     ylabel="",
+    subset_indices=None
 ):
     """Plots the value of a function on every sample or every feature, depending
     on the value of obs_or_var which must be either "obs" or "var"
@@ -301,19 +342,24 @@ def function_plot(
         xlabel=xlabel,
         ylabel=ylabel,
         function_plot_=True,
+        subset_indices=subset_indices
     )
 
 
-def var_plot(adata: sc.AnnData, features=None, ylog_scale=False):
+def var_plot(adata: sc.AnnData, features=None, ylog_scale=False, subset_indices=None):
     """ """
     if type(features) == str or type(features) == np.str_ or type(features) == int:
         idx = features
         if type(idx) == str or type(idx) == np.str_:
             assert "var_indices" in adata.uns
             idx = adata.uns["var_indices"][idx]
-        function_plot(adata, lambda i: adata.X[i, idx], "obs", ylog_scale=ylog_scale)
+        function_plot(adata, lambda i: adata.X[i, idx], "obs", ylog_scale=ylog_scale,
+                      subset_indices=subset_indices)
     else:
-        xsize = adata.n_obs
+        if subset_indices is None:
+            xsize = adata.n_obs
+        else:
+            xsize = len(subset_indices)
         ysize = len(features)
         set_xticks = None
         set_xticks_text = None
@@ -333,7 +379,8 @@ def var_plot(adata: sc.AnnData, features=None, ylog_scale=False):
                 set_xticks,
                 set_xticks_text,
                 boundaries,
-            ) = _samples_by_labels(adata, sort_annot=False)
+            ) = _samples_by_labels(adata, sort_annot=True,
+                                   subset_indices=subset_indices)
             for k, idx in enumerate(feature_indices_list_):
                 plot_array[k, :] = [adata.X[i, idx] for i in list_samples]
 
@@ -442,11 +489,11 @@ def plot2d(
 
 def umap_plot(
     adata: sc.AnnData,
-    save_dir=None,
     metric="cosine",
     min_dist=0.0,
     n_neighbors=30,
     random_state=None,
+    subset_indices=None
 ):
     assert "labels" in adata.obs and "all_labels" in adata.uns
     reducer = umap.UMAP(
@@ -456,61 +503,87 @@ def umap_plot(
         random_state=random_state,
     )
     print("Starting UMAP reduction...")
-    reducer.fit(adata.X)
-    embedding = reducer.transform(adata.X)
+    if subset_indices is None:
+        datamatrix = adata.X
+    else:
+        datamatrix = adata.X[subset_indices]
+    reducer.fit(datamatrix)
+    embedding = reducer.transform(datamatrix)
+    full_embedding = np.zeros((adata.X.shape[0], 2))
+    full_embedding[subset_indices] = embedding
     print("Done.")
 
-    def hover_function(id_):
-        return "{}".format(adata.obs_names[id_] + ": " + str(adata.obs["labels"][id_]))
+    def embedding_x(j):
+        return full_embedding[j, 0]
 
-    annot_idxs = {}
-    for i, annot_ in enumerate(adata.uns["all_labels"]):
-        annot_idxs[annot_] = i
+    def embedding_y(j):
+        return full_embedding[j, 1]
 
-    samples_color = np.empty(adata.n_obs)
-    for i in range(adata.n_obs):
-        samples_color[i] = annot_idxs[adata.obs["labels"][i]]
-
-    fig, ax = plt.subplots()
-
-    sctr = plt.scatter(
-        embedding[:, 0], embedding[:, 1], c=samples_color, cmap="nipy_spectral", s=5
+    function_scatter(
+        adata,
+        embedding_x,
+        embedding_y,
+        "obs",
+        violinplot=False,
+        xlog_scale=False,
+        ylog_scale=False,
+        xlabel="",
+        ylabel="",
+        function_plot_=False,
+        subset_indices=subset_indices
     )
-    plt.gca().set_aspect("equal", "datalim")
 
-    ann = ax.annotate(
-        "",
-        xy=(0, 0),
-        xytext=(20, 20),
-        textcoords="offset points",
-        bbox=dict(boxstyle="round", fc="w"),
-        arrowprops=dict(arrowstyle="->"),
-    )
-    ann.set_visible(False)
-
-    def update_annot(ind):
-        pos = sctr.get_offsets()[ind["ind"][0]]
-        ann.xy = pos
-        text = hover_function(ind["ind"][0])
-        ann.set_text(text)
-
-    def hover(event):
-        vis = ann.get_visible()
-        if event.inaxes == ax:
-            cont, ind = sctr.contains(event)
-            if cont:
-                update_annot(ind)
-                ann.set_visible(True)
-                fig.canvas.draw_idle()
-            else:
-                if vis:
-                    ann.set_visible(False)
-                    fig.canvas.draw_idle()
-
-    fig.canvas.mpl_connect("motion_notify_event", hover)
-
-    if save_dir:
-        os.makedirs(save_dir, exist_ok=True)
-        plt.savefig(os.path.join(save_dir, "plot.png"), dpi=200)
-    else:
-        plt.show()
+    # def hover_function(id_):
+    #     return "{}".format(adata.obs_names[id_] + ": " + str(adata.obs["labels"][id_]))
+    #
+    # annot_idxs = {}
+    # for i, annot_ in enumerate(adata.uns["all_labels"]):
+    #     annot_idxs[annot_] = i
+    #
+    # samples_color = np.empty(adata.n_obs)
+    # for i in range(adata.n_obs):
+    #     samples_color[i] = annot_idxs[adata.obs["labels"][i]]
+    #
+    # fig, ax = plt.subplots()
+    #
+    # sctr = plt.scatter(
+    #     embedding[:, 0], embedding[:, 1], c=samples_color, cmap="nipy_spectral", s=5,
+    # )
+    # plt.gca().set_aspect("equal", "datalim")
+    #
+    # ann = ax.annotate(
+    #     "",
+    #     xy=(0, 0),
+    #     xytext=(20, 20),
+    #     textcoords="offset points",
+    #     bbox=dict(boxstyle="round", fc="w"),
+    #     arrowprops=dict(arrowstyle="->"),
+    # )
+    # ann.set_visible(False)
+    #
+    # def update_annot(ind):
+    #     pos = sctr.get_offsets()[ind["ind"][0]]
+    #     ann.xy = pos
+    #     text = hover_function(ind["ind"][0])
+    #     ann.set_text(text)
+    #
+    # def hover(event):
+    #     vis = ann.get_visible()
+    #     if event.inaxes == ax:
+    #         cont, ind = sctr.contains(event)
+    #         if cont:
+    #             update_annot(ind)
+    #             ann.set_visible(True)
+    #             fig.canvas.draw_idle()
+    #         else:
+    #             if vis:
+    #                 ann.set_visible(False)
+    #                 fig.canvas.draw_idle()
+    #
+    # fig.canvas.mpl_connect("motion_notify_event", hover)
+    #
+    # if save_dir:
+    #     os.makedirs(save_dir, exist_ok=True)
+    #     plt.savefig(os.path.join(save_dir, "plot.png"), dpi=200)
+    # else:
+    #     plt.show()
