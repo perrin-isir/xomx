@@ -6,3 +6,4 @@ from .basic_plot import (
     plot2d,
     umap_plot
 )
+from .logos import plot_logo

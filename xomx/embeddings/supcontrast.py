@@ -251,6 +251,7 @@ class SupContrast:
                                        adata.uns['train_indices_per_label'],
                                        batch_size)
         self.model = Model().to(self.device)
+        self.embedding_size = self.model.embedding_size
         self.optimizer = torch.optim.Adam(self.model.parameters(),
                                           lr=1e-3,
                                           weight_decay=1e-5)
