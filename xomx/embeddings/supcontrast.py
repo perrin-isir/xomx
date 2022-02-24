@@ -177,22 +177,25 @@ def initialize_last_layer(layer: torch.nn.Module, init_w: float = 1e-3):
 
 
 class Model(nn.Module):
-    def __init__(self):
+    def __init__(self, input_size, embedding_size):
         super().__init__()
 
-        self.embedding_size = 128
+        self.embedding_size = embedding_size
 
-        self.dp1 = nn.Dropout(p=0.8)
-        self.dp2 = nn.Dropout(p=0.8)
+        # self.dp1 = nn.Dropout(p=0.5)
+        # self.dp2 = nn.Dropout(p=0.5)
 
         # encoder
-        self.l1 = nn.Linear(440, 512)
-        self.l2 = nn.Linear(512, 256)
-        self.l3 = nn.Linear(256, self.embedding_size)
+        # self.l1 = nn.Linear(440, 512)
+        # self.l2 = nn.Linear(512, 256)
+        # self.l3 = nn.Linear(256, self.embedding_size)
+        self.l1 = nn.Linear(input_size, 256)
+        self.l2 = nn.Linear(256, 128)
+        self.l3 = nn.Linear(128, self.embedding_size)
 
         # head
-        self.l4 = nn.Linear(self.embedding_size, 64)
-        self.l5 = nn.Linear(64, 32)
+        self.l4 = nn.Linear(self.embedding_size, self.embedding_size//4)
+        self.l5 = nn.Linear(self.embedding_size//4, self.embedding_size//8)
 
         initialize_hidden_layer(self.l1)
         initialize_hidden_layer(self.l2)
@@ -205,9 +208,9 @@ class Model(nn.Module):
 
         # encode
         x = F.relu(self.l1(x))
-        x = self.dp1(x)
+        # x = self.dp1(x)
         x = F.relu(self.l2(x))
-        x = self.dp2(x)
+        # x = self.dp2(x)
         x = self.l3(x)
 
         # head
@@ -230,7 +233,9 @@ class SupContrast:
             self,
             adata: sc.AnnData,
             labels=None,
+            embedding_size=10,
             batch_size=256,
+            lr=1e-3,
             random_state=None,
     ):
         self.adata = adata
@@ -250,12 +255,12 @@ class SupContrast:
         self.loader = DataloadBalanced(self.labels,
                                        adata.uns['train_indices_per_label'],
                                        batch_size)
-        self.model = Model().to(self.device)
-        self.embedding_size = self.model.embedding_size
+        self.embedding_size = embedding_size
+        self.model = Model(self.adata.n_vars, self.embedding_size).to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(),
-                                          lr=1e-3,
-                                          weight_decay=1e-5)
-        self.criterion = SupConLoss(temperature=0.2).to(self.device)
+                                          lr=lr,)
+                                          # weight_decay=1e-4)
+        self.criterion = SupConLoss(temperature=0.05).to(self.device)
 
     @staticmethod
     def save_model(model, optimizer, save_file):
@@ -310,12 +315,6 @@ class SupContrast:
                         self.optimizer,
                         self.device,
                         epoch)
-
-            # if epoch % opt.save_freq == 0:
-            #     save_file = os.path.join(
-            #         opt.save_folder, 'ckpt_epoch_{epoch}.pth'.format(epoch=epoch))
-            #     # save_model(model, optimizer, opt, epoch, save_file)
-            #     save_model(my_model, my_optimizer, opt, epoch, save_file)
 
     def encode(self, inputs):
         return self.model.encode(
