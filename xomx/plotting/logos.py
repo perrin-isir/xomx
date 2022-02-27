@@ -1,19 +1,16 @@
-import pandas as pd
 import numpy as np
-import scanpy as sc
-import xomx
+from pandas import DataFrame
+from scanpy import AnnData
+from xomx.tools.bio import aminoacids
 import logomaker
 import matplotlib.pyplot as plt
 from scipy.stats import entropy
 
 
-# from xomx.tools import aminoacids
-
-
-def compute_logo_df(adata: sc.AnnData, indices, fixed_length: int = None):
+def compute_logo_df(adata: AnnData, indices, fixed_length: int = None):
     """
     The sample names (adata.obs_names) must be strings made of amino acid characters.
-    The list of allowed characters is xomx.tl.aminoacids.
+    The list of allowed characters is stored in the variable aminoacids.
     """
     if fixed_length is None:
         pos_list = np.arange(max([len(adata.obs_names[idx]) for idx in indices]))
@@ -26,11 +23,11 @@ def compute_logo_df(adata: sc.AnnData, indices, fixed_length: int = None):
                 total_size += 1
     if total_size == 0:
         raise ValueError('Cannot compute logo on an empty set.')
-    probability_matrix = np.zeros((len(pos_list), len(xomx.tl.aminoacids)))
+    probability_matrix = np.zeros((len(pos_list), len(aminoacids)))
 
     for position in pos_list:
         counts = {}
-        for aa in xomx.tl.aminoacids:
+        for aa in aminoacids:
             counts[aa] = 0
         for idx in indices:
             if fixed_length is None:
@@ -39,27 +36,27 @@ def compute_logo_df(adata: sc.AnnData, indices, fixed_length: int = None):
             else:
                 if len(adata.obs_names[idx]) == fixed_length:
                     counts[adata.obs_names[idx][position]] += 1
-        for k in range(len(xomx.tl.aminoacids)):
+        for k in range(len(aminoacids)):
             probability_matrix[position, k] = counts[
-                                                  xomx.tl.aminoacids[k]] / total_size
+                                                  aminoacids[k]] / total_size
     # from probabilities to bits:
-    max_entropy = -np.log2(1 / len(xomx.tl.aminoacids))
+    max_entropy = -np.log2(1 / len(aminoacids))
     for position in pos_list:
         pos_entropy = max_entropy - entropy(1e-10 + probability_matrix[position, :],
                                             base=2)
         probability_matrix[position, :] *= pos_entropy
     dico = {'pos': pos_list}
-    for k in range(len(xomx.tl.aminoacids)):
-        dico[xomx.tl.aminoacids[k]] = probability_matrix[:, k]
-    df_ = pd.DataFrame(dico)
+    for k in range(len(aminoacids)):
+        dico[aminoacids[k]] = probability_matrix[:, k]
+    df_ = DataFrame(dico)
     df_ = df_.set_index('pos')
     return df_
 
 
-def plot_logo(adata: sc.AnnData, indices, fixed_length: int = None):
+def plot_logo(adata: AnnData, indices, fixed_length: int = None):
     """
     The sample names (adata.obs_names) must be strings made of amino acid characters.
-    The list of allowed characters is xomx.tl.aminoacids.
+    The list of allowed characters is aminoacids.
     """
     df = compute_logo_df(adata, indices, fixed_length)
     fig, ax = plt.subplots(1, 1, figsize=[4, 2])

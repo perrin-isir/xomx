@@ -1,8 +1,8 @@
 import os
 import numpy as np
-import xomx
-import scanpy as sc
-import umap
+from xomx.tools.utils import _to_dense
+from scanpy import AnnData
+from umap import UMAP
 import matplotlib.pyplot as plt
 
 
@@ -21,7 +21,7 @@ def _hover(event, fig, ax, ann, sctr, update_annot):
 
 
 def plot_scores(
-    adata: sc.AnnData,
+    adata: AnnData,
     scores,
     score_threshold,
     indices,
@@ -101,7 +101,7 @@ def plot_scores(
         plt.show()
 
 
-def _samples_by_labels(adata: sc.AnnData, sort_annot=False, subset_indices=None):
+def _samples_by_labels(adata: AnnData, sort_annot=False, subset_indices=None):
     assert "obs_indices_per_label" in adata.uns and "all_labels" in adata.uns
     if sort_annot:
         argsort_labels = np.argsort(
@@ -150,7 +150,7 @@ def _identity_func(x):
 
 
 def function_scatter(
-    adata: sc.AnnData,
+    adata: AnnData,
     func1_=_identity_func,
     func2_=_identity_func,
     obs_or_var="obs",
@@ -319,7 +319,7 @@ def function_scatter(
 
 
 def function_plot(
-    adata: sc.AnnData,
+    adata: AnnData,
     func=_identity_func,
     obs_or_var="obs",
     violinplot=True,
@@ -346,7 +346,7 @@ def function_plot(
     )
 
 
-def var_plot(adata: sc.AnnData, features=None, ylog_scale=False, subset_indices=None):
+def var_plot(adata: AnnData, features=None, ylog_scale=False, subset_indices=None):
     """ """
     if type(features) == str or type(features) == np.str_ or type(features) == int:
         idx = features
@@ -398,7 +398,7 @@ def var_plot(adata: sc.AnnData, features=None, ylog_scale=False, subset_indices=
 
 
 def plot2d(
-    adata: sc.AnnData,
+    adata: AnnData,
     obsm_key,
     var_key=None,
     save_dir=None,
@@ -418,7 +418,7 @@ def plot2d(
     if var_key is not None:
         colorbar = True
         cmap = "viridis"
-        samples_color = np.squeeze(np.asarray(xomx.tl._to_dense(adata[:, var_key].X)))
+        samples_color = np.squeeze(np.asarray(_to_dense(adata[:, var_key].X)))
     else:
         if "labels" in adata.obs and "all_labels" in adata.uns:
             colorbar = False
@@ -488,7 +488,7 @@ def plot2d(
 
 
 def umap_plot(
-    adata: sc.AnnData,
+    adata: AnnData,
     metric="cosine",
     min_dist=0.0,
     n_neighbors=30,
@@ -496,7 +496,7 @@ def umap_plot(
     subset_indices=None
 ):
     assert "labels" in adata.obs and "all_labels" in adata.uns
-    reducer = umap.UMAP(
+    reducer = UMAP(
         metric=metric,
         min_dist=min_dist,
         n_neighbors=n_neighbors,

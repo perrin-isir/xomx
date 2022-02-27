@@ -1,7 +1,7 @@
 import requests
 import os
-import pandas as pd
 from io import StringIO
+from pandas import read_table
 
 
 def gdc_create_manifest(disease_type, project_list, nr_of_cases_list):
@@ -67,7 +67,7 @@ def gdc_create_manifest(disease_type, project_list, nr_of_cases_list):
         response = requests.post(
             files_endpt, headers={"Content-Type": "application/json"}, json=params
         )
-        df = pd.read_table(StringIO(response.content.decode("utf-8")))
+        df = read_table(StringIO(response.content.decode("utf-8")))
         df = df.rename(
             columns={
                 "file_name": "filename",
@@ -82,7 +82,7 @@ def gdc_create_manifest(disease_type, project_list, nr_of_cases_list):
 
 
 def gdc_create_data_matrix(dir_path, manifest_path):
-    manifest = pd.read_table(manifest_path)
+    manifest = read_table(manifest_path)
     df_list = []
     nr_of_samples = manifest.shape[0]
     for i in range(nr_of_samples):
@@ -92,7 +92,7 @@ def gdc_create_data_matrix(dir_path, manifest_path):
             os.path.join(dir_path, manifest["id"][i], manifest["filename"][i])
         ):
             df_list.append(
-                pd.read_table(
+                read_table(
                     os.path.join(dir_path, manifest["id"][i], manifest["filename"][i]),
                     header=None,
                 )

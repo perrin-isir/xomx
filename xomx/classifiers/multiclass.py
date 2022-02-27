@@ -1,6 +1,7 @@
 import numpy as np
-import xomx
-import scipy
+from xomx.tools.utils import _to_dense
+from xomx.plotting.basic_plot import plot_scores
+from scipy.special import softmax
 
 
 class ScoreBasedMulticlass:
@@ -22,7 +23,7 @@ class ScoreBasedMulticlass:
             scores[annot] = self.binary_classifiers[annot].score(x)
         scores_list = [scores[annot] for annot in self.annotations]
         predictions = np.argmax(scores_list, axis=0)
-        add_score = np.max(scipy.special.softmax(scores_list, axis=0), axis=0).astype(
+        add_score = np.max(softmax(scores_list, axis=0), axis=0).astype(
             np.float
         )
         maxas = max(add_score)
@@ -32,9 +33,9 @@ class ScoreBasedMulticlass:
 
     def plot(self, label=None, save_dir=None):
         predictions, res = self.pred_score(
-            np.asarray(xomx.tl._to_dense(self.adata[self.adata.uns["test_indices"], :].X))
+            np.asarray(_to_dense(self.adata[self.adata.uns["test_indices"], :].X))
         )
-        xomx.pl.plot_scores(
+        plot_scores(
             self.adata,
             res.astype(np.float),
             None,

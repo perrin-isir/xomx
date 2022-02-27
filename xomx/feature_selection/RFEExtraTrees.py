@@ -1,15 +1,16 @@
 import os
 import numpy as np
 from sklearn.ensemble import ExtraTreesClassifier
-import xomx
-import scanpy as sc
+from xomx.tools.utils import _to_dense, confusion_matrix
+from xomx.plotting.basic_plot import plot_scores
+from scanpy import AnnData
 from joblib import dump, load
 
 
 class RFEExtraTrees:
     def __init__(
         self,
-        adata: sc.AnnData,
+        adata: AnnData,
         label,
         init_selection_size=None,
         n_estimators=450,
@@ -27,10 +28,10 @@ class RFEExtraTrees:
         self.n_estimators = n_estimators
         self.random_state = random_state
         self.current_feature_indices = np.arange(adata.n_vars)
-        self.data_train = np.asarray(xomx.tl._to_dense(
+        self.data_train = np.asarray(_to_dense(
             adata[adata.uns["train_indices"], :].X
         ).copy())
-        self.data_test = np.asarray(xomx.tl._to_dense(adata[adata.uns["test_indices"], :].X).copy())
+        self.data_test = np.asarray(_to_dense(adata[adata.uns["test_indices"], :].X).copy())
         self.target_train = np.zeros(adata.n_obs)
         self.target_train[adata.uns["train_indices_per_label"][label]] = 1.0
         self.target_train = np.take(
@@ -79,7 +80,7 @@ class RFEExtraTrees:
             n_estimators=self.n_estimators, random_state=self.random_state
         )
         self.forest.fit(self.data_train, self.target_train)
-        self.confusion_matrix = xomx.tl.confusion_matrix(
+        self.confusion_matrix = confusion_matrix(
             self.forest, self.data_test, self.target_test
         )
         self.log.append(
@@ -176,7 +177,7 @@ class RFEExtraTrees:
                               replace=False)
             res = self.score(self.data_test[idxs])
             indices = self.adata.uns["test_indices"][idxs]
-        xomx.pl.plot_scores(
+        plot_scores(
             self.adata,
             res,
             0.5,
@@ -189,7 +190,7 @@ class RFEExtraTrees:
 
 def load_RFEExtraTrees(
     fpath,
-    adata: sc.AnnData,
+    adata: AnnData,
 ) -> RFEExtraTrees:
     label = load(os.path.join(fpath, "label.joblib"))
     rfeet = RFEExtraTrees(adata, label)
