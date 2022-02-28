@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from xomx.tools.utils import _to_dense
-# from umap import UMAP
+from umap import UMAP
 import matplotlib.pyplot as plt
 
 
@@ -485,49 +485,48 @@ def plot2d(
     else:
         plt.show()
 
-#
-# def umap_plot(
-#     adata,
-#     metric="cosine",
-#     min_dist=0.0,
-#     n_neighbors=30,
-#     random_state=None,
-#     subset_indices=None
-# ):
-#     assert "labels" in adata.obs and "all_labels" in adata.uns
-#     reducer = UMAP(
-#         metric=metric,
-#         min_dist=min_dist,
-#         n_neighbors=n_neighbors,
-#         random_state=random_state,
-#     )
-#     print("Starting UMAP reduction...")
-#     if subset_indices is None:
-#         datamatrix = adata.X
-#     else:
-#         datamatrix = adata.X[subset_indices]
-#     reducer.fit(datamatrix)
-#     embedding = reducer.transform(datamatrix)
-#     full_embedding = np.zeros((adata.X.shape[0], 2))
-#     full_embedding[subset_indices] = embedding
-#     print("Done.")
-#
-#     def embedding_x(j):
-#         return full_embedding[j, 0]
-#
-#     def embedding_y(j):
-#         return full_embedding[j, 1]
-#
-#     function_scatter(
-#         adata,
-#         embedding_x,
-#         embedding_y,
-#         "obs",
-#         violinplot=False,
-#         xlog_scale=False,
-#         ylog_scale=False,
-#         xlabel="",
-#         ylabel="",
-#         function_plot_=False,
-#         subset_indices=subset_indices
-#     )
+
+def umap_plot(
+    adata,
+    metric="cosine",
+    min_dist=0.0,
+    n_neighbors=30,
+    random_state=None,
+    subset_indices=None
+):
+    reducer = UMAP(
+        metric=metric,
+        min_dist=min_dist,
+        n_neighbors=n_neighbors,
+        random_state=random_state,
+    )
+    print("Starting UMAP reduction...")
+    if subset_indices is None:
+        datamatrix = adata.X
+    else:
+        datamatrix = adata.X[subset_indices]
+    reducer.fit(datamatrix)
+    embedding = reducer.transform(datamatrix)
+    full_embedding = np.zeros((adata.X.shape[0], 2))
+    full_embedding[subset_indices] = embedding
+    print("Done.")
+
+    def embedding_x(j):
+        return full_embedding[j, 0]
+
+    def embedding_y(j):
+        return full_embedding[j, 1]
+
+    function_scatter(
+        adata,
+        embedding_x,
+        embedding_y,
+        "obs",
+        violinplot=False,
+        xlog_scale=False,
+        ylog_scale=False,
+        xlabel="",
+        ylabel="",
+        function_plot_=False,
+        subset_indices=subset_indices
+    )
