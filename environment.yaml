@@ -16,7 +16,6 @@ dependencies:
     - scikit-learn>=0.24.2
     - joblib>=1.0.1
     - requests>=2.25.1
-    - scanpy>=1.8.1
     - leidenalg>=0.8.8
     - jupyter>=1.0.0
     - logomaker

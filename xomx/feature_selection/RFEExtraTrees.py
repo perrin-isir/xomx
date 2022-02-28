@@ -3,14 +3,13 @@ import numpy as np
 from sklearn.ensemble import ExtraTreesClassifier
 from xomx.tools.utils import _to_dense, confusion_matrix
 from xomx.plotting.basic_plot import plot_scores
-from scanpy import AnnData
 from joblib import dump, load
 
 
 class RFEExtraTrees:
     def __init__(
         self,
-        adata: AnnData,
+        adata,
         label,
         init_selection_size=None,
         n_estimators=450,
@@ -190,7 +189,7 @@ class RFEExtraTrees:
 
 def load_RFEExtraTrees(
     fpath,
-    adata: AnnData,
+    adata,
 ) -> RFEExtraTrees:
     label = load(os.path.join(fpath, "label.joblib"))
     rfeet = RFEExtraTrees(adata, label)

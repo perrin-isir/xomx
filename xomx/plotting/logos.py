@@ -1,13 +1,12 @@
 import numpy as np
 from pandas import DataFrame
-from scanpy import AnnData
 from xomx.tools.bio import aminoacids
-from logomaker import Logo
 import matplotlib.pyplot as plt
 from scipy.stats import entropy
+from logomaker import Logo
 
 
-def compute_logo_df(adata: AnnData, indices, fixed_length: int = None):
+def compute_logo_df(adata, indices, fixed_length: int = None):
     """
     The sample names (adata.obs_names) must be strings made of amino acid characters.
     The list of allowed characters is stored in the variable aminoacids.
@@ -53,7 +52,7 @@ def compute_logo_df(adata: AnnData, indices, fixed_length: int = None):
     return df_
 
 
-def plot_logo(adata: AnnData, indices, fixed_length: int = None):
+def plot_logo(adata, indices, fixed_length: int = None):
     """
     The sample names (adata.obs_names) must be strings made of amino acid characters.
     The list of allowed characters is aminoacids.

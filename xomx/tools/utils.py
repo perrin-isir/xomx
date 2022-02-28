@@ -1,5 +1,4 @@
 import numpy as np
-from scanpy import AnnData
 from scipy.sparse import issparse
 
 
@@ -10,22 +9,22 @@ def _to_dense(x):
         return x
 
 
-def var_mean_values(adata: AnnData) -> np.ndarray:
+def var_mean_values(adata) -> np.ndarray:
     return np.squeeze(np.array(np.mean(adata.X, axis=0)))
 
 
-def var_standard_deviations(adata: AnnData) -> np.ndarray:
+def var_standard_deviations(adata) -> np.ndarray:
     return np.squeeze(np.array(np.std(adata.X, axis=0)))
 
 
-def var_indices(adata: AnnData) -> dict:
+def var_indices(adata) -> dict:
     vi_dict = {}
     for i, s_id in enumerate(adata.var_names):
         vi_dict[s_id] = i
     return vi_dict
 
 
-def obs_indices(adata: AnnData) -> dict:
+def obs_indices(adata) -> dict:
     oi_dict = {}
     for i, s_id in enumerate(adata.obs_names):
         oi_dict[s_id] = i
@@ -45,7 +44,7 @@ def indices_per_label(labels) -> dict:
 
 
 def train_and_test_indices(
-        adata: AnnData,
+        adata,
         indices_per_label_key: dict,
         test_train_ratio: float = 0.25,
         rng=np.random.default_rng(),

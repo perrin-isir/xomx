@@ -32,7 +32,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from scanpy import AnnData
 import numpy as np
 import sys
 
@@ -231,7 +230,7 @@ class Model(nn.Module):
 class SupContrast:
     def __init__(
             self,
-            adata: AnnData,
+            adata,
             labels=None,
             embedding_size=10,
             batch_size=256,

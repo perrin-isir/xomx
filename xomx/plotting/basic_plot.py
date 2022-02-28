@@ -1,8 +1,7 @@
 import os
 import numpy as np
 from xomx.tools.utils import _to_dense
-from scanpy import AnnData
-from umap import UMAP
+# from umap import UMAP
 import matplotlib.pyplot as plt
 
 
@@ -21,7 +20,7 @@ def _hover(event, fig, ax, ann, sctr, update_annot):
 
 
 def plot_scores(
-    adata: AnnData,
+    adata,
     scores,
     score_threshold,
     indices,
@@ -101,7 +100,7 @@ def plot_scores(
         plt.show()
 
 
-def _samples_by_labels(adata: AnnData, sort_annot=False, subset_indices=None):
+def _samples_by_labels(adata, sort_annot=False, subset_indices=None):
     assert "obs_indices_per_label" in adata.uns and "all_labels" in adata.uns
     if sort_annot:
         argsort_labels = np.argsort(
@@ -150,7 +149,7 @@ def _identity_func(x):
 
 
 def function_scatter(
-    adata: AnnData,
+    adata,
     func1_=_identity_func,
     func2_=_identity_func,
     obs_or_var="obs",
@@ -319,7 +318,7 @@ def function_scatter(
 
 
 def function_plot(
-    adata: AnnData,
+    adata,
     func=_identity_func,
     obs_or_var="obs",
     violinplot=True,
@@ -346,7 +345,7 @@ def function_plot(
     )
 
 
-def var_plot(adata: AnnData, features=None, ylog_scale=False, subset_indices=None):
+def var_plot(adata, features=None, ylog_scale=False, subset_indices=None):
     """ """
     if type(features) == str or type(features) == np.str_ or type(features) == int:
         idx = features
@@ -398,7 +397,7 @@ def var_plot(adata: AnnData, features=None, ylog_scale=False, subset_indices=Non
 
 
 def plot2d(
-    adata: AnnData,
+    adata,
     obsm_key,
     var_key=None,
     save_dir=None,
@@ -486,104 +485,49 @@ def plot2d(
     else:
         plt.show()
 
-
-def umap_plot(
-    adata: AnnData,
-    metric="cosine",
-    min_dist=0.0,
-    n_neighbors=30,
-    random_state=None,
-    subset_indices=None
-):
-    assert "labels" in adata.obs and "all_labels" in adata.uns
-    reducer = UMAP(
-        metric=metric,
-        min_dist=min_dist,
-        n_neighbors=n_neighbors,
-        random_state=random_state,
-    )
-    print("Starting UMAP reduction...")
-    if subset_indices is None:
-        datamatrix = adata.X
-    else:
-        datamatrix = adata.X[subset_indices]
-    reducer.fit(datamatrix)
-    embedding = reducer.transform(datamatrix)
-    full_embedding = np.zeros((adata.X.shape[0], 2))
-    full_embedding[subset_indices] = embedding
-    print("Done.")
-
-    def embedding_x(j):
-        return full_embedding[j, 0]
-
-    def embedding_y(j):
-        return full_embedding[j, 1]
-
-    function_scatter(
-        adata,
-        embedding_x,
-        embedding_y,
-        "obs",
-        violinplot=False,
-        xlog_scale=False,
-        ylog_scale=False,
-        xlabel="",
-        ylabel="",
-        function_plot_=False,
-        subset_indices=subset_indices
-    )
-
-    # def hover_function(id_):
-    #     return "{}".format(adata.obs_names[id_] + ": " + str(adata.obs["labels"][id_]))
-    #
-    # annot_idxs = {}
-    # for i, annot_ in enumerate(adata.uns["all_labels"]):
-    #     annot_idxs[annot_] = i
-    #
-    # samples_color = np.empty(adata.n_obs)
-    # for i in range(adata.n_obs):
-    #     samples_color[i] = annot_idxs[adata.obs["labels"][i]]
-    #
-    # fig, ax = plt.subplots()
-    #
-    # sctr = plt.scatter(
-    #     embedding[:, 0], embedding[:, 1], c=samples_color, cmap="nipy_spectral", s=5,
-    # )
-    # plt.gca().set_aspect("equal", "datalim")
-    #
-    # ann = ax.annotate(
-    #     "",
-    #     xy=(0, 0),
-    #     xytext=(20, 20),
-    #     textcoords="offset points",
-    #     bbox=dict(boxstyle="round", fc="w"),
-    #     arrowprops=dict(arrowstyle="->"),
-    # )
-    # ann.set_visible(False)
-    #
-    # def update_annot(ind):
-    #     pos = sctr.get_offsets()[ind["ind"][0]]
-    #     ann.xy = pos
-    #     text = hover_function(ind["ind"][0])
-    #     ann.set_text(text)
-    #
-    # def hover(event):
-    #     vis = ann.get_visible()
-    #     if event.inaxes == ax:
-    #         cont, ind = sctr.contains(event)
-    #         if cont:
-    #             update_annot(ind)
-    #             ann.set_visible(True)
-    #             fig.canvas.draw_idle()
-    #         else:
-    #             if vis:
-    #                 ann.set_visible(False)
-    #                 fig.canvas.draw_idle()
-    #
-    # fig.canvas.mpl_connect("motion_notify_event", hover)
-    #
-    # if save_dir:
-    #     os.makedirs(save_dir, exist_ok=True)
-    #     plt.savefig(os.path.join(save_dir, "plot.png"), dpi=200)
-    # else:
-    #     plt.show()
+#
+# def umap_plot(
+#     adata,
+#     metric="cosine",
+#     min_dist=0.0,
+#     n_neighbors=30,
+#     random_state=None,
+#     subset_indices=None
+# ):
+#     assert "labels" in adata.obs and "all_labels" in adata.uns
+#     reducer = UMAP(
+#         metric=metric,
+#         min_dist=min_dist,
+#         n_neighbors=n_neighbors,
+#         random_state=random_state,
+#     )
+#     print("Starting UMAP reduction...")
+#     if subset_indices is None:
+#         datamatrix = adata.X
+#     else:
+#         datamatrix = adata.X[subset_indices]
+#     reducer.fit(datamatrix)
+#     embedding = reducer.transform(datamatrix)
+#     full_embedding = np.zeros((adata.X.shape[0], 2))
+#     full_embedding[subset_indices] = embedding
+#     print("Done.")
+#
+#     def embedding_x(j):
+#         return full_embedding[j, 0]
+#
+#     def embedding_y(j):
+#         return full_embedding[j, 1]
+#
+#     function_scatter(
+#         adata,
+#         embedding_x,
+#         embedding_y,
+#         "obs",
+#         violinplot=False,
+#         xlog_scale=False,
+#         ylog_scale=False,
+#         xlabel="",
+#         ylabel="",
+#         function_plot_=False,
+#         subset_indices=subset_indices
+#     )
