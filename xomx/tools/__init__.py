@@ -10,4 +10,5 @@ from .utils import (
     confusion_matrix,
     matthews_coef,
 )
-from .bio import aminoacids, to_float, to_float_inverse, onehot, onehot_inverse
+from .bio import aminoacids, to_float, to_float_inverse, onehot, onehot_inverse, \
+    compute_logomaker_df

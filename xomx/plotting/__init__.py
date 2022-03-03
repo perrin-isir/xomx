@@ -6,4 +6,4 @@ from .basic_plot import (
     plot2d,
     embedding_plot
 )
-from .logos import plot_logo
+# from .logos import plot_logo
