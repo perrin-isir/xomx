@@ -1,7 +1,6 @@
 import os
 import numpy as np
 from xomx.tools.utils import _to_dense
-from umap import UMAP
 import matplotlib.pyplot as plt
 
 
@@ -486,20 +485,12 @@ def plot2d(
         plt.show()
 
 
-def umap_plot(
+def embedding_plot(
     adata,
-    metric="cosine",
-    min_dist=0.0,
-    n_neighbors=30,
-    random_state=None,
+    reducer,
     subset_indices=None
 ):
-    reducer = UMAP(
-        metric=metric,
-        min_dist=min_dist,
-        n_neighbors=n_neighbors,
-        random_state=random_state,
-    )
+    assert (hasattr(reducer, 'fit') and hasattr(reducer, 'transform'))
     print("Starting UMAP reduction...")
     if subset_indices is None:
         datamatrix = adata.X
