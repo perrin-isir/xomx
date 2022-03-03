@@ -19,18 +19,40 @@ fully compatible with [Scanpy](https://scanpy.readthedocs.io).
 
 ## Install
 
-Recommended installation steps (with conda): 
-```
-git clone https://github.com/perrin-isir/xomx.git
-cd xomx
-conda env create -f environment.yaml
-conda activate xomxv
-```
-Then, use the following command to install the xomx library within the xomxv virtual
-environment: 
-```
-pip install -e .
-```
+<details><summary>Option 1: pip</summary>
+<p>
+
+    pip install git+https://github.com/perrin-isir/xomx
+
+</p>
+</details>
+
+<details><summary>Option 2: conda</summary>
+<p>
+
+    git clone https://github.com/perrin-isir/xomx.git
+    cd xomx
+
+Choose a conda environmnent name, for instance `xomxv`.  
+The following command creates the `xomxv` environment with the requirements listed in [environment.yaml](environment.yaml):
+
+    conda env create --name xomxv --file environment.yaml
+
+If you prefer to update an existing environment (`existing_env`):
+
+    conda env update --name existing_env --file environment.yml
+
+To activate the `xomxv` environment:
+
+    conda activate xomxv
+
+Finally, to install the *xomx* library in the activated virtual environment:
+
+    pip install -e .
+
+</p>
+</details>
+
 -----
 ## Tutorials
 
