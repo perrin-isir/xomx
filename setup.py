@@ -20,7 +20,7 @@ setup(
         "scikit-learn>=0.24.2",
         "requests>=2.25.1",
         "leidenalg>=0.8.8",
-        "umap>=0.5.2",
+        "umap-learn>=0.5.2",
         "logomaker"
     ],
     license="LICENSE",
