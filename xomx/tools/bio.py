@@ -2,9 +2,28 @@ import numpy as np
 from pandas import DataFrame
 from scipy.stats import entropy
 
-aminoacids = ["A", "R", "N", "D", "C", "Q", "E",
-              "G", "H", "I", "L", "K", "M", "F",
-              "P", "S", "T", "W", "Y", "V"]
+aminoacids = [
+    "A",
+    "R",
+    "N",
+    "D",
+    "C",
+    "Q",
+    "E",
+    "G",
+    "H",
+    "I",
+    "L",
+    "K",
+    "M",
+    "F",
+    "P",
+    "S",
+    "T",
+    "W",
+    "Y",
+    "V",
+]
 
 
 def onehot(seq: str, max_length: int) -> np.ndarray:
@@ -17,11 +36,14 @@ def onehot(seq: str, max_length: int) -> np.ndarray:
 
 def onehot_inverse(vec: np.ndarray, max_length: int) -> str:
     len_aa = len(aminoacids)
-    return_string = ''
+    return_string = ""
     v = np.array(vec)
     for k in range(max_length):
-        return_string += aminoacids[v[len_aa * k:len_aa * (k + 1)].argmax()] \
-            if v[len_aa * k:len_aa * (k + 1)].max() else ''
+        return_string += (
+            aminoacids[v[len_aa * k : len_aa * (k + 1)].argmax()]
+            if v[len_aa * k : len_aa * (k + 1)].max()
+            else ""
+        )
     return return_string
 
 
@@ -30,12 +52,12 @@ def to_float(seq: str) -> float:
     value = 0
     for char in seq[::-1]:
         value += ((np.array(char) == aminoacids).argmax() + 1) * mult
-        mult *= (len(aminoacids) + 1)
-    return 1. * value
+        mult *= len(aminoacids) + 1
+    return 1.0 * value
 
 
 def to_float_inverse(x: float) -> str:
-    base = (len(aminoacids) + 1)
+    base = len(aminoacids) + 1
     n = int(x)
     digit_list = []
     if n == 0:
@@ -44,7 +66,7 @@ def to_float_inverse(x: float) -> str:
         digit_list.append(int(n % base))
         n //= base
     dl = digit_list[::-1]
-    s = ''
+    s = ""
     for digit in dl:
         s += aminoacids[digit - 1]
     return s
@@ -65,7 +87,7 @@ def compute_logomaker_df(adata, indices, fixed_length: int = None):
             if len(adata.obs_names[idx]) == fixed_length:
                 total_size += 1
     if total_size == 0:
-        raise ValueError('Cannot compute logo on an empty set.')
+        raise ValueError("Cannot compute logo on an empty set.")
     probability_matrix = np.zeros((len(pos_list), len(aminoacids)))
 
     for position in pos_list:
@@ -80,17 +102,17 @@ def compute_logomaker_df(adata, indices, fixed_length: int = None):
                 if len(adata.obs_names[idx]) == fixed_length:
                     counts[adata.obs_names[idx][position]] += 1
         for k in range(len(aminoacids)):
-            probability_matrix[position, k] = counts[
-                                                  aminoacids[k]] / total_size
+            probability_matrix[position, k] = counts[aminoacids[k]] / total_size
     # from probabilities to bits:
     max_entropy = -np.log2(1 / len(aminoacids))
     for position in pos_list:
-        pos_entropy = max_entropy - entropy(1e-10 + probability_matrix[position, :],
-                                            base=2)
+        pos_entropy = max_entropy - entropy(
+            1e-10 + probability_matrix[position, :], base=2
+        )
         probability_matrix[position, :] *= pos_entropy
-    dico = {'pos': pos_list}
+    dico = {"pos": pos_list}
     for k in range(len(aminoacids)):
         dico[aminoacids[k]] = probability_matrix[:, k]
     df_ = DataFrame(dico)
-    df_ = df_.set_index('pos')
+    df_ = df_.set_index("pos")
     return df_

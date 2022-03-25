@@ -21,7 +21,7 @@ setup(
         "requests>=2.25.1",
         "leidenalg>=0.8.8",
         "umap-learn>=0.5.2",
-        "logomaker"
+        "logomaker",
     ],
     license="LICENSE",
 )

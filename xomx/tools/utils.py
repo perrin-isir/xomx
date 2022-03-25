@@ -44,11 +44,11 @@ def indices_per_label(labels) -> dict:
 
 
 def train_and_test_indices(
-        adata,
-        indices_per_label_key: dict,
-        test_train_ratio: float = 0.25,
-        rng=np.random.default_rng(),
-        shuffle: bool = True
+    adata,
+    indices_per_label_key: dict,
+    test_train_ratio: float = 0.25,
+    rng=np.random.default_rng(),
+    shuffle: bool = True,
 ):
     train_indices_per_label = {}
     test_indices_per_label = {}

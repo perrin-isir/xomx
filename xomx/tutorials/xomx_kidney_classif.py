@@ -83,9 +83,11 @@ if step == 2:
     try:
         subprocess.check_call(commandstring, shell=True)
     except subprocess.CalledProcessError:
-       print("ERROR: make sure you have downloaded gdc-client" + \
-             " and that it is accessible (see xomx_kidney_classif.md)")
-       sys.exit()
+        print(
+            "ERROR: make sure you have downloaded gdc-client"
+            + " and that it is accessible (see xomx_kidney_classif.md)"
+        )
+        sys.exit()
     print("STEP 2: done")
 
 
@@ -177,10 +179,9 @@ if step == 5:
     xd.uns["var_indices"] = xomx.tl.var_indices(xd)
 
     # Randomly separate samples into training and test sets.
-    xomx.tl.train_and_test_indices(xd,
-                                   "obs_indices_per_label",
-                                   test_train_ratio=0.25,
-                                   rng=rng)
+    xomx.tl.train_and_test_indices(
+        xd, "obs_indices_per_label", test_train_ratio=0.25, rng=rng
+    )
     # New annotations after this call:
     # xd.uns["train_indices_per_label"]
     # xd.uns["test_indices_per_label"]

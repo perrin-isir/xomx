@@ -154,10 +154,9 @@ if step == 1:
     xd.uns["obs_indices_per_label"] = xomx.tl.indices_per_label(xd.obs["labels"])
 
     # Compute training and test sets
-    xomx.tl.train_and_test_indices(xd,
-                                   "obs_indices_per_label",
-                                   test_train_ratio=0.25,
-                                   rng=rng)
+    xomx.tl.train_and_test_indices(
+        xd, "obs_indices_per_label", test_train_ratio=0.25, rng=rng
+    )
 
     # Rank the genes for each cluster with t-test
     sc.tl.rank_genes_groups(xd, "leiden", method="t-test")

@@ -40,8 +40,7 @@ class SupConLoss(nn.Module):
     """Supervised Contrastive Learning: https://arxiv.org/pdf/2004.11362.pdf.
     It also supports the unsupervised contrastive loss in SimCLR"""
 
-    def __init__(self, temperature=0.07, contrast_mode='all',
-                 base_temperature=0.07):
+    def __init__(self, temperature=0.07, contrast_mode="all", base_temperature=0.07):
         super(SupConLoss, self).__init__()
         self.temperature = temperature
         self.contrast_mode = contrast_mode
@@ -60,15 +59,13 @@ class SupConLoss(nn.Module):
         Returns:
             A loss scalar.
         """
-        device = (torch.device('cuda')
-                  if features.is_cuda
-                  else torch.device('cpu'))
+        device = torch.device("cuda") if features.is_cuda else torch.device("cpu")
 
         batch_size = features.shape[0]
 
         labels = labels.contiguous().view(-1, 1)
         if labels.shape[0] != batch_size:
-            raise ValueError('Num of labels does not match num of features')
+            raise ValueError("Num of labels does not match num of features")
         mask = torch.eq(labels, labels.T).float().to(device)
 
         contrast_count = 1
@@ -78,8 +75,8 @@ class SupConLoss(nn.Module):
 
         # compute logits
         anchor_dot_contrast = torch.div(
-            torch.matmul(anchor_feature, contrast_feature.T),
-            self.temperature)
+            torch.matmul(anchor_feature, contrast_feature.T), self.temperature
+        )
         # for numerical stability
         logits_max, _ = torch.max(anchor_dot_contrast, dim=1, keepdim=True)
         logits = anchor_dot_contrast - logits_max.detach()
@@ -91,7 +88,7 @@ class SupConLoss(nn.Module):
             torch.ones_like(mask),
             1,
             torch.arange(batch_size * anchor_count).view(-1, 1).to(device),
-            0
+            0,
         )
         mask = mask * logits_mask
 
@@ -103,7 +100,7 @@ class SupConLoss(nn.Module):
         mean_log_prob_pos = (mask * log_prob).sum(1) / mask.sum(1)
 
         # loss
-        loss = - (self.temperature / self.base_temperature) * mean_log_prob_pos
+        loss = -(self.temperature / self.base_temperature) * mean_log_prob_pos
         loss = loss.view(anchor_count, batch_size).mean()
 
         return loss
@@ -137,9 +134,9 @@ class DataloadBalanced:
 
     def __next__(self):
         if self.index < self.total_length:
-            halfbatch = np.random.choice(self.keys,
-                                         size=self.batchsize // 2,
-                                         replace=True)
+            halfbatch = np.random.choice(
+                self.keys, size=self.batchsize // 2, replace=True
+            )
             fullbatch = np.hstack((halfbatch, halfbatch))
             batch = []
             for key in fullbatch:
@@ -193,8 +190,8 @@ class Model(nn.Module):
         self.l3 = nn.Linear(128, self.embedding_size)
 
         # head
-        self.l4 = nn.Linear(self.embedding_size, self.embedding_size//4)
-        self.l5 = nn.Linear(self.embedding_size//4, self.embedding_size//8)
+        self.l4 = nn.Linear(self.embedding_size, self.embedding_size // 4)
+        self.l5 = nn.Linear(self.embedding_size // 4, self.embedding_size // 8)
 
         initialize_hidden_layer(self.l1)
         initialize_hidden_layer(self.l2)
@@ -229,44 +226,46 @@ class Model(nn.Module):
 
 class SupContrast:
     def __init__(
-            self,
-            adata,
-            labels=None,
-            embedding_size=10,
-            batch_size=256,
-            lr=1e-3,
-            random_state=None,
+        self,
+        adata,
+        labels=None,
+        embedding_size=10,
+        batch_size=256,
+        lr=1e-3,
+        random_state=None,
     ):
         self.adata = adata
         assert (
-                "all_labels" in adata.uns
-                and "train_indices" in adata.uns
-                and "test_indices" in adata.uns
-                and "train_indices_per_label" in adata.uns
-                and "test_indices_per_label" in adata.uns
+            "all_labels" in adata.uns
+            and "train_indices" in adata.uns
+            and "test_indices" in adata.uns
+            and "train_indices_per_label" in adata.uns
+            and "test_indices_per_label" in adata.uns
         )
         self.int_labels = {}
-        for lbl in self.adata.uns['all_labels']:
-            self.int_labels[lbl] = (self.adata.uns['all_labels'] == lbl).argmax()
+        for lbl in self.adata.uns["all_labels"]:
+            self.int_labels[lbl] = (self.adata.uns["all_labels"] == lbl).argmax()
         self.labels = labels
         self.random_state = random_state
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.loader = DataloadBalanced(self.labels,
-                                       adata.uns['train_indices_per_label'],
-                                       batch_size)
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.loader = DataloadBalanced(
+            self.labels, adata.uns["train_indices_per_label"], batch_size
+        )
         self.embedding_size = embedding_size
         self.model = Model(self.adata.n_vars, self.embedding_size).to(self.device)
-        self.optimizer = torch.optim.Adam(self.model.parameters(),
-                                          lr=lr,)
-                                          # weight_decay=1e-4)
+        self.optimizer = torch.optim.Adam(
+            self.model.parameters(),
+            lr=lr,
+        )
+        # weight_decay=1e-4)
         self.criterion = SupConLoss(temperature=0.05).to(self.device)
 
     @staticmethod
     def save_model(model, optimizer, save_file):
-        print('==> Saving...')
+        print("==> Saving...")
         state = {
-            'model': model.state_dict(),
-            'optimizer': optimizer.state_dict(),
+            "model": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
         }
         torch.save(state, save_file)
         del state
@@ -276,8 +275,8 @@ class SupContrast:
 
     def load(self, filename):
         state = torch.load(filename)
-        self.model.load_state_dict(state['model'])
-        self.optimizer.load_state_dict(state['optimizer'])
+        self.model.load_state_dict(state["model"])
+        self.optimizer.load_state_dict(state["optimizer"])
 
     @staticmethod
     def train_(loader, adata, int_labels, model, criterion, optimizer, device, epoch):
@@ -287,7 +286,7 @@ class SupContrast:
 
         for idx, indices in enumerate(loader):
             inputs = torch.tensor(adata.X[indices]).to(device)
-            l_labels = adata.obs['labels'][indices]
+            l_labels = adata.obs["labels"][indices]
             labels = torch.tensor([int_labels[elt] for elt in l_labels]).to(device)
 
             # compute loss
@@ -298,23 +297,29 @@ class SupContrast:
             loss.backward()
             optimizer.step()
 
-        print('Train: [epoch {0}]({1} gradient steps)]\t'
-              'loss {loss:.3f}'.format(epoch,
-                                       loader.len(),
-                                       loss=loss.item()))
+        print(
+            "Train: [epoch {0}]({1} gradient steps)]\t"
+            "loss {loss:.3f}".format(epoch, loader.len(), loss=loss.item())
+        )
         sys.stdout.flush()
 
     def train(self, n_epochs):
         for epoch in range(1, n_epochs + 1):
-            self.train_(self.loader,
-                        self.adata,
-                        self.int_labels,
-                        self.model,
-                        self.criterion,
-                        self.optimizer,
-                        self.device,
-                        epoch)
+            self.train_(
+                self.loader,
+                self.adata,
+                self.int_labels,
+                self.model,
+                self.criterion,
+                self.optimizer,
+                self.device,
+                epoch,
+            )
 
     def encode(self, inputs):
-        return self.model.encode(
-            torch.tensor(inputs).to(self.device)).detach().cpu().numpy()
+        return (
+            self.model.encode(torch.tensor(inputs).to(self.device))
+            .detach()
+            .cpu()
+            .numpy()
+        )
