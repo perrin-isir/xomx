@@ -1,8 +1,8 @@
 from .basic_plot import (
+    scatter,
+    plot,
     plot_scores,
-    function_scatter,
-    function_plot,
-    var_plot,
-    plot2d,
-    embedding_plot,
+    plot_var,
+    plot_2d_obsm,
+    plot_2d_embedding,
 )

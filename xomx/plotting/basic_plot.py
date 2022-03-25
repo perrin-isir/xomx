@@ -145,7 +145,7 @@ def _identity_func(x):
     return x
 
 
-def function_scatter(
+def scatter(
     adata,
     func1_=_identity_func,
     func2_=_identity_func,
@@ -372,7 +372,7 @@ def function_scatter(
         plt.show()
 
 
-def function_plot(
+def plot(
     adata,
     func=_identity_func,
     obs_or_var="obs",
@@ -385,7 +385,7 @@ def function_plot(
     """Plots the value of a function on every sample or every feature, depending
     on the value of obs_or_var which must be either "obs" or "var"
     (the function must take indices in input)"""
-    return function_scatter(
+    return scatter(
         adata,
         _identity_func,
         func,
@@ -399,7 +399,7 @@ def function_plot(
     )
 
 
-def var_plot(
+def plot_var(
     adata,
     features=None,
     ylog_scale=False,
@@ -415,7 +415,7 @@ def var_plot(
                 "adata.uns['var_indices'] = xomx.tl.var_indices(adata)"
             )
             idx = adata.uns["var_indices"][idx]
-        function_plot(
+        plot(
             adata,
             lambda i: adata.X[i, idx],
             "obs",
@@ -469,7 +469,7 @@ def var_plot(
             plt.show()
 
 
-def plot2d(
+def plot_2d_obsm(
     adata,
     obsm_key,
     var_key=None,
@@ -548,7 +548,7 @@ def plot2d(
         plt.show()
 
 
-def embedding_plot(
+def plot_2d_embedding(
     adata,
     reducer,
     subset_indices=None,
@@ -573,7 +573,7 @@ def embedding_plot(
     def embedding_y(j):
         return full_embedding[j, 1]
 
-    function_scatter(
+    scatter(
         adata,
         embedding_x,
         embedding_y,

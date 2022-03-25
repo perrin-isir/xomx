@@ -233,7 +233,7 @@ if step == 7:
     xd = sc.read(os.path.join(savedir, "xomx_k_c_small.h5ad"))
 
     # Plot standard deviation vs mean value for all features
-    xomx.pl.function_scatter(
+    xomx.pl.scatter(
         xd,
         lambda idx: xd.var["mean_values"][idx],
         lambda idx: xd.var["standard_deviations"][idx],
@@ -268,29 +268,29 @@ if step == 7:
     all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
 
     # Visualizing all genes
-    xomx.pl.var_plot(xd, all_selected_genes)
+    xomx.pl.plot_var(xd, all_selected_genes)
 
     # Visualizing the 10-gene signature for "TCGA-KIRP"
-    xomx.pl.var_plot(xd, gene_dict["TCGA-KIRP"])
+    xomx.pl.plot_var(xd, gene_dict["TCGA-KIRP"])
 
     # Stacked violin plot (using Scanpy)
     sc.pl.stacked_violin(xd, gene_dict["TCGA-KIRP"], groupby="labels", rotation=90)
 
     # Visualizing the 10-gene signature for "TCGA-KICH"
-    xomx.pl.var_plot(xd, gene_dict["TCGA-KICH"])
+    xomx.pl.plot_var(xd, gene_dict["TCGA-KICH"])
 
     # A single feature
-    xomx.pl.var_plot(xd, "ENSG00000168269.8")
+    xomx.pl.plot_var(xd, "ENSG00000168269.8")
 
     # Visualizing the 10-gene signature for "TCGA-KIRC"
-    xomx.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
+    xomx.pl.plot_var(xd, gene_dict["TCGA-KIRC"])
 
     # Computing and plotting a 2D UMAP embedding
     xd = xd[:, all_selected_genes]
     xd.var_names_make_unique()
     sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40, random_state=rng)
     sc.tl.umap(xd, random_state=rng)
-    xomx.pl.plot2d(xd, "X_umap")
+    xomx.pl.plot_2d_obsm(xd, "X_umap")
 
     print("STEP 7: done")
 

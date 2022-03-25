@@ -376,18 +376,18 @@ Loading:
 xd = sc.read(os.path.join(savedir, "xomx_k_c_small.h5ad"))
 ```
 
-Using the plotting function `function_scatter()`,
+Using the plotting function `scatter()`,
 we plot the standard deviation vs mean value for all the 
 genes (which were computed before logarithmizing the data).
-`function_scatter()` takes in input two functions, one for 
+`scatter()` takes in input two functions, one for 
 the x-axis, and one for the y-axis. Each of these functions
 must take in input the feature index. By changing the 
 `obs_or_var` option to "obs" instead of "var", we can use
-`function_scatter()` to make a scatter plot over the samples
+`scatter()` to make a scatter plot over the samples
 instead of over the features.
 
 ```python
-xomx.pl.function_scatter(
+xomx.pl.scatter(
     xd,
     lambda idx: xd.var["mean_values"][idx],
     lambda idx: xd.var["standard_deviations"][idx],
@@ -472,9 +472,9 @@ We gather the selected genes in a single list:
 ```python
 all_selected_genes = np.asarray(list(gene_dict.values())).flatten()
 ```
-We can visualize these marker genes with `xomx.pl.var_plot()`:
+We can visualize these marker genes with `xomx.pl.plot_var()`:
 ```python
-xomx.pl.var_plot(xd, all_selected_genes)
+xomx.pl.plot_var(xd, all_selected_genes)
 ```
 ![alt text](imgs/tuto1_markers.png
 "Marker gene expressions")
@@ -485,7 +485,7 @@ the selected marker genes are mostly downregulated
 lead to similarly good results).  
 Let us zoom on the marker genes for KIRP:
 ```python
-xomx.pl.var_plot(xd, gene_dict["TCGA-KIRP"])
+xomx.pl.plot_var(xd, gene_dict["TCGA-KIRP"])
 ```
 ![alt text](imgs/tuto1_KIRPmarkers.png
 "Downregulated marker genes for TCGA-KIRP")
@@ -502,13 +502,13 @@ PTGER3 (ENSG00000050628) and EBF2 (ENSG00000221818).
 
 KICH markers:
 ```python
-xomx.pl.var_plot(xd, gene_dict["TCGA-KICH"])
+xomx.pl.plot_var(xd, gene_dict["TCGA-KICH"])
 ```
 ![alt text](imgs/tuto1_KICHmarkers.png
 "Upregulated marker genes for TCGA-KIRC")
-We can also use `var_plot()` with a single gene:
+We can also use `plot_var()` with a single gene:
 ```python
-xomx.pl.var_plot(xd, "ENSG00000168269.8")
+xomx.pl.plot_var(xd, "ENSG00000168269.8")
 ```
 ![alt text](imgs/tuto1_FOXI1_KICH.png
 "Upregulated marker genes for TCGA-KICH")
@@ -525,7 +525,7 @@ https://doi.org/10.1016/j.celrep.2017.07.043
 
 KIRC markers:
 ```python
-xomx.pl.var_plot(xd, gene_dict["TCGA-KIRC"])
+xomx.pl.plot_var(xd, gene_dict["TCGA-KIRC"])
 ```
 ![alt text](imgs/tuto1_KIRCmarkers.png
 "Upregulated marker genes for TCGA-KIRC")
@@ -547,9 +547,9 @@ sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40, random_state=rng)
 sc.tl.umap(xd, random_state=rng)
 ```
 `sc.tl.umap()` stores the embedding in `xd.obsm["X_umap"]`.  
-We use `xomx.pl.plot2d()` to display an interactive plot:
+We use `xomx.pl.plot_2d_obsm()` to display an interactive plot:
 ```python
-xomx.pl.plot2d(xd, "X_umap")
+xomx.pl.plot_2d_obsm(xd, "X_umap")
 ```
 ![alt text](imgs/tuto1_UMAP.gif
 "Interactive UMAP plot")

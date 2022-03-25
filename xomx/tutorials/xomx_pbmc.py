@@ -76,7 +76,7 @@ if step == 1:
 
     # Plot, for all genes, the mean fraction
     # of counts in single cells, across all cells
-    xomx.pl.function_plot(
+    xomx.pl.plot(
         xd,
         lambda idx: mean_count_fractions[idx],
         obs_or_var="var",
@@ -87,23 +87,21 @@ if step == 1:
     )
 
     # Plot the total counts per cell
-    xomx.pl.function_plot(
+    xomx.pl.plot(
         xd,
         lambda idx: xd.obs["total_counts"][idx],
         obs_or_var="obs",
-        violinplot=True,
         ylog_scale=False,
         xlabel="cells",
         ylabel="total number of counts",
     )
 
     # Plot mitochondrial count percentages vs total number of counts
-    xomx.pl.function_scatter(
+    xomx.pl.scatter(
         xd,
         lambda idx: xd.obs["total_counts"][idx],
         lambda idx: xd.obs["pct_counts_mt"][idx],
         obs_or_var="obs",
-        violinplot=False,
         xlog_scale=False,
         ylog_scale=False,
         xlabel="total number number of counts",
@@ -254,12 +252,12 @@ if step == 3:
     sc.tl.umap(xd, random_state=rng)
 
     # Interactive UMAP plots
-    xomx.pl.plot2d(xd, "X_umap")
-    xomx.pl.plot2d(xd, "X_umap", "CST3")
+    xomx.pl.plot_2d_obsm(xd, "X_umap")
+    xomx.pl.plot_2d_obsm(xd, "X_umap", "CST3")
 
     # Interactive PCA plots
-    xomx.pl.plot2d(xd, "X_pca")
-    xomx.pl.plot2d(xd, "X_pca", "CST3")
+    xomx.pl.plot_2d_obsm(xd, "X_pca")
+    xomx.pl.plot_2d_obsm(xd, "X_pca", "CST3")
 
     print("STEP 3: done")
 

@@ -97,11 +97,11 @@ gene in each single cell, across all cells.
 
 + Plot, for all genes, the mean fraction of counts in single cells, across all cells.
 
-We use `xomx.pl.function_plot()`. Besides the AnnData object, it takes in input a 
+We use `xomx.pl.plot()`. Besides the AnnData object, it takes in input a 
 function (here `lambda idx: mean_count_fractions[idx]`) which itself takes as input 
 the index of a feature (if `obs_or_var="var"`) or a sample (if `obs_or_var="obs"`). 
 ```python
-xomx.pl.function_plot(
+xomx.pl.plot(
     xd,
     lambda idx: mean_count_fractions[idx],
     obs_or_var="var",
@@ -119,7 +119,7 @@ of the corresponding genes.
 
 + Plot the total counts per cell.
 ```python
-xomx.pl.function_plot(
+xomx.pl.plot(
     xd,
     lambda idx: xd.obs["total_counts"][idx],
     obs_or_var="obs",
@@ -137,10 +137,10 @@ of the corresponding cells.
 
 + Plot mitochondrial count percentages vs total number of counts.
 
-We use `xomx.pl.function_scatter()` which takes in input two functions, one for 
+We use `xomx.pl.scatter()` which takes in input two functions, one for 
 the x-axis, and one for the y-axis.
 ```python
-xomx.pl.function_scatter(
+xomx.pl.scatter(
     xd,
     lambda idx: xd.obs["total_counts"][idx],
     lambda idx: xd.obs["pct_counts_mt"][idx],
@@ -387,9 +387,9 @@ We use Scanpy to create a UMAP embedding, stored in `.obsm["X_umap"]`:
 sc.tl.umap(xd)
 ```
 
-Using `xomx.pl.plot2d()`, we get an interactive plot of this embedding:
+Using `xomx.pl.plot_2d_obsm()`, we get an interactive plot of this embedding:
 ```python
-xomx.pl.plot2d(xd, "X_umap")
+xomx.pl.plot_2d_obsm(xd, "X_umap")
 ```
 ![alt text](imgs/tuto2_UMAP.gif 
 "Interactive UMAP plot")
@@ -397,21 +397,21 @@ xomx.pl.plot2d(xd, "X_umap")
 By default, different colors correspond to the different labels, but 
 we can also specify a feature:
 ```python
-xomx.pl.plot2d(xd, "X_umap", "CST3")
+xomx.pl.plot_2d_obsm(xd, "X_umap", "CST3")
 ```
 ![alt text](imgs/tuto2_UMAP_CST3.gif 
 "Interactive UMAP plot")
 
-We can also use `xomx.pl.plot2d()` to get an interactive plot of the 
+We can also use `xomx.pl.plot_2d_obsm()` to get an interactive plot of the 
 first 2 PCA components of the data (computed in Step 1):
 ```python
-xomx.pl.plot2d(xd, "X_pca")
+xomx.pl.plot_2d_obsm(xd, "X_pca")
 ```
 ![alt text](imgs/tuto2_PCA.png 
 "First 2 PCA components")
 
 ```python
-xomx.pl.plot2d(xd, "X_pca", "CST3")
+xomx.pl.plot_2d_obsm(xd, "X_pca", "CST3")
 ```
 ![alt text](imgs/tuto2_PCA_CST3.gif 
 "First 2 PCA components")
