@@ -12,6 +12,15 @@ from bokeh.models import HoverTool
 global_bokeh_or_matplotlib = "bokeh"
 
 
+def extension(bokeh_or_matplotlib: str):
+    global global_bokeh_or_matplotlib
+    assert bokeh_or_matplotlib in [
+        "bokeh",
+        "matplotlib",
+    ], "Input must be 'bokeh' or 'matplotlib'."
+    global_bokeh_or_matplotlib = bokeh_or_matplotlib
+
+
 def _hover(event, fig, ax, ann, sctr, update_annot):
     vis = ann.get_visible()
     if event.inaxes == ax:
@@ -38,6 +47,7 @@ def plot_scores(
     yticks=None,
     ylabel="",
 ):
+    global global_bokeh_or_matplotlib
     annot_colors = {}
     assert "all_labels" in adata.uns and "labels" in adata.obs, (
         "plot_scores() requires data with labels (even if there is only one label), "
@@ -57,131 +67,136 @@ def plot_scores(
     for i in range(len(indices)):
         samples_color[i] = annot_colors[adata.obs["labels"][indices[i]]]
 
-    fig, ax = plt.subplots()
-    if label:
-        cm = "winter"
-    else:
-        cm = "nipy_spectral"
-    sctr = ax.scatter(np.arange(len(indices)), scores, c=samples_color, cmap=cm, s=5)
-    if score_threshold is not None:
-        ax.axhline(y=score_threshold, xmin=0, xmax=1, lw=1, ls="--", c="red")
-    if lines:
-        for k_ in range(denom + 1):
-            ax.axhline(y=k_, xmin=0, xmax=1, lw=0.2, ls="-", c="gray")
-
-    if yticks is not None:
-        plt.yticks(
-            np.arange(len(yticks)) + 0.5,
-            yticks,
-        )
-
-    ann = ax.annotate(
-        "",
-        xy=(0, 0),
-        xytext=(-100, 20),
-        textcoords="offset points",
-        bbox=dict(boxstyle="round", fc="w"),
-        arrowprops=dict(arrowstyle="->"),
-    )
-    ann.set_visible(False)
-
-    def update_annot(ind, sctr_):
-        pos = sctr_.get_offsets()[ind["ind"][0]]
-        ann.xy = pos
-        text = "{}: {}".format(
-            adata.obs_names[indices[ind["ind"][0]]],
-            adata.obs["labels"][indices[ind["ind"][0]]],
-        )
-        if text_complements is not None:
-            text += text_complements[ind["ind"][0]]
-        ann.set_text(text)
-
-    fig.canvas.mpl_connect(
-        "motion_notify_event",
-        lambda event: _hover(event, fig, ax, ann, sctr, update_annot),
-    )
-
-    plt.ylabel(ylabel)
     xlabel = "samples"
-    plt.xlabel(xlabel)
+
+    if global_bokeh_or_matplotlib == "matplotlib":
+        fig, ax = plt.subplots()
+        if label:
+            cm = "winter"
+        else:
+            cm = "nipy_spectral"
+        sctr = ax.scatter(
+            np.arange(len(indices)), scores, c=samples_color, cmap=cm, s=5
+        )
+        if score_threshold is not None:
+            ax.axhline(y=score_threshold, xmin=0, xmax=1, lw=1, ls="--", c="red")
+        if lines:
+            for k_ in range(denom + 1):
+                ax.axhline(y=k_, xmin=0, xmax=1, lw=0.2, ls="-", c="gray")
+
+        if yticks is not None:
+            plt.yticks(
+                np.arange(len(yticks)) + 0.5,
+                yticks,
+            )
+
+        ann = ax.annotate(
+            "",
+            xy=(0, 0),
+            xytext=(-100, 20),
+            textcoords="offset points",
+            bbox=dict(boxstyle="round", fc="w"),
+            arrowprops=dict(arrowstyle="->"),
+        )
+        ann.set_visible(False)
+
+        def update_annot(ind, sctr_):
+            pos = sctr_.get_offsets()[ind["ind"][0]]
+            ann.xy = pos
+            text = "{}: {}".format(
+                adata.obs_names[indices[ind["ind"][0]]],
+                adata.obs["labels"][indices[ind["ind"][0]]],
+            )
+            if text_complements is not None:
+                text += text_complements[ind["ind"][0]]
+            ann.set_text(text)
+
+        fig.canvas.mpl_connect(
+            "motion_notify_event",
+            lambda event: _hover(event, fig, ax, ann, sctr, update_annot),
+        )
+
+        plt.ylabel(ylabel)
+        plt.xlabel(xlabel)
+        if output_file:
+            plt.savefig(output_file, dpi=200)
+        else:
+            plt.show()
 
     ####################################################################################
     # Bokeh
+    if global_bokeh_or_matplotlib == "bokeh":
+        tmp_df = adata.obs.iloc[indices].copy()
 
-    tmp_df = adata.obs.iloc[indices].copy()
+        random_id = "".join(np.random.choice(list(string.ascii_letters), 10)) + "_"
+        tooltips = [("name", "@{" + random_id + "name}")]
+        if text_complements is not None:
+            tooltips += [("info", "@{" + random_id + "info}")]
+        tooltips += [(key, "@{" + key + "}") for key in tmp_df.keys()]
+        tmp_df[random_id + "x_" + xlabel] = np.arange(len(indices))
+        tmp_df[random_id + "y_" + ylabel] = scores.reshape(len(indices))
+        tooltips += [
+            ("x:" + xlabel, "@{" + random_id + "x_" + xlabel + "}"),
+            ("y:" + ylabel, "@{" + random_id + "y_" + ylabel + "}"),
+        ]
 
-    random_id = "".join(np.random.choice(list(string.ascii_letters), 10)) + "_"
-    tooltips = [("name", "@{" + random_id + "name}")]
-    if text_complements is not None:
-        tooltips += [("info", "@{" + random_id + "info}")]
-    tooltips += [(key, "@{" + key + "}") for key in tmp_df.keys()]
-    tmp_df[random_id + "x_" + xlabel] = np.arange(len(indices))
-    tmp_df[random_id + "y_" + ylabel] = scores.reshape(len(indices))
-    tooltips += [
-        ("x:" + xlabel, "@{" + random_id + "x_" + xlabel + "}"),
-        ("y:" + ylabel, "@{" + random_id + "y_" + ylabel + "}"),
-    ]
+        tmp_df[random_id + "name"] = adata.obs_names[indices]
+        if text_complements is not None:
+            tmp_df[random_id + "info"] = text_complements
+        tmp_df[random_id + "colors"] = samples_color
+        tmp_cmap = "nipy_spectral"
 
-    tmp_df[random_id + "name"] = adata.obs_names[indices]
-    if text_complements is not None:
-        tmp_df[random_id + "info"] = text_complements
-    tmp_df[random_id + "colors"] = samples_color
-    tmp_cmap = "nipy_spectral"
-
-    hv.extension("bokeh")
-    points = hv.Points(
-        tmp_df,
-        [random_id + "x_" + xlabel, random_id + "y_" + ylabel],
-        list(tmp_df.keys()),
-    )
-    hover = HoverTool(tooltips=tooltips)
-    points.opts(
-        tools=[hover],
-        color=random_id + "colors",
-        cmap=tmp_cmap,
-        size=4,
-        width=900,
-        height=600,
-        show_grid=False,
-        title="",
-        xlabel=xlabel,
-        ylabel=ylabel,
-        logx=False,
-        logy=False,
-    )
-    if yticks is not None:
+        hv.extension("bokeh")
+        points = hv.Points(
+            tmp_df,
+            [random_id + "x_" + xlabel, random_id + "y_" + ylabel],
+            list(tmp_df.keys()),
+        )
+        hover = HoverTool(tooltips=tooltips)
         points.opts(
-            yticks=list(zip([float(y) for y in np.arange(len(yticks)) + 0.5], yticks))
+            tools=[hover],
+            color=random_id + "colors",
+            cmap=tmp_cmap,
+            size=4,
+            width=900,
+            height=600,
+            show_grid=False,
+            title="",
+            xlabel=xlabel,
+            ylabel=ylabel,
+            logx=False,
+            logy=False,
         )
-    hline = []
-    if score_threshold is not None:
-        hline.append(hv.HLine(score_threshold))
-        hline[-1].opts(
-            color="red",
-            line_dash="dashed",
-            line_width=1.0,
-        )
-    if lines:
-        for k_ in range(denom + 1):
-            hline.append(hv.HLine(k_))
-            hline[-1].opts(
-                color="gray",
-                line_width=0.5,
+        if yticks is not None:
+            points.opts(
+                yticks=list(
+                    zip([float(y) for y in np.arange(len(yticks)) + 0.5], yticks)
+                )
             )
+        hline = []
+        if score_threshold is not None:
+            hline.append(hv.HLine(score_threshold))
+            hline[-1].opts(
+                color="red",
+                line_dash="dashed",
+                line_width=1.0,
+            )
+        if lines:
+            for k_ in range(denom + 1):
+                hline.append(hv.HLine(k_))
+                hline[-1].opts(
+                    color="gray",
+                    line_width=0.5,
+                )
 
-    bokeh.io.show(hv.render(hv.Overlay([points] + hline)))
-    del tmp_df[random_id + "name"]
-    if text_complements is not None:
-        del tmp_df[random_id + "info"]
-    del tmp_df[random_id + "colors"]
-    del tmp_df[random_id + "x_" + xlabel]
-    del tmp_df[random_id + "y_" + ylabel]
+        bokeh.io.show(hv.render(hv.Overlay([points] + hline)))
+        del tmp_df[random_id + "name"]
+        if text_complements is not None:
+            del tmp_df[random_id + "info"]
+        del tmp_df[random_id + "colors"]
+        del tmp_df[random_id + "x_" + xlabel]
+        del tmp_df[random_id + "y_" + ylabel]
     ####################################################################################
-
-    if output_file:
-        plt.savefig(output_file, dpi=200)
-    else:
-        plt.show()
 
 
 def _samples_by_labels(adata, sort_annot=False, subset_indices=None):
@@ -242,6 +257,7 @@ def scatter(
     on the value of obs_or_var which must be either "obs" or "var"
     (both functions must take indices in input)
     """
+    global global_bokeh_or_matplotlib
     if func1_ == _identity_func:
         function_plot_ = True
     else:
@@ -253,7 +269,8 @@ def scatter(
     violinplots_done = False
     samples_color = None
     colormap = None
-    fig, ax = plt.subplots()
+    if global_bokeh_or_matplotlib == "matplotlib":
+        fig, ax = plt.subplots()
     if obs_or_var == "obs":
         if "all_labels" in adata.uns and function_plot_:
             violinplot = True
@@ -267,22 +284,23 @@ def scatter(
             )
             y = [func2_(i) for i in list_samples]
             x = [i for i in range(len(y))]
-            if violinplot:
-                for i in range(len(boundaries) - 1):
-                    parts = ax.violinplot(
-                        y[boundaries[i] : boundaries[i + 1]],
-                        [(boundaries[i + 1] + boundaries[i]) / 2.0],
-                        points=60,
-                        widths=(boundaries[i + 1] - boundaries[i]) * 0.8,
-                        showmeans=False,
-                        showextrema=False,
-                        showmedians=False,
-                        bw_method=0.5,
-                    )
-                    for pc in parts["bodies"]:
-                        pc.set_facecolor("#D43F3A")
-                        pc.set_edgecolor("grey")
-                        pc.set_alpha(0.5)
+            if global_bokeh_or_matplotlib == "matplotlib":
+                if violinplot:
+                    for i in range(len(boundaries) - 1):
+                        parts = ax.violinplot(
+                            y[boundaries[i] : boundaries[i + 1]],
+                            [(boundaries[i + 1] + boundaries[i]) / 2.0],
+                            points=60,
+                            widths=(boundaries[i + 1] - boundaries[i]) * 0.8,
+                            showmeans=False,
+                            showextrema=False,
+                            showmedians=False,
+                            bw_method=0.5,
+                        )
+                        for pc in parts["bodies"]:
+                            pc.set_facecolor("#D43F3A")
+                            pc.set_edgecolor("grey")
+                            pc.set_alpha(0.5)
             violinplots_done = True
         else:
             if subset_indices is None:
@@ -320,160 +338,169 @@ def scatter(
             x = [func1_(i) for i in subset_indices]
     xmax = np.max(x)
     xmin = np.min(x)
-    if violinplot and not violinplots_done:
-        parts = ax.violinplot(
-            y,
-            [(xmax + xmin) / 2.0],
-            points=60,
-            widths=xmax - xmin,
-            showmeans=False,
-            showextrema=False,
-            showmedians=False,
-            bw_method=0.5,
-        )
-        for pc in parts["bodies"]:
-            pc.set_facecolor("#D43F3A")
-            pc.set_edgecolor("grey")
-            pc.set_alpha(0.5)
 
     if colormap is None:
         colormap = "nipy_spectral"
-    if samples_color is None:
-        scax = ax.scatter(x, y, s=1)
-    else:
-        scax = ax.scatter(x, y, c=samples_color, cmap=colormap, s=1)
-        if colormap == "viridis":
-            fig.colorbar(scax, ax=ax)
 
-    ann = ax.annotate(
-        "",
-        xy=(0, 0),
-        xytext=(-100, 20),
-        textcoords="offset points",
-        bbox=dict(boxstyle="round", fc="w"),
-        arrowprops=dict(arrowstyle="->"),
-    )
-    ann.set_visible(False)
+    if global_bokeh_or_matplotlib == "matplotlib":
+        if violinplot and not violinplots_done:
+            parts = ax.violinplot(
+                y,
+                [(xmax + xmin) / 2.0],
+                points=60,
+                widths=xmax - xmin,
+                showmeans=False,
+                showextrema=False,
+                showmedians=False,
+                bw_method=0.5,
+            )
+            for pc in parts["bodies"]:
+                pc.set_facecolor("#D43F3A")
+                pc.set_edgecolor("grey")
+                pc.set_alpha(0.5)
 
-    def update_annot(ind, scax_):
-        pos = scax_.get_offsets()[ind["ind"][0]]
-        ann.xy = pos
-        if obs_or_var == "obs":
-            if "all_labels" in adata.uns and function_plot_ and subset_indices is None:
-                text = "{}".format(adata.obs_names[list_samples[ind["ind"][0]]])
-            else:
-                if samples_color is None:
-                    if subset_indices is None:
-                        text = "{}".format(adata.obs_names[ind["ind"][0]])
-                    else:
-                        text = "{}".format(
-                            adata.obs_names[subset_indices[ind["ind"][0]]]
-                        )
-                else:
-                    if subset_indices is None:
-                        text = "{}: {}".format(
-                            adata.obs_names[ind["ind"][0]],
-                            str(adata.obs["labels"][ind["ind"][0]]),
-                        )
-                    else:
-                        text = "{}: {}".format(
-                            adata.obs_names[subset_indices[ind["ind"][0]]],
-                            str(adata.obs["labels"][subset_indices[ind["ind"][0]]]),
-                        )
+        if samples_color is None:
+            scax = ax.scatter(x, y, s=1)
         else:
-            if subset_indices is None:
-                text = "{}".format(adata.var_names[ind["ind"][0]])
+            scax = ax.scatter(x, y, c=samples_color, cmap=colormap, s=1)
+            if colormap == "viridis":
+                fig.colorbar(scax, ax=ax)
+
+        ann = ax.annotate(
+            "",
+            xy=(0, 0),
+            xytext=(-100, 20),
+            textcoords="offset points",
+            bbox=dict(boxstyle="round", fc="w"),
+            arrowprops=dict(arrowstyle="->"),
+        )
+        ann.set_visible(False)
+
+        def update_annot(ind, scax_):
+            pos = scax_.get_offsets()[ind["ind"][0]]
+            ann.xy = pos
+            if obs_or_var == "obs":
+                if (
+                    "all_labels" in adata.uns
+                    and function_plot_
+                    and subset_indices is None
+                ):
+                    text = "{}".format(adata.obs_names[list_samples[ind["ind"][0]]])
+                else:
+                    if samples_color is None:
+                        if subset_indices is None:
+                            text = "{}".format(adata.obs_names[ind["ind"][0]])
+                        else:
+                            text = "{}".format(
+                                adata.obs_names[subset_indices[ind["ind"][0]]]
+                            )
+                    else:
+                        if subset_indices is None:
+                            text = "{}: {}".format(
+                                adata.obs_names[ind["ind"][0]],
+                                str(adata.obs["labels"][ind["ind"][0]]),
+                            )
+                        else:
+                            text = "{}: {}".format(
+                                adata.obs_names[subset_indices[ind["ind"][0]]],
+                                str(adata.obs["labels"][subset_indices[ind["ind"][0]]]),
+                            )
             else:
-                text = "{}".format(adata.var_names[subset_indices[ind["ind"][0]]])
-        ann.set_text(text)
+                if subset_indices is None:
+                    text = "{}".format(adata.var_names[ind["ind"][0]])
+                else:
+                    text = "{}".format(adata.var_names[subset_indices[ind["ind"][0]]])
+            ann.set_text(text)
 
-    fig.canvas.mpl_connect(
-        "motion_notify_event",
-        lambda event: _hover(event, fig, ax, ann, scax, update_annot),
-    )
+        fig.canvas.mpl_connect(
+            "motion_notify_event",
+            lambda event: _hover(event, fig, ax, ann, scax, update_annot),
+        )
 
-    if set_xticks is not None:
-        plt.xticks(set_xticks, set_xticks_text)
-    if xlog_scale:
-        plt.xscale("log")
-    if ylog_scale:
-        plt.yscale("log")
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
+        if set_xticks is not None:
+            plt.xticks(set_xticks, set_xticks_text)
+        if xlog_scale:
+            plt.xscale("log")
+        if ylog_scale:
+            plt.yscale("log")
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
+        if output_file:
+            plt.savefig(output_file, dpi=200)
+        else:
+            plt.show()
 
     ####################################################################################
     # Bokeh
-    if subset_indices is None:
-        tmp_df = adata.obs if obs_or_var == "obs" else adata.var
-    else:
-        tmp_df = (
-            adata.obs.iloc[subset_indices].copy()
-            if obs_or_var == "obs"
-            else adata.var.iloc[subset_indices].copy()
-        )
+    if global_bokeh_or_matplotlib == "bokeh":
+        if subset_indices is None:
+            tmp_df = adata.obs if obs_or_var == "obs" else adata.var
+        else:
+            tmp_df = (
+                adata.obs.iloc[subset_indices].copy()
+                if obs_or_var == "obs"
+                else adata.var.iloc[subset_indices].copy()
+            )
 
-    random_id = "".join(np.random.choice(list(string.ascii_letters), 10)) + "_"
-    tooltips = [("name", "@{" + random_id + "name}")] + [
-        (key, "@{" + key + "}") for key in tmp_df.keys()
-    ]
-    tmp_df[random_id + "x_" + xlabel] = x
-    tmp_df[random_id + "y_" + ylabel] = y
-    tooltips += [
-        ("x:" + xlabel, "@{" + random_id + "x_" + xlabel + "}"),
-        ("y:" + ylabel, "@{" + random_id + "y_" + ylabel + "}"),
-    ]
+        random_id = "".join(np.random.choice(list(string.ascii_letters), 10)) + "_"
+        tooltips = [("name", "@{" + random_id + "name}")] + [
+            (key, "@{" + key + "}") for key in tmp_df.keys()
+        ]
+        tmp_df[random_id + "x_" + xlabel] = x
+        tmp_df[random_id + "y_" + ylabel] = y
+        tooltips += [
+            ("x:" + xlabel, "@{" + random_id + "x_" + xlabel + "}"),
+            ("y:" + ylabel, "@{" + random_id + "y_" + ylabel + "}"),
+        ]
 
-    if subset_indices is None:
-        tmp_df[random_id + "name"] = (
-            adata.obs_names if obs_or_var == "obs" else adata.var_names
+        if subset_indices is None:
+            tmp_df[random_id + "name"] = (
+                adata.obs_names if obs_or_var == "obs" else adata.var_names
+            )
+        else:
+            tmp_df[random_id + "name"] = (
+                adata.obs_names[subset_indices]
+                if obs_or_var == "obs"
+                else adata.var_names[subset_indices]
+            )
+        if samples_color is not None:
+            tmp_df[random_id + "colors"] = samples_color
+            tmp_cmap = colormap
+        else:
+            tmp_df[random_id + "colors"] = 0
+            tmp_cmap = "blues"
+        hv.extension("bokeh")
+        points = hv.Points(
+            tmp_df,
+            [random_id + "x_" + xlabel, random_id + "y_" + ylabel],
+            list(tmp_df.keys()),
         )
-    else:
-        tmp_df[random_id + "name"] = (
-            adata.obs_names[subset_indices]
-            if obs_or_var == "obs"
-            else adata.var_names[subset_indices]
+        hover = HoverTool(tooltips=tooltips)
+        points.opts(
+            tools=[hover],
+            color=random_id + "colors",
+            cmap=tmp_cmap,
+            size=4,
+            width=900,
+            height=600,
+            show_grid=False,
+            title="",
+            xlabel=xlabel,
+            ylabel=ylabel,
+            logx=xlog_scale,
+            logy=ylog_scale,
+            colorbar=True if tmp_cmap == "viridis" else False,
         )
-    if samples_color is not None:
-        tmp_df[random_id + "colors"] = samples_color
-        tmp_cmap = colormap
-    else:
-        tmp_df[random_id + "colors"] = 0
-        tmp_cmap = "blues"
-    hv.extension("bokeh")
-    points = hv.Points(
-        tmp_df,
-        [random_id + "x_" + xlabel, random_id + "y_" + ylabel],
-        list(tmp_df.keys()),
-    )
-    hover = HoverTool(tooltips=tooltips)
-    points.opts(
-        tools=[hover],
-        color=random_id + "colors",
-        cmap=tmp_cmap,
-        size=4,
-        width=900,
-        height=600,
-        show_grid=False,
-        title="",
-        xlabel=xlabel,
-        ylabel=ylabel,
-        logx=xlog_scale,
-        logy=ylog_scale,
-        colorbar=True if tmp_cmap == "viridis" else False,
-    )
-    if set_xticks is not None:
-        points.opts(xticks=list(zip([float(x) for x in set_xticks], set_xticks_text)))
-    bokeh.io.show(hv.render(points))
-    del tmp_df[random_id + "name"]
-    del tmp_df[random_id + "colors"]
-    del tmp_df[random_id + "x_" + xlabel]
-    del tmp_df[random_id + "y_" + ylabel]
+        if set_xticks is not None:
+            points.opts(
+                xticks=list(zip([float(x) for x in set_xticks], set_xticks_text))
+            )
+        bokeh.io.show(hv.render(points))
+        del tmp_df[random_id + "name"]
+        del tmp_df[random_id + "colors"]
+        del tmp_df[random_id + "x_" + xlabel]
+        del tmp_df[random_id + "y_" + ylabel]
     ####################################################################################
-
-    if output_file:
-        plt.savefig(output_file, dpi=200)
-    else:
-        plt.show()
 
 
 def plot(
@@ -511,6 +538,7 @@ def plot_var(
     output_file: Union[str, None] = None,
 ):
     """ """
+    global global_bokeh_or_matplotlib
     if type(features) == str or type(features) == np.str_ or type(features) == int:
         idx = features
         if type(idx) == str or type(idx) == np.str_:
@@ -557,49 +585,51 @@ def plot_var(
             for k, idx in enumerate(feature_indices_list_):
                 plot_array[k, :] = [adata.X[i, idx] for i in list_samples]
 
-        fig, ax = plt.subplots()
-        im = ax.imshow(plot_array, extent=[0, xsize, 0, ysize], aspect="auto")
-        if set_xticks is not None:
-            plt.xticks(set_xticks, set_xticks_text)
-        plt.yticks(
-            np.arange(ysize) + 0.5,
-            [adata.var_names[i] for i in feature_indices_list_][::-1],
-        )
-        plt.tick_params(axis=u"both", which=u"both", length=0)
-        plt.colorbar(im)
+        if global_bokeh_or_matplotlib == "matplotlib":
+            fig, ax = plt.subplots()
+            im = ax.imshow(plot_array, extent=[0, xsize, 0, ysize], aspect="auto")
+            if set_xticks is not None:
+                plt.xticks(set_xticks, set_xticks_text)
+            plt.yticks(
+                np.arange(ysize) + 0.5,
+                [adata.var_names[i] for i in feature_indices_list_][::-1],
+            )
+            plt.tick_params(axis=u"both", which=u"both", length=0)
+            plt.colorbar(im)
+            if output_file:
+                plt.savefig(output_file, dpi=200)
+            else:
+                plt.show()
 
         ################################################################################
         # Bokeh
-
-        hv.extension("bokeh")
-        bounds = (0, 0, xsize, ysize)  # Coordinate system: (left, bottom, right, top)
-        img = hv.Image(plot_array, bounds=bounds)
-        img.opts(
-            cmap="viridis",
-            width=900,
-            height=600,
-            title="",
-            xlabel="",
-            ylabel="",
-            colorbar=True,
-        )
-        if set_xticks is not None:
-            img.opts(xticks=list(zip([float(x) for x in set_xticks], set_xticks_text)))
-        img.opts(
-            yticks=list(
-                zip(
-                    [float(y) for y in np.arange(ysize) + 0.5],
-                    [adata.var_names[i] for i in feature_indices_list_][::-1],
+        if global_bokeh_or_matplotlib == "bokeh":
+            hv.extension("bokeh")
+            bounds = (0, 0, xsize, ysize)  # Coord system: (left, bottom, right, top)
+            img = hv.Image(plot_array, bounds=bounds)
+            img.opts(
+                cmap="viridis",
+                width=900,
+                height=600,
+                title="",
+                xlabel="",
+                ylabel="",
+                colorbar=True,
+            )
+            if set_xticks is not None:
+                img.opts(
+                    xticks=list(zip([float(x) for x in set_xticks], set_xticks_text))
+                )
+            img.opts(
+                yticks=list(
+                    zip(
+                        [float(y) for y in np.arange(ysize) + 0.5],
+                        [adata.var_names[i] for i in feature_indices_list_][::-1],
+                    )
                 )
             )
-        )
-        bokeh.io.show(hv.render(img))
+            bokeh.io.show(hv.render(img))
         ################################################################################
-
-        if output_file:
-            plt.savefig(output_file, dpi=200)
-        else:
-            plt.show()
 
 
 def plot_2d_obsm(

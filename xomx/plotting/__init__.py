@@ -1,4 +1,5 @@
 from .basic_plot import (
+    extension,
     scatter,
     plot,
     plot_scores,
