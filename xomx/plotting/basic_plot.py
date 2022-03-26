@@ -118,6 +118,22 @@ def plot_scores(
             lambda event: _hover(event, fig, ax, ann, sctr, update_annot),
         )
 
+        def lp(i_):
+            val_ = adata.uns["all_labels"][i_]
+            return plt.plot(
+                [],
+                color=sctr.cmap(sctr.norm(annot_colors[val_])),
+                ms=5,
+                mec="none",
+                label=val_,
+                ls="",
+                marker="o",
+            )[0]
+
+        handles = [lp(i) for i in range(len(adata.uns["all_labels"]))]
+        plt.legend(handles=handles, loc="lower left", bbox_to_anchor=(1.0, 0.0))
+        plt.subplots_adjust(right=0.75)
+
         plt.ylabel(ylabel)
         plt.xlabel(xlabel)
         if output_file:
@@ -289,6 +305,7 @@ def scatter(
             )
             y = [func2_(i) for i in list_samples]
             x = [i for i in range(len(y))]
+            subset_indices = list_samples
             if global_bokeh_or_matplotlib == "matplotlib":
                 if violinplot:
                     for i in range(len(boundaries) - 1):
@@ -387,10 +404,10 @@ def scatter(
             if obs_or_var == "obs":
                 if (
                     "all_labels" in adata.uns
+                    and "labels" in adata.obs
                     and function_plot_
-                    and subset_indices is None
                 ):
-                    text = "{}".format(adata.obs_names[list_samples[ind["ind"][0]]])
+                    text = "{}".format(adata.obs_names[subset_indices[ind["ind"][0]]])
                 else:
                     if samples_color is None:
                         if subset_indices is None:
@@ -422,25 +439,28 @@ def scatter(
             lambda event: _hover(event, fig, ax, ann, scax, update_annot),
         )
 
-        # if (
-        #         obs_or_var == 'obs' and
-        #         'all_labels' in adata.uns and
-        #         'labels' in adata.obs and
-        #         not colormap == 'viridis'
-        # ):
-        #     def lp(i):
-        #         val_ = adata.uns["all_labels"][i]
-        #         return plt.plot(
-        #             [],
-        #             color=scax.cmap(scax.norm(annot_colors[val_])),
-        #             ms=5,
-        #             mec="none",
-        #             label=val_,
-        #             ls="",
-        #             marker="o"
-        #         )[0]
-        #     handles = [lp(i) for i in range(len(adata.uns["all_labels"]))]
-        #     plt.legend(handles=handles, loc='lower left', bbox_to_anchor=(1, 0.5))
+        if (
+            obs_or_var == "obs"
+            and "all_labels" in adata.uns
+            and "labels" in adata.obs
+            and not colormap == "viridis"
+        ):
+
+            def lp(i):
+                val_ = adata.uns["all_labels"][i]
+                return plt.plot(
+                    [],
+                    color=scax.cmap(scax.norm(annot_colors[val_])),
+                    ms=5,
+                    mec="none",
+                    label=val_,
+                    ls="",
+                    marker="o",
+                )[0]
+
+            handles = [lp(i) for i in range(len(adata.uns["all_labels"]))]
+            plt.legend(handles=handles, loc="lower left", bbox_to_anchor=(1.0, 0.0))
+            plt.subplots_adjust(right=0.75)
 
         if set_xticks is not None:
             plt.xticks(set_xticks, set_xticks_text)
