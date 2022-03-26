@@ -210,20 +210,20 @@ def scatter(
             else:
                 y = [func2_(i) for i in subset_indices]
                 x = [func1_(i) for i in subset_indices]
-            if "all_labels" in adata.uns:
-                annot_colors = {}
-                denom = len(adata.uns["all_labels"])
-                for i, val in enumerate(adata.uns["all_labels"]):
-                    annot_colors[val] = i / denom
-                samples_color = np.zeros_like(x)
-                if subset_indices is None:
-                    for i in range(adata.n_obs):
-                        samples_color[i] = annot_colors[adata.obs["labels"][i]]
-                else:
-                    for i in range(len(subset_indices)):
-                        samples_color[i] = annot_colors[
-                            adata.obs["labels"][subset_indices[i]]
-                        ]
+        if "all_labels" in adata.uns:
+            annot_colors = {}
+            denom = len(adata.uns["all_labels"])
+            for i, val in enumerate(adata.uns["all_labels"]):
+                annot_colors[val] = i / denom
+            samples_color = np.zeros_like(x, dtype=float)
+            if subset_indices is None:
+                for i in range(adata.n_obs):
+                    samples_color[i] = annot_colors[adata.obs["labels"][i]]
+            else:
+                for i in range(len(subset_indices)):
+                    samples_color[i] = annot_colors[
+                        adata.obs["labels"][subset_indices[i]]
+                    ]
     else:
         if subset_indices is None:
             y = [func2_(i) for i in range(adata.n_vars)]
@@ -248,6 +248,9 @@ def scatter(
             pc.set_facecolor("#D43F3A")
             pc.set_edgecolor("grey")
             pc.set_alpha(0.5)
+    from IPython import embed
+
+    embed()
     if samples_color is None:
         scax = ax.scatter(x, y, s=1)
     else:
@@ -531,8 +534,8 @@ def plot_2d_obsm(
     )
     ann.set_visible(False)
 
-    def update_annot(ind):
-        pos = sctr.get_offsets()[ind["ind"][0]]
+    def update_annot(ind, sctr_):
+        pos = sctr_.get_offsets()[ind["ind"][0]]
         ann.xy = pos
         text = hover_function(ind["ind"][0])
         ann.set_text(text)
