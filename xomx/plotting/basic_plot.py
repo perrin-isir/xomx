@@ -1,4 +1,6 @@
 import numpy as np
+
+# import matplotlib
 import matplotlib.pyplot as plt
 from typing import Union
 import string
@@ -155,7 +157,9 @@ def plot_scores(
         hover = HoverTool(tooltips=tooltips)
         points.opts(
             tools=[hover],
-            color=random_id + "colors",
+            color="labels"
+            if ("all_labels" in adata.uns and "labels" in adata.obs)
+            else random_id + "colors",
             cmap=tmp_cmap,
             size=4,
             width=900,
@@ -166,6 +170,7 @@ def plot_scores(
             ylabel=ylabel,
             logx=False,
             logy=False,
+            legend_position="right",
         )
         if yticks is not None:
             points.opts(
@@ -272,7 +277,7 @@ def scatter(
     if global_bokeh_or_matplotlib == "matplotlib":
         fig, ax = plt.subplots()
     if obs_or_var == "obs":
-        if "all_labels" in adata.uns and function_plot_:
+        if "all_labels" in adata.uns and "labels" in adata.obs and function_plot_:
             violinplot = True
             (
                 list_samples,
@@ -309,13 +314,13 @@ def scatter(
             else:
                 y = [func2_(i) for i in subset_indices]
                 x = [func1_(i) for i in subset_indices]
-        if "color" in adata.obs:
+        if "colors" in adata.obs:
             colormap = "viridis"
             if subset_indices is None:
-                samples_color = adata.obs["color"]
+                samples_color = adata.obs["colors"]
             else:
-                samples_color = adata.obs["color"][subset_indices]
-        elif "all_labels" in adata.uns:
+                samples_color = adata.obs["colors"][subset_indices]
+        elif "all_labels" in adata.uns and "labels" in adata.obs:
             annot_colors = {}
             denom = len(adata.uns["all_labels"])
             for i, val in enumerate(adata.uns["all_labels"]):
@@ -417,6 +422,26 @@ def scatter(
             lambda event: _hover(event, fig, ax, ann, scax, update_annot),
         )
 
+        # if (
+        #         obs_or_var == 'obs' and
+        #         'all_labels' in adata.uns and
+        #         'labels' in adata.obs and
+        #         not colormap == 'viridis'
+        # ):
+        #     def lp(i):
+        #         val_ = adata.uns["all_labels"][i]
+        #         return plt.plot(
+        #             [],
+        #             color=scax.cmap(scax.norm(annot_colors[val_])),
+        #             ms=5,
+        #             mec="none",
+        #             label=val_,
+        #             ls="",
+        #             marker="o"
+        #         )[0]
+        #     handles = [lp(i) for i in range(len(adata.uns["all_labels"]))]
+        #     plt.legend(handles=handles, loc='lower left', bbox_to_anchor=(1, 0.5))
+
         if set_xticks is not None:
             plt.xticks(set_xticks, set_xticks_text)
         if xlog_scale:
@@ -476,9 +501,18 @@ def scatter(
             list(tmp_df.keys()),
         )
         hover = HoverTool(tooltips=tooltips)
+        # from IPython import embed
+        # embed()
         points.opts(
             tools=[hover],
-            color=random_id + "colors",
+            color="labels"
+            if (
+                obs_or_var == "obs"
+                and "all_labels" in adata.uns
+                and "labels" in adata.obs
+                and not tmp_cmap == "viridis"
+            )
+            else random_id + "colors",
             cmap=tmp_cmap,
             size=4,
             width=900,
@@ -490,6 +524,7 @@ def scatter(
             logx=xlog_scale,
             logy=ylog_scale,
             colorbar=True if tmp_cmap == "viridis" else False,
+            legend_position="right",
         )
         if set_xticks is not None:
             points.opts(
@@ -647,9 +682,9 @@ def plot_2d_obsm(
 
     if var_key is not None:
         assert (
-            "color" not in adata.obs
-        ), "var_key must be None if adata.obs['color'] exists."
-        adata.obs["color"] = adata[:, var_key].X
+            "colors" not in adata.obs
+        ), "var_key must be None if adata.obs['colors'] exists."
+        adata.obs["colors"] = adata[:, var_key].X
 
     scatter(
         adata,
@@ -665,7 +700,7 @@ def plot_2d_obsm(
     )
 
     if var_key is not None:
-        del adata.obs["color"]
+        del adata.obs["colors"]
 
 
 def plot_2d_embedding(
