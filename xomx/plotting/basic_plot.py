@@ -214,8 +214,15 @@ def plot_scores(
                     color="gray",
                     line_width=0.5,
                 )
-
-        bokeh.io.show(hv.render(hv.Overlay([points] + hline)))
+        if output_file:
+            bokeh.io.export_png(
+                hv.render(hv.Overlay([points] + hline)),
+                output_file,
+                width=width,
+                height=height,
+            )
+        else:
+            bokeh.io.show(hv.render(hv.Overlay([points] + hline)))
         del tmp_df[random_id + "name"]
         if text_complements is not None:
             del tmp_df[random_id + "info"]
@@ -560,7 +567,12 @@ def scatter(
             points.opts(
                 xticks=list(zip([float(x) for x in set_xticks], set_xticks_text))
             )
-        bokeh.io.show(hv.render(points))
+        if output_file:
+            bokeh.io.export_png(
+                hv.render(points), output_file, width=width, height=height
+            )
+        else:
+            bokeh.io.show(hv.render(points))
         del tmp_df[random_id + "name"]
         del tmp_df[random_id + "colors"]
         del tmp_df[random_id + "x_" + xlabel]
@@ -706,7 +718,12 @@ def plot_var(
                     )
                 )
             )
-            bokeh.io.show(hv.render(img))
+            if output_file:
+                bokeh.io.export_png(
+                    hv.render(img), output_file, width=width, height=height
+                )
+            else:
+                bokeh.io.show(hv.render(img))
         ################################################################################
 
 
