@@ -18,10 +18,10 @@ setup(
         "scipy>=1.4.1",
         "torch>=1.7.1",
         "scikit-learn>=0.24.2",
-        "requests>=2.25.1",
+        "requests>=2.23.0",
         "leidenalg>=0.8.8",
         "holoviews>=1.14.8",
-        "bokeh>=2.4.2",
+        "bokeh>=2.3.3",
     ],
     license="LICENSE",
 )
