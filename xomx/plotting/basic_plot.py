@@ -1,10 +1,8 @@
 import numpy as np
-
-# import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 from typing import Union
 import string
-import bokeh
 import bokeh.plotting
 import bokeh.io
 import holoviews as hv
@@ -48,6 +46,8 @@ def plot_scores(
     lines=False,
     yticks=None,
     ylabel="",
+    width=900,
+    height=600,
 ):
     global global_bokeh_or_matplotlib
     annot_colors = {}
@@ -72,6 +72,11 @@ def plot_scores(
     xlabel = "samples"
 
     if global_bokeh_or_matplotlib == "matplotlib":
+        rcParams["figure.dpi"] = 100
+        rcParams["figure.figsize"] = (
+            width / rcParams["figure.dpi"],
+            height / rcParams["figure.dpi"],
+        )
         fig, ax = plt.subplots()
         if label:
             cm = "winter"
@@ -178,8 +183,8 @@ def plot_scores(
             else random_id + "colors",
             cmap=tmp_cmap,
             size=4,
-            width=900,
-            height=600,
+            width=width,
+            height=height,
             show_grid=False,
             title="",
             xlabel=xlabel,
@@ -272,6 +277,8 @@ def scatter(
     ylabel="",
     subset_indices=None,
     output_file: Union[str, None] = None,
+    width=900,
+    height=600,
 ):
     """Displays a scatter plot, with coordinates computed by applying two
     functions (func1_ and func2_) to every sample or every feature, depending
@@ -291,6 +298,11 @@ def scatter(
     samples_color = None
     colormap = None
     if global_bokeh_or_matplotlib == "matplotlib":
+        rcParams["figure.dpi"] = 100
+        rcParams["figure.figsize"] = (
+            width / rcParams["figure.dpi"],
+            height / rcParams["figure.dpi"],
+        )
         fig, ax = plt.subplots()
     if obs_or_var == "obs":
         if "all_labels" in adata.uns and "labels" in adata.obs and function_plot_:
@@ -521,8 +533,6 @@ def scatter(
             list(tmp_df.keys()),
         )
         hover = HoverTool(tooltips=tooltips)
-        # from IPython import embed
-        # embed()
         points.opts(
             tools=[hover],
             color="labels"
@@ -535,8 +545,8 @@ def scatter(
             else random_id + "colors",
             cmap=tmp_cmap,
             size=4,
-            width=900,
-            height=600,
+            width=width,
+            height=height,
             show_grid=False,
             title="",
             xlabel=xlabel,
@@ -567,6 +577,8 @@ def plot(
     ylabel="",
     subset_indices=None,
     output_file: Union[str, None] = None,
+    width=900,
+    height=600,
 ):
     """Plots the value of a function on every sample or every feature, depending
     on the value of obs_or_var which must be either "obs" or "var"
@@ -582,6 +594,8 @@ def plot(
         ylabel=ylabel,
         subset_indices=subset_indices,
         output_file=output_file,
+        width=900,
+        height=600,
     )
 
 
@@ -591,6 +605,8 @@ def plot_var(
     ylog_scale=False,
     subset_indices=None,
     output_file: Union[str, None] = None,
+    width=900,
+    height=600,
 ):
     """ """
     global global_bokeh_or_matplotlib
@@ -609,6 +625,8 @@ def plot_var(
             ylog_scale=ylog_scale,
             subset_indices=subset_indices,
             output_file=output_file,
+            width=width,
+            height=height,
         )
     else:
         if subset_indices is None:
@@ -641,6 +659,11 @@ def plot_var(
                 plot_array[k, :] = [adata.X[i, idx] for i in list_samples]
 
         if global_bokeh_or_matplotlib == "matplotlib":
+            rcParams["figure.dpi"] = 100
+            rcParams["figure.figsize"] = (
+                width / rcParams["figure.dpi"],
+                height / rcParams["figure.dpi"],
+            )
             fig, ax = plt.subplots()
             im = ax.imshow(plot_array, extent=[0, xsize, 0, ysize], aspect="auto")
             if set_xticks is not None:
@@ -664,8 +687,8 @@ def plot_var(
             img = hv.Image(plot_array, bounds=bounds)
             img.opts(
                 cmap="viridis",
-                width=900,
-                height=600,
+                width=width,
+                height=height,
                 title="",
                 xlabel="",
                 ylabel="",
@@ -693,6 +716,8 @@ def plot_2d_obsm(
     var_key=None,
     subset_indices=None,
     output_file: Union[str, None] = None,
+    width=900,
+    height=600,
 ):
     def embedding_x(j):
         return adata.obsm[obsm_key][j, 0]
@@ -717,6 +742,8 @@ def plot_2d_obsm(
         ylabel="",
         subset_indices=subset_indices,
         output_file=output_file,
+        width=width,
+        height=height,
     )
 
     if var_key is not None:
@@ -728,6 +755,8 @@ def plot_2d_embedding(
     reducer,
     subset_indices=None,
     output_file: Union[str, None] = None,
+    width=900,
+    height=600,
 ):
     assert hasattr(reducer, "fit") and hasattr(reducer, "transform")
     if subset_indices is None:
@@ -759,4 +788,6 @@ def plot_2d_embedding(
         ylabel="",
         subset_indices=subset_indices,
         output_file=output_file,
+        width=width,
+        height=height,
     )
