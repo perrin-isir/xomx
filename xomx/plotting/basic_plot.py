@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
-from typing import Union
+from typing import Union, Callable, Any
+from numbers import Number
 import string
 import bokeh.plotting
 import bokeh.io
@@ -722,7 +723,7 @@ def plot_var(
 def plot_2d_obsm(
     adata,
     obsm_key,
-    var_key=None,
+    color_function: Union[Callable[[int], Number], Any] = None,
     subset_indices=None,
     output_file: Union[str, None] = None,
     width=900,
@@ -734,11 +735,21 @@ def plot_2d_obsm(
     def embedding_y(j):
         return adata.obsm[obsm_key][j, 1]
 
-    if var_key is not None:
+    if color_function is not None:
         assert (
             "colors" not in adata.obs
-        ), "var_key must be None if adata.obs['colors'] exists."
-        adata.obs["colors"] = adata[:, var_key].X
+        ), "color_function must be None if adata.obs['colors'] exists."
+        if color_function in adata.var_names:
+            adata.obs["colors"] = adata[:, color_function].X
+        else:
+            color_values = np.zeros((adata.n_obs, 1))
+            if subset_indices is None:
+                color_values[:, 0] = [color_function(i) for i in range(adata.n_obs)]
+            else:
+                color_values[subset_indices, 0] = [
+                    color_function(i) for i in subset_indices
+                ]
+            adata.obs["colors"] = color_values
 
     scatter(
         adata,
@@ -755,7 +766,7 @@ def plot_2d_obsm(
         height=height,
     )
 
-    if var_key is not None:
+    if color_function is not None:
         del adata.obs["colors"]
 
 
