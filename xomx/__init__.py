@@ -4,6 +4,7 @@ from . import data_importation as di
 from . import classifiers as cl
 from . import embeddings as em
 from . import feature_selection as fs
+from . import tutorials as tt
 
 # from . import tutorials as tu
 

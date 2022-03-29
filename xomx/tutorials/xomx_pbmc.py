@@ -80,8 +80,6 @@ if step == 1:
         xd,
         lambda idx: mean_count_fractions[idx],
         obs_or_var="var",
-        violinplot=False,
-        ylog_scale=False,
         xlabel="genes",
         ylabel="mean fractions of counts across all cells",
     )
@@ -118,9 +116,9 @@ if step == 1:
     xd = xd[:, xd.var.highly_variable]
     sc.pp.regress_out(xd, ["total_counts", "pct_counts_mt"])
     sc.pp.scale(xd, max_value=10)
-    sc.tl.pca(xd, svd_solver="arpack", random_state=rng)
-    sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40, random_state=rng)
-    sc.tl.leiden(xd, random_state=rng)
+    sc.tl.pca(xd, svd_solver="arpack", random_state=0)
+    sc.pp.neighbors(xd, n_neighbors=10, n_pcs=40, random_state=0)
+    sc.tl.leiden(xd, random_state=0)
 
     # Rename the "leiden" clusters
     new_cluster_names = [
@@ -178,11 +176,12 @@ if step == 2:
         feature_selectors[label] = xomx.fs.RFEExtraTrees(
             xd,
             label,
-            init_selection_size=8000,
             n_estimators=450,
             random_state=rng,
         )
-        feature_selectors[label].init()
+        feature_selectors[label].init(
+            init_selection_size=8000, rank=xd.uns["rank_genes_groups"]["names"][label]
+        )
         for siz in [100, 30, 20, 15, 10]:
             print("Selecting", siz, "features...")
             feature_selectors[label].select_features(siz)

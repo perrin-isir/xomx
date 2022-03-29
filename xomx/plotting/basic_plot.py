@@ -620,8 +620,8 @@ def plot(
         ylabel=ylabel,
         subset_indices=subset_indices,
         output_file=output_file,
-        width=900,
-        height=600,
+        width=width,
+        height=height,
     )
 
 
@@ -766,7 +766,7 @@ def plot_2d_obsm(
             "colors" not in adata.obs
         ), "color_function must be None if adata.obs['colors'] exists."
         if color_function in adata.var_names:
-            adata.obs["colors"] = _to_dense(adata[:, color_function].X)
+            adata.obs["colors"] = np.array(_to_dense(adata[:, color_function].X))
         else:
             color_values = np.zeros((adata.n_obs, 1))
             if subset_indices is None:
