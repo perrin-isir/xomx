@@ -4,6 +4,7 @@ from sklearn.ensemble import ExtraTreesClassifier
 from xomx.tools.utils import _to_dense, confusion_matrix
 from xomx.plotting.basic_plot import plot_scores
 from joblib import dump, load
+from typing import List, Union
 
 
 class RFEExtraTrees:
@@ -11,7 +12,6 @@ class RFEExtraTrees:
         self,
         adata,
         label,
-        init_selection_size=None,
         n_estimators=450,
         random_state=None,
     ):
@@ -23,7 +23,7 @@ class RFEExtraTrees:
             and "test_indices_per_label" in adata.uns
         )
         self.label = label
-        self.init_selection_size = init_selection_size
+        self.init_selection_size = None
         self.n_estimators = n_estimators
         self.random_state = random_state
         self.current_feature_indices = np.arange(adata.n_vars)
@@ -45,13 +45,15 @@ class RFEExtraTrees:
         self.confusion_matrix = None
         self.log = []
 
-    def init(self):
-
+    def init(
+        self, init_selection_size=None, ranks: Union[np.ndarray, List, None] = None
+    ):
+        self.init_selection_size = init_selection_size
         if self.init_selection_size is not None:
-            assert "rank_genes_groups" in self.adata.uns
-            list_features = self.adata.uns["rank_genes_groups"]["names"][self.label][
-                : self.init_selection_size
-            ]
+            list_features = ranks[: self.init_selection_size]
+            assert (
+                "var_indices" in self.adata.uns
+            ), "self.adata.uns[var_indices] must exist."
             selected_feats = np.array(
                 [self.adata.uns["var_indices"][feat] for feat in list_features]
             )
