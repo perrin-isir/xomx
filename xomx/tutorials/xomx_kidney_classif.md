@@ -8,10 +8,10 @@ for the differential diagnosis of three types of kidney cancer: kidney renal cle
 carcinoma (**KIRC**), kidney renal papillary cell carcinoma (**KIRP**), and chromophobe
 renal cell carcinoma (**KICH**).
 
-The recursive feature elimination method is based on 
+**_~~The recursive feature elimination method is based on 
 the [Extra-Trees algorithm](https://link.springer.com/article/10.1007/s10994-006-6226-1)
 (and its implementation in 
-[scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html)).
+[scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html)).**_~~
 
 ### Running the tutorial:
 - **Repeated executions of the [xomx_kidney_classif.py](xomx_kidney_classif.py) 
