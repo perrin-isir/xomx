@@ -46,14 +46,14 @@ class RFEExtraTrees:
         self.log = []
 
     def init(
-        self, init_selection_size=None, ranks: Union[np.ndarray, List, None] = None
+        self, init_selection_size=None, rank: Union[np.ndarray, List, None] = None
     ):
         self.init_selection_size = init_selection_size
         if self.init_selection_size is not None:
-            list_features = ranks[: self.init_selection_size]
+            list_features = rank[: self.init_selection_size]
             assert (
                 "var_indices" in self.adata.uns
-            ), "self.adata.uns[var_indices] must exist."
+            ), "self.adata.uns['var_indices'] must exist."
             selected_feats = np.array(
                 [self.adata.uns["var_indices"][feat] for feat in list_features]
             )
