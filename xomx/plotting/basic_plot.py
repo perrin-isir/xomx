@@ -8,6 +8,7 @@ import bokeh.plotting
 import bokeh.io
 import holoviews as hv
 from bokeh.models import HoverTool
+from xomx.tools.utils import _to_dense
 
 
 global_bokeh_or_matplotlib = "bokeh"
@@ -228,7 +229,7 @@ def plot_scores(
     ####################################################################################
 
 
-def _samples_by_labels(adata, sort_annot=False, subset_indices=None):
+def _samples_by_labels(adata, sort_annot=False, subset_indices=None, equal_size=False):
     assert "obs_indices_per_label" in adata.uns and "all_labels" in adata.uns
     if sort_annot:
         argsort_labels = np.argsort(
@@ -241,13 +242,32 @@ def _samples_by_labels(adata, sort_annot=False, subset_indices=None):
         argsort_labels = np.arange(len(adata.uns["all_labels"]))
 
     if subset_indices is None:
-        i_per_label = adata.uns["obs_indices_per_label"]
+        if not equal_size:
+            i_per_label = adata.uns["obs_indices_per_label"]
+        else:
+            i_per_label = adata.uns["obs_indices_per_label"].copy()
     else:
         i_per_label = {}
         for lbl in adata.uns["all_labels"]:
             i_per_label[lbl] = []
         for i, annot in enumerate(adata.obs["labels"][subset_indices]):
             i_per_label[annot].append(int(subset_indices[i]))
+        for lbl in adata.uns["all_labels"]:
+            i_per_label[lbl] = np.array(i_per_label[lbl])
+
+    if equal_size:
+        max_size = 0
+        for lbl in adata.uns["all_labels"]:
+            len_lbl = len(i_per_label[lbl])
+            if len_lbl > max_size:
+                max_size = len_lbl
+        for lbl in adata.uns["all_labels"]:
+            tmp_array = np.repeat(
+                i_per_label[lbl], int(np.ceil(max_size / len(i_per_label[lbl])))
+            )
+            rng = np.random.default_rng()
+            rng.shuffle(tmp_array)
+            i_per_label[lbl] = tmp_array[:max_size]
 
     list_samples = np.concatenate(
         [i_per_label[adata.uns["all_labels"][i]] for i in argsort_labels]
@@ -610,6 +630,7 @@ def plot_var(
     features=None,
     ylog_scale=False,
     subset_indices=None,
+    equal_size=False,
     output_file: Union[str, None] = None,
     width=900,
     height=600,
@@ -642,7 +663,6 @@ def plot_var(
         ysize = len(features)
         set_xticks = None
         set_xticks_text = None
-        plot_array = np.empty((len(features), xsize))
         feature_indices_list_ = []
         for idx in features:
             if type(idx) == str or type(idx) == np.str_:
@@ -650,6 +670,7 @@ def plot_var(
                 idx = adata.uns["var_indices"][idx]
             feature_indices_list_.append(idx)
         if "all_labels" not in adata.uns:
+            plot_array = np.empty((len(features), xsize))
             for k, idx in enumerate(feature_indices_list_):
                 plot_array[k, :] = [adata.X[i, idx] for i in range(adata.n_obs)]
         else:
@@ -659,10 +680,15 @@ def plot_var(
                 set_xticks_text,
                 boundaries,
             ) = _samples_by_labels(
-                adata, sort_annot=True, subset_indices=subset_indices
+                adata,
+                sort_annot=True,
+                subset_indices=subset_indices,
+                equal_size=equal_size,
             )
+            plot_array = np.empty((len(features), len(list_samples)))
             for k, idx in enumerate(feature_indices_list_):
                 plot_array[k, :] = [adata.X[i, idx] for i in list_samples]
+        xsize = plot_array.shape[1]
 
         if global_bokeh_or_matplotlib == "matplotlib":
             rcParams["figure.dpi"] = 100
@@ -740,7 +766,7 @@ def plot_2d_obsm(
             "colors" not in adata.obs
         ), "color_function must be None if adata.obs['colors'] exists."
         if color_function in adata.var_names:
-            adata.obs["colors"] = adata[:, color_function].X
+            adata.obs["colors"] = _to_dense(adata[:, color_function].X)
         else:
             color_values = np.zeros((adata.n_obs, 1))
             if subset_indices is None:
