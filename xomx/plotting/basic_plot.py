@@ -19,7 +19,7 @@ def extension(bokeh_or_matplotlib: str):
     assert bokeh_or_matplotlib in [
         "bokeh",
         "matplotlib",
-    ], "Input must be 'bokeh' or 'matplotlib'."
+    ], 'Input must be "bokeh" or "matplotlib".'
     global_bokeh_or_matplotlib = bokeh_or_matplotlib
 
 
@@ -55,7 +55,7 @@ def plot_scores(
     annot_colors = {}
     assert "all_labels" in adata.uns and "labels" in adata.obs, (
         "plot_scores() requires data with labels (even if there is only one label), "
-        "so adata.obs['labels'] and adata.uns['all_labels'] must exist."
+        'so adata.obs["labels"] and adata.uns["all_labels"] must exist.'
     )
     denom = len(adata.uns["all_labels"])
     for i, val in enumerate(adata.uns["all_labels"]):
@@ -642,7 +642,7 @@ def plot_var(
         if type(idx) == str or type(idx) == np.str_:
             assert "var_indices" in adata.uns, (
                 "Please compute and store the dictionary of feature indices with: "
-                "adata.uns['var_indices'] = xomx.tl.var_indices(adata)"
+                'adata.uns["var_indices"] = xomx.tl.var_indices(adata)'
             )
             idx = adata.uns["var_indices"][idx]
         plot(
@@ -704,7 +704,7 @@ def plot_var(
                 np.arange(ysize) + 0.5,
                 [adata.var_names[i] for i in feature_indices_list_][::-1],
             )
-            plt.tick_params(axis=u"both", which=u"both", length=0)
+            plt.tick_params(axis="both", which="both", length=0)
             plt.colorbar(im)
             if output_file:
                 plt.savefig(output_file, dpi=200)
@@ -764,7 +764,7 @@ def plot_2d_obsm(
     if color_function is not None:
         assert (
             "colors" not in adata.obs
-        ), "color_function must be None if adata.obs['colors'] exists."
+        ), 'color_function must be None if adata.obs["colors"] exists.'
         if color_function in adata.var_names:
             adata.obs["colors"] = np.array(_to_dense(adata[:, color_function].X))
         else:

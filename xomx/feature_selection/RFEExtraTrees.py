@@ -53,7 +53,7 @@ class RFEExtraTrees:
             list_features = rank[: self.init_selection_size]
             assert (
                 "var_indices" in self.adata.uns
-            ), "self.adata.uns['var_indices'] must exist."
+            ), 'self.adata.uns["var_indices"] must exist.'
             selected_feats = np.array(
                 [self.adata.uns["var_indices"][feat] for feat in list_features]
             )
