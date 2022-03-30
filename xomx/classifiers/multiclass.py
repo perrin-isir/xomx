@@ -29,15 +29,34 @@ class ScoreBasedMulticlass:
         add_score = ((add_score - minas) / (maxas - minas),)
         return predictions, predictions.astype(np.float) + add_score
 
-    def plot(self, label=None, save_dir=None):
+    def plot(
+        self,
+        label=None,
+        save_dir=None,
+        random_subset_size=None,
+        rng=None,
+        width=900,
+        height=600,
+    ):
+        if random_subset_size is None:
+            indices = self.adata.uns["test_indices"]
+        else:
+            idxs = sorted(
+                rng.choice(
+                    len(self.adata.uns["test_indices"]),
+                    random_subset_size,
+                    replace=False,
+                )
+            )
+            indices = self.adata.uns["test_indices"][idxs]
         predictions, res = self.pred_score(
-            np.asarray(_to_dense(self.adata[self.adata.uns["test_indices"], :].X))
+            np.asarray(_to_dense(self.adata[indices, :].X))
         )
         plot_scores(
             self.adata,
             res.astype(np.float),
             None,
-            self.adata.uns["test_indices"],
+            indices,
             label,
             save_dir,
             text_complements=[
@@ -46,4 +65,6 @@ class ScoreBasedMulticlass:
             lines=True,
             yticks=self.annotations,
             ylabel="predictions",
+            width=width,
+            height=height,
         )

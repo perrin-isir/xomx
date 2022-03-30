@@ -170,13 +170,25 @@ class RFEExtraTrees:
         else:
             return False
 
-    def plot(self, label=None, save_dir=None, random_subset_size=None, rng=None):
+    def plot(
+        self,
+        label=None,
+        save_dir=None,
+        random_subset_size=None,
+        rng=None,
+        width=900,
+        height=600,
+    ):
         if random_subset_size is None:
             res = self.score(self.data_test)
             indices = self.adata.uns["test_indices"]
         else:
-            idxs = rng.choice(
-                len(self.adata.uns["test_indices"]), random_subset_size, replace=False
+            idxs = sorted(
+                rng.choice(
+                    len(self.adata.uns["test_indices"]),
+                    random_subset_size,
+                    replace=False,
+                )
             )
             res = self.score(self.data_test[idxs])
             indices = self.adata.uns["test_indices"][idxs]
@@ -188,6 +200,8 @@ class RFEExtraTrees:
             label,
             save_dir,
             ylabel="scores",
+            width=width,
+            height=height,
         )
 
 
