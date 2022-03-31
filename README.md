@@ -56,7 +56,7 @@ Finally, to install the *xomx* library in the activated virtual environment:
 -----
 ## Tutorials
 
-Tutorials (in [xomx/tutorials/](xomx/tutorials/)) are the best way to learn to use
+Tutorials are the best way to learn to use
 *xomx*.
 
 The xomx-tutorials repository contains a list of tutorials (colab notebooks) for xomx:  
