@@ -58,11 +58,12 @@ def gdc_create_manifest(disease_type, project_list, nr_of_cases_list):
                 },
             ],
         }
+        max_number_of_cases = 1_000_000
         params = {
             "filters": filters,
             "fields": fields,
             "format": "TSV",
-            "size": str(nr_of_cases),
+            "size": str(max_number_of_cases),
         }
         response = requests.post(
             files_endpt, headers={"Content-Type": "application/json"}, json=params
@@ -78,7 +79,7 @@ def gdc_create_manifest(disease_type, project_list, nr_of_cases_list):
         )
         df = df[~df["filename"].str.endswith("tsv.gz")]
         df = df[["id", "filename", "md5", "size", "state", "annotation"]]
-        df_list.append(df)
+        df_list.append(df.head(nr_of_cases))
     return df_list
 
 
