@@ -63,6 +63,16 @@ The xomx-tutorials repository contains a list of tutorials (colab notebooks) for
 https://github.com/perrin-isir/xomx-tutorials
 
 -----
+## Acknowledgements
+
+Here is the list of people who have contributed to *xomx*:
+- Nicolas Perrin-Gilbert (ISIR)
+- Joshua J. Waterfall (Curie Institute)
+- Julien Vibert (Curie Institute)
+- Mathias Vandenbogaert (Curie Institute)
+- Paul Klein (Curie Institute)
+
+-----
 ## Citing the project
 To cite this repository in publications:
 
