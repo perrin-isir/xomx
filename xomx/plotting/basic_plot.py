@@ -804,15 +804,21 @@ def plot_2d_embedding(
     width=900,
     height=600,
 ):
-    assert hasattr(reducer, "fit") and hasattr(reducer, "transform")
+    assert (hasattr(reducer, "fit") and hasattr(reducer, "transform")) or (
+        hasattr(reducer, "fit_transform")
+    )
     if subset_indices is None:
         datamatrix = adata.X
     else:
         datamatrix = adata.X[subset_indices]
-    print("Step 1: fit...")
-    reducer.fit(datamatrix)
-    print("Step 2: transform...")
-    embedding = reducer.transform(datamatrix)
+    if hasattr(reducer, "fit_transform"):
+        print("Applying fit_transform()...")
+        embedding = reducer.fit_transform(datamatrix)
+    else:
+        print("Step 1: applying fit()...")
+        reducer.fit(datamatrix)
+        print("Step 2: applying transform()...")
+        embedding = reducer.transform(datamatrix)
     full_embedding = np.zeros((adata.X.shape[0], 2))
     full_embedding[subset_indices] = embedding
     print("Done.")
