@@ -72,11 +72,13 @@ def to_float_inverse(x: float) -> str:
     return s
 
 
-def compute_logomaker_df(adata, indices, fixed_length: int = None):
+def compute_logomaker_df(adata, indices=None, fixed_length: int = None):
     """
     The sample names (adata.obs_names) must be strings made of amino acid characters.
     The list of allowed characters is stored in the variable aminoacids.
     """
+    if indices is None:
+        indices = np.arange(len(adata.obs_names))
     if fixed_length is None:
         pos_list = np.arange(max([len(adata.obs_names[idx]) for idx in indices]))
         total_size = len(indices)

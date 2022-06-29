@@ -217,9 +217,10 @@ def plot_scores(
                     line_width=0.5,
                 )
         hv_plot = hv.Overlay([points] + hline)
-        bokeh.io.show(hv.render(hv_plot))
         if output_file:
-            hv.save(hv_plot, output_file, fmt="png")
+            hv.save(hv_plot, output_file, fmt="html")
+        else:
+            bokeh.io.show(hv.render(hv_plot))
         del tmp_df[random_id + "name"]
         if text_complements is not None:
             del tmp_df[random_id + "info"]
@@ -299,6 +300,7 @@ def scatter(
     xlabel="",
     ylabel="",
     subset_indices=None,
+    equal_size=False,
     output_file: Union[str, None] = None,
     width=900,
     height=600,
@@ -336,7 +338,10 @@ def scatter(
                 set_xticks_text,
                 boundaries,
             ) = _samples_by_labels(
-                adata, sort_annot=True, subset_indices=subset_indices
+                adata,
+                sort_annot=True,
+                subset_indices=subset_indices,
+                equal_size=equal_size,
             )
             y = [func2_(i) for i in list_samples]
             x = [i for i in range(len(y))]
@@ -584,9 +589,10 @@ def scatter(
                 xticks=list(zip([float(x) for x in set_xticks], set_xticks_text))
             )
         hv_plot = points
-        bokeh.io.show(hv.render(hv_plot))
         if output_file:
-            hv.save(hv_plot, output_file, fmt="png")
+            hv.save(hv_plot, output_file, fmt="html")
+        else:
+            bokeh.io.show(hv.render(hv_plot))
         del tmp_df[random_id + "name"]
         del tmp_df[random_id + "colors"]
         del tmp_df[random_id + "x_" + xlabel]
@@ -602,6 +608,7 @@ def plot(
     xlabel="",
     ylabel="",
     subset_indices=None,
+    equal_size=False,
     output_file: Union[str, None] = None,
     width=900,
     height=600,
@@ -619,6 +626,7 @@ def plot(
         xlabel=xlabel,
         ylabel=ylabel,
         subset_indices=subset_indices,
+        equal_size=equal_size,
         output_file=output_file,
         width=width,
         height=height,
@@ -739,9 +747,10 @@ def plot_var(
                 )
             )
             hv_plot = img
-            bokeh.io.show(hv.render(hv_plot))
             if output_file:
-                hv.save(hv_plot, output_file, fmt="png")
+                hv.save(hv_plot, output_file, fmt="html")
+            else:
+                bokeh.io.show(hv.render(hv_plot))
 
         ################################################################################
 
