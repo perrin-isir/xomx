@@ -8,6 +8,7 @@ import bokeh.plotting
 import bokeh.io
 import holoviews as hv
 from bokeh.models import HoverTool
+from bokeh.plotting import Figure
 from xomx.tools.utils import _to_dense
 
 
@@ -21,6 +22,39 @@ def extension(bokeh_or_matplotlib: str):
         "matplotlib",
     ], 'Input must be "bokeh" or "matplotlib".'
     global_bokeh_or_matplotlib = bokeh_or_matplotlib
+
+
+def _custom_legend(bokeh_plot: Figure):
+    bokeh_plot.legend[0].items[0].visible = False
+    glyph = bokeh_plot.legend[0].items[0].renderers[0].glyph
+    factors = glyph.fill_color["transform"].factors
+    palette = glyph.fill_color["transform"].palette
+    size = glyph.size
+    height = 24
+    margin = 0
+    spacing = 0
+    padding = 5
+    max_nr = (bokeh_plot.height - 2 * margin - 2 * padding - height) // (
+        height + spacing
+    )
+    full_length = len(factors)
+    cuts = list(np.arange(0, full_length, max_nr)) + [full_length]
+    list_intervals = [np.arange(cuts[i], cuts[i + 1]) for i in range(len(cuts) - 1)]
+    for itvl in list_intervals:
+        items_list = [
+            (factors[i], [bokeh_plot.scatter(size=size, color=palette[i])])
+            for i in itvl
+        ]
+        legend = bokeh.models.Legend(
+            items=items_list,
+            label_height=height,
+            glyph_height=height,
+            spacing=spacing,
+            padding=padding,
+            margin=margin,
+        )
+        bokeh_plot.add_layout(legend, "right")
+    return bokeh_plot
 
 
 def _hover(event, fig, ax, ann, sctr, update_annot):
@@ -193,7 +227,6 @@ def plot_scores(
             ylabel=ylabel,
             logx=False,
             logy=False,
-            legend_position="right",
         )
         if yticks is not None:
             points.opts(
@@ -220,7 +253,7 @@ def plot_scores(
         if output_file:
             hv.save(hv_plot, output_file, fmt="html")
         else:
-            bokeh.io.show(hv.render(hv_plot))
+            bokeh.io.show(_custom_legend(hv.render(hv_plot)))
         del tmp_df[random_id + "name"]
         if text_complements is not None:
             del tmp_df[random_id + "info"]
@@ -582,7 +615,6 @@ def scatter(
             logx=xlog_scale,
             logy=ylog_scale,
             colorbar=True if tmp_cmap == "viridis" else False,
-            legend_position="right",
         )
         if set_xticks is not None:
             points.opts(
@@ -592,7 +624,7 @@ def scatter(
         if output_file:
             hv.save(hv_plot, output_file, fmt="html")
         else:
-            bokeh.io.show(hv.render(hv_plot))
+            bokeh.io.show(_custom_legend(hv.render(hv_plot)))
         del tmp_df[random_id + "name"]
         del tmp_df[random_id + "colors"]
         del tmp_df[random_id + "x_" + xlabel]
@@ -750,7 +782,7 @@ def plot_var(
             if output_file:
                 hv.save(hv_plot, output_file, fmt="html")
             else:
-                bokeh.io.show(hv.render(hv_plot))
+                bokeh.io.show(_custom_legend(hv.render(hv_plot)))
 
         ################################################################################
 
