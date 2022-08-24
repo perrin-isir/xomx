@@ -20,8 +20,8 @@ setup(
         "scikit-learn>=0.24.2",
         "requests>=2.23.0",
         "leidenalg>=0.8.8",
-        "holoviews>=1.14.8",
-        "bokeh>=2.3.3",
+        "holoviews>=1.15.0",
+        "bokeh>=2.4.3",
     ],
     license="LICENSE",
 )
