@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors
 from matplotlib import rcParams
-from typing import Union, Callable, Any
-from numbers import Number
+from typing import Union
 import string
 import bokeh.plotting
 import bokeh.io
@@ -92,9 +92,11 @@ def plot_scores(
         "plot_scores() requires data with labels (even if there is only one label), "
         'so adata.obs["labels"] and adata.uns["all_labels"] must exist.'
     )
-    denom = len(adata.uns["all_labels"])
+    denom = max(len(adata.uns["all_labels"]) - 1, 1)
     for i, val in enumerate(adata.uns["all_labels"]):
-        if label:
+        if "label_colors" in adata.uns:
+            annot_colors[val] = adata.uns["label_colors"][i]
+        elif label:
             if val == label:
                 annot_colors[val] = 0.0 / denom
             else:
@@ -102,9 +104,9 @@ def plot_scores(
         else:
             annot_colors[val] = i / denom
 
-    samples_color = np.zeros(len(indices))
+    sample_colors = np.zeros(len(indices))
     for i in range(len(indices)):
-        samples_color[i] = annot_colors[adata.obs["labels"][indices[i]]]
+        sample_colors[i] = annot_colors[adata.obs["labels"][indices[i]]]
 
     xlabel = "samples"
 
@@ -120,7 +122,7 @@ def plot_scores(
         else:
             cm = "nipy_spectral"
         sctr = ax.scatter(
-            np.arange(len(indices)), scores, c=samples_color, cmap=cm, s=5
+            np.arange(len(indices)), scores, c=sample_colors, cmap=cm, s=5
         )
         if score_threshold is not None:
             ax.axhline(y=score_threshold, xmin=0, xmax=1, lw=1, ls="--", c="red")
@@ -203,8 +205,18 @@ def plot_scores(
         tmp_df[random_id + "name"] = adata.obs_names[indices]
         if text_complements is not None:
             tmp_df[random_id + "info"] = text_complements
-        tmp_df[random_id + "colors"] = samples_color
+        tmp_df[random_id + "colors"] = sample_colors
         tmp_cmap = "nipy_spectral"
+        new_tmp_cmap = {}
+        for i, lbl in enumerate(adata.uns["all_labels"]):
+            new_tmp_cmap[lbl] = matplotlib.colors.rgb2hex(
+                plt.get_cmap(tmp_cmap)(
+                    adata.uns["label_colors"][i]
+                    if "label_colors" in adata.uns
+                    else annot_colors[lbl]
+                )
+            )
+        tmp_cmap = new_tmp_cmap
 
         hv.extension("bokeh")
         points = hv.Points(
@@ -354,7 +366,7 @@ def scatter(
     set_xticks = None
     set_xticks_text = None
     violinplots_done = False
-    samples_color = None
+    sample_colors = None
     colormap = None
     if global_bokeh_or_matplotlib == "matplotlib":
         rcParams["figure.dpi"] = 100
@@ -408,21 +420,24 @@ def scatter(
         if "colors" in adata.obs:
             colormap = "viridis"
             if subset_indices is None:
-                samples_color = adata.obs["colors"]
+                sample_colors = adata.obs["colors"]
             else:
-                samples_color = adata.obs["colors"][subset_indices]
+                sample_colors = adata.obs["colors"][subset_indices]
         elif "all_labels" in adata.uns and "labels" in adata.obs:
             annot_colors = {}
-            denom = len(adata.uns["all_labels"])
+            denom = max(len(adata.uns["all_labels"]) - 1, 1)
             for i, val in enumerate(adata.uns["all_labels"]):
-                annot_colors[val] = i / denom
-            samples_color = np.zeros_like(x, dtype=float)
+                if "label_colors" in adata.uns:
+                    annot_colors[val] = adata.uns["label_colors"][i]
+                else:
+                    annot_colors[val] = i / denom
+            sample_colors = np.zeros_like(x, dtype=float)
             if subset_indices is None:
                 for i in range(adata.n_obs):
-                    samples_color[i] = annot_colors[adata.obs["labels"][i]]
+                    sample_colors[i] = annot_colors[adata.obs["labels"][i]]
             else:
                 for i in range(len(subset_indices)):
-                    samples_color[i] = annot_colors[
+                    sample_colors[i] = annot_colors[
                         adata.obs["labels"][subset_indices[i]]
                     ]
     else:
@@ -455,10 +470,10 @@ def scatter(
                 pc.set_edgecolor("grey")
                 pc.set_alpha(0.5)
 
-        if samples_color is None:
+        if sample_colors is None:
             scax = ax.scatter(x, y, s=1)
         else:
-            scax = ax.scatter(x, y, c=samples_color, cmap=colormap, s=1)
+            scax = ax.scatter(x, y, c=sample_colors, cmap=colormap, s=1)
             if colormap == "viridis":
                 fig.colorbar(scax, ax=ax)
 
@@ -483,7 +498,7 @@ def scatter(
                 ):
                     text = "{}".format(adata.obs_names[subset_indices[ind["ind"][0]]])
                 else:
-                    if samples_color is None:
+                    if sample_colors is None:
                         if subset_indices is None:
                             text = "{}".format(adata.obs_names[ind["ind"][0]])
                         else:
@@ -582,12 +597,30 @@ def scatter(
                 if obs_or_var == "obs"
                 else adata.var_names[subset_indices]
             )
-        if samples_color is not None:
-            tmp_df[random_id + "colors"] = samples_color
+        if sample_colors is not None:
+            tmp_df[random_id + "colors"] = sample_colors
             tmp_cmap = colormap
         else:
             tmp_df[random_id + "colors"] = 0
             tmp_cmap = "blues"
+        if (
+            sample_colors is not None
+            and obs_or_var == "obs"
+            and "all_labels" in adata.uns
+            and "labels" in adata.obs
+            and not tmp_cmap == "viridis"
+        ):
+            new_tmp_cmap = {}
+            for i, lbl in enumerate(adata.uns["all_labels"]):
+                new_tmp_cmap[lbl] = matplotlib.colors.rgb2hex(
+                    plt.get_cmap(tmp_cmap)(
+                        adata.uns["label_colors"][i]
+                        if "label_colors" in adata.uns
+                        else annot_colors[lbl]
+                    )
+                )
+            tmp_cmap = new_tmp_cmap
+
         hv.extension("bokeh")
         points = hv.Points(
             tmp_df,
@@ -791,7 +824,7 @@ def plot_var(
 def plot_2d_obsm(
     adata,
     obsm_key,
-    color_function: Union[Callable[[int], Number], Any] = None,
+    var_name=None,
     subset_indices=None,
     output_file: Union[str, None] = None,
     width=900,
@@ -803,21 +836,15 @@ def plot_2d_obsm(
     def embedding_y(j):
         return adata.obsm[obsm_key][j, 1]
 
-    if color_function is not None:
+    if var_name is not None:
+        assert "colors" not in adata.obs, (
+            'adata.obs["colors"] must not exist when using the var_name= option'
+            " to define colors"
+        )
         assert (
-            "colors" not in adata.obs
-        ), 'color_function must be None if adata.obs["colors"] exists.'
-        if color_function in adata.var_names:
-            adata.obs["colors"] = np.array(_to_dense(adata[:, color_function].X))
-        else:
-            color_values = np.zeros((adata.n_obs, 1))
-            if subset_indices is None:
-                color_values[:, 0] = [color_function(i) for i in range(adata.n_obs)]
-            else:
-                color_values[subset_indices, 0] = [
-                    color_function(i) for i in subset_indices
-                ]
-            adata.obs["colors"] = color_values
+            var_name in adata.var_names
+        ), "the var_name input must be in adata.var_names"
+        adata.obs["colors"] = np.array(_to_dense(adata[:, var_name].X))
 
     scatter(
         adata,
@@ -834,7 +861,7 @@ def plot_2d_obsm(
         height=height,
     )
 
-    if color_function is not None:
+    if var_name is not None:
         del adata.obs["colors"]
 
 
