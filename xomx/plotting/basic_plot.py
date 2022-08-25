@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors
 from matplotlib import rcParams
-from typing import Union
+from typing import Optional
 import string
 import bokeh.plotting
 import bokeh.io
@@ -78,13 +78,15 @@ def plot_scores(
     score_threshold,
     indices,
     label=None,
-    output_file: Union[str, None] = None,
+    *,
+    output_file: Optional[str] = None,
     text_complements=None,
-    lines=False,
+    lines: bool = False,
     yticks=None,
-    ylabel="",
-    width=900,
-    height=600,
+    ylabel: str = "",
+    title: str = "",
+    width: int = 900,
+    height: int = 600,
 ):
     global global_bokeh_or_matplotlib
     annot_colors = {}
@@ -178,6 +180,7 @@ def plot_scores(
         plt.legend(handles=handles, loc="lower left", bbox_to_anchor=(1.0, 0.0))
         plt.subplots_adjust(right=0.75)
 
+        plt.title(title)
         plt.ylabel(ylabel)
         plt.xlabel(xlabel)
         if output_file:
@@ -235,7 +238,7 @@ def plot_scores(
             width=width,
             height=height,
             show_grid=False,
-            title="",
+            title=title,
             xlabel=xlabel,
             ylabel=ylabel,
             logx=False,
@@ -340,14 +343,16 @@ def scatter(
     adata,
     func1_=_identity_func,
     func2_=_identity_func,
-    obs_or_var="obs",
-    xlog_scale=False,
-    ylog_scale=False,
-    xlabel="",
-    ylabel="",
+    obs_or_var: str = "obs",
+    *,
+    xlog_scale: bool = False,
+    ylog_scale: bool = False,
+    xlabel: str = "",
+    ylabel: str = "",
+    title: str = "",
     subset_indices=None,
     equal_size=False,
-    output_file: Union[str, None] = None,
+    output_file: Optional[str] = None,
     width=900,
     height=600,
 ):
@@ -557,6 +562,7 @@ def scatter(
             plt.xscale("log")
         if ylog_scale:
             plt.yscale("log")
+        plt.title(title)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         if output_file:
@@ -643,7 +649,7 @@ def scatter(
             width=width,
             height=height,
             show_grid=False,
-            title="",
+            title=title,
             xlabel=xlabel,
             ylabel=ylabel,
             logx=xlog_scale,
@@ -670,14 +676,16 @@ def plot(
     adata,
     func=_identity_func,
     obs_or_var="obs",
+    *,
     ylog_scale=False,
     xlabel="",
     ylabel="",
+    title="",
     subset_indices=None,
-    equal_size=False,
-    output_file: Union[str, None] = None,
-    width=900,
-    height=600,
+    equal_size: bool = False,
+    output_file: Optional[str] = None,
+    width: int = 900,
+    height: int = 600,
 ):
     """Plots the value of a function on every sample or every feature, depending
     on the value of obs_or_var which must be either "obs" or "var"
@@ -691,6 +699,7 @@ def plot(
         ylog_scale=ylog_scale,
         xlabel=xlabel,
         ylabel=ylabel,
+        title=title,
         subset_indices=subset_indices,
         equal_size=equal_size,
         output_file=output_file,
@@ -702,10 +711,14 @@ def plot(
 def plot_var(
     adata,
     features=None,
+    *,
     ylog_scale=False,
+    xlabel="",
+    ylabel="",
+    title="",
     subset_indices=None,
     equal_size=False,
-    output_file: Union[str, None] = None,
+    output_file: Optional[str] = None,
     width=900,
     height=600,
 ):
@@ -724,6 +737,9 @@ def plot_var(
             lambda i: adata.X[i, idx],
             "obs",
             ylog_scale=ylog_scale,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            title=title,
             subset_indices=subset_indices,
             output_file=output_file,
             width=width,
@@ -780,6 +796,9 @@ def plot_var(
             )
             plt.tick_params(axis="both", which="both", length=0)
             plt.colorbar(im)
+            plt.title(title)
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel)
             if output_file:
                 plt.savefig(output_file, dpi=200)
             else:
@@ -795,9 +814,9 @@ def plot_var(
                 cmap="viridis",
                 width=width,
                 height=height,
-                title="",
-                xlabel="",
-                ylabel="",
+                title=title,
+                xlabel=xlabel,
+                ylabel=ylabel,
                 colorbar=True,
             )
             if set_xticks is not None:
@@ -825,10 +844,14 @@ def plot_2d_obsm(
     adata,
     obsm_key,
     var_name=None,
+    *,
+    xlabel: str = "",
+    ylabel: str = "",
+    title: str = "",
     subset_indices=None,
-    output_file: Union[str, None] = None,
-    width=900,
-    height=600,
+    output_file: Optional[str] = None,
+    width: int = 900,
+    height: int = 600,
 ):
     def embedding_x(j):
         return adata.obsm[obsm_key][j, 0]
@@ -853,8 +876,9 @@ def plot_2d_obsm(
         "obs",
         xlog_scale=False,
         ylog_scale=False,
-        xlabel="",
-        ylabel="",
+        xlabel=xlabel,
+        ylabel=ylabel,
+        title=title,
         subset_indices=subset_indices,
         output_file=output_file,
         width=width,
@@ -868,10 +892,12 @@ def plot_2d_obsm(
 def plot_2d_embedding(
     adata,
     reducer,
+    *,
+    title: str = "",
     subset_indices=None,
-    output_file: Union[str, None] = None,
-    width=900,
-    height=600,
+    output_file: Optional[str] = None,
+    width: int = 900,
+    height: int = 600,
 ):
     assert (hasattr(reducer, "fit") and hasattr(reducer, "transform")) or (
         hasattr(reducer, "fit_transform")
@@ -907,6 +933,7 @@ def plot_2d_embedding(
         ylog_scale=False,
         xlabel="",
         ylabel="",
+        title=title,
         subset_indices=subset_indices,
         output_file=output_file,
         width=width,

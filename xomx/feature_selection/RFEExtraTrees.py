@@ -4,7 +4,7 @@ from sklearn.ensemble import ExtraTreesClassifier
 from xomx.tools.utils import _to_dense, confusion_matrix
 from xomx.plotting.basic_plot import plot_scores
 from joblib import dump, load
-from typing import List, Union
+from typing import List, Union, Optional
 
 
 class RFEExtraTrees:
@@ -173,11 +173,13 @@ class RFEExtraTrees:
     def plot(
         self,
         label=None,
-        save_dir=None,
-        random_subset_size=None,
+        *,
+        output_file: Optional[str] = None,
+        title: str = "",
+        random_subset_size: Optional[int] = None,
         rng=None,
-        width=900,
-        height=600,
+        width: int = 900,
+        height: int = 600,
     ):
         if random_subset_size is None:
             res = self.score(self.data_test)
@@ -198,7 +200,8 @@ class RFEExtraTrees:
             0.5,
             indices,
             label,
-            save_dir,
+            output_file=output_file,
+            title=title,
             ylabel="scores",
             width=width,
             height=height,

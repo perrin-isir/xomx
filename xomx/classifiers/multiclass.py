@@ -2,6 +2,7 @@ import numpy as np
 from xomx.tools.utils import _to_dense
 from xomx.plotting.basic_plot import plot_scores
 from scipy.special import softmax
+from typing import Optional
 
 
 class ScoreBasedMulticlass:
@@ -32,11 +33,12 @@ class ScoreBasedMulticlass:
     def plot(
         self,
         label=None,
-        save_dir=None,
+        output_file: Optional[str] = None,
+        title: str = "",
         random_subset_size=None,
         rng=None,
-        width=900,
-        height=600,
+        width: int = 900,
+        height: int = 600,
     ):
         if random_subset_size is None:
             indices = self.adata.uns["test_indices"]
@@ -58,13 +60,14 @@ class ScoreBasedMulticlass:
             None,
             indices,
             label,
-            save_dir,
+            output_file=output_file,
             text_complements=[
                 " | prediction: " + str(att_) for att_ in self.annotations[predictions]
             ],
             lines=True,
             yticks=self.annotations,
             ylabel="predictions",
+            title=title,
             width=width,
             height=height,
         )
