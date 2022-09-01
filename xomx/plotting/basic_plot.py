@@ -12,16 +12,16 @@ from bokeh.plotting import Figure
 from xomx.tools.utils import _to_dense
 
 
-global_bokeh_or_matplotlib = "bokeh"
+global_xomx_extension_bokeh_or_matplotlib = "bokeh"
 
 
 def extension(bokeh_or_matplotlib: str):
-    global global_bokeh_or_matplotlib
+    global global_xomx_extension_bokeh_or_matplotlib
     assert bokeh_or_matplotlib in [
         "bokeh",
         "matplotlib",
     ], 'Input must be "bokeh" or "matplotlib".'
-    global_bokeh_or_matplotlib = bokeh_or_matplotlib
+    global_xomx_extension_bokeh_or_matplotlib = bokeh_or_matplotlib
 
 
 def _custom_legend(bokeh_plot: Figure):
@@ -88,7 +88,7 @@ def plot_scores(
     width: int = 900,
     height: int = 600,
 ):
-    global global_bokeh_or_matplotlib
+    global global_xomx_extension_bokeh_or_matplotlib
     annot_colors = {}
     assert "all_labels" in adata.uns and "labels" in adata.obs, (
         "plot_scores() requires data with labels (even if there is only one label), "
@@ -112,7 +112,7 @@ def plot_scores(
 
     xlabel = "samples"
 
-    if global_bokeh_or_matplotlib == "matplotlib":
+    if global_xomx_extension_bokeh_or_matplotlib == "matplotlib":
         rcParams["figure.dpi"] = 100
         rcParams["figure.figsize"] = (
             width / rcParams["figure.dpi"],
@@ -190,7 +190,7 @@ def plot_scores(
 
     ####################################################################################
     # Bokeh
-    if global_bokeh_or_matplotlib == "bokeh":
+    if global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         tmp_df = adata.obs.iloc[indices].copy()
 
         random_id = "".join(np.random.choice(list(string.ascii_letters), 10)) + "_"
@@ -361,7 +361,7 @@ def scatter(
     on the value of obs_or_var which must be either "obs" or "var"
     (both functions must take indices in input)
     """
-    global global_bokeh_or_matplotlib
+    global global_xomx_extension_bokeh_or_matplotlib
     if func1_ == _identity_func:
         function_plot_ = True
     else:
@@ -373,7 +373,7 @@ def scatter(
     violinplots_done = False
     sample_colors = None
     colormap = None
-    if global_bokeh_or_matplotlib == "matplotlib":
+    if global_xomx_extension_bokeh_or_matplotlib == "matplotlib":
         rcParams["figure.dpi"] = 100
         rcParams["figure.figsize"] = (
             width / rcParams["figure.dpi"],
@@ -397,7 +397,7 @@ def scatter(
             y = [func2_(i) for i in list_samples]
             x = [i for i in range(len(y))]
             subset_indices = list_samples
-            if global_bokeh_or_matplotlib == "matplotlib":
+            if global_xomx_extension_bokeh_or_matplotlib == "matplotlib":
                 if violinplot:
                     for i in range(len(boundaries) - 1):
                         parts = ax.violinplot(
@@ -458,7 +458,7 @@ def scatter(
     if colormap is None:
         colormap = "nipy_spectral"
 
-    if global_bokeh_or_matplotlib == "matplotlib":
+    if global_xomx_extension_bokeh_or_matplotlib == "matplotlib":
         if violinplot and not violinplots_done:
             parts = ax.violinplot(
                 y,
@@ -572,7 +572,7 @@ def scatter(
 
     ####################################################################################
     # Bokeh
-    if global_bokeh_or_matplotlib == "bokeh":
+    if global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         if subset_indices is None:
             tmp_df = adata.obs if obs_or_var == "obs" else adata.var
         else:
@@ -723,7 +723,7 @@ def plot_var(
     height=600,
 ):
     """ """
-    global global_bokeh_or_matplotlib
+    global global_xomx_extension_bokeh_or_matplotlib
     if type(features) == str or type(features) == np.str_ or type(features) == int:
         idx = features
         if type(idx) == str or type(idx) == np.str_:
@@ -780,7 +780,7 @@ def plot_var(
                 plot_array[k, :] = [adata.X[i, idx] for i in list_samples]
         xsize = plot_array.shape[1]
 
-        if global_bokeh_or_matplotlib == "matplotlib":
+        if global_xomx_extension_bokeh_or_matplotlib == "matplotlib":
             rcParams["figure.dpi"] = 100
             rcParams["figure.figsize"] = (
                 width / rcParams["figure.dpi"],
@@ -806,7 +806,7 @@ def plot_var(
 
         ################################################################################
         # Bokeh
-        if global_bokeh_or_matplotlib == "bokeh":
+        if global_xomx_extension_bokeh_or_matplotlib == "bokeh":
             hv.extension("bokeh")
             bounds = (0, 0, xsize, ysize)  # Coord system: (left, bottom, right, top)
             img = hv.Image(plot_array, bounds=bounds)
