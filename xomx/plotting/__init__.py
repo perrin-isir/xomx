@@ -1,5 +1,6 @@
 from .basic_plot import (
     extension,
+    colormap,
     scatter,
     plot,
     plot_scores,

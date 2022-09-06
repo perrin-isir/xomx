@@ -1,6 +1,5 @@
 import os
 import numpy as np
-from sklearn.ensemble import ExtraTreesClassifier
 from xomx.tools.utils import _to_dense, confusion_matrix
 from xomx.plotting.basic_plot import plot_scores
 from joblib import dump, load
@@ -64,6 +63,8 @@ class RFEExtraTrees:
             )
 
     def select_features(self, n, selected_feats=None):
+        from sklearn.ensemble import ExtraTreesClassifier  # lazy import
+
         if n < self.data_train.shape[1]:
             if selected_feats is not None:
                 reduced_feats = selected_feats

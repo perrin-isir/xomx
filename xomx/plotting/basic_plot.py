@@ -4,11 +4,6 @@ import matplotlib.colors
 from matplotlib import rcParams
 from typing import Optional
 import string
-import bokeh.plotting
-import bokeh.io
-import holoviews as hv
-from bokeh.models import HoverTool
-from bokeh.plotting import Figure
 from xomx.tools.utils import _to_dense
 
 
@@ -24,7 +19,53 @@ def extension(bokeh_or_matplotlib: str):
     global_xomx_extension_bokeh_or_matplotlib = bokeh_or_matplotlib
 
 
-def _custom_legend(bokeh_plot: Figure):
+def colormap(
+    *,
+    width: int = 900,
+    height: int = 150,
+):
+    if global_xomx_extension_bokeh_or_matplotlib == "matplotlib":
+        rcParams["figure.dpi"] = 100
+        rcParams["figure.figsize"] = (
+            900 / rcParams["figure.dpi"],
+            150 / rcParams["figure.dpi"],
+        )
+        fig, ax = plt.subplots()
+        cm = "nipy_spectral"
+        ax.imshow(
+            np.vstack((np.linspace(0, 1, 100), np.linspace(0, 1, 100))),
+            extent=[0, 1, 0, 1],
+            aspect="auto",
+            cmap=cm,
+        )
+        ax.get_yaxis().set_visible(False)
+        ax.locator_params(axis="x", nbins=20)
+        plt.show()
+    elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
+        import holoviews as hv  # lazy import
+        import bokeh.io  # lazy import
+
+        hv.extension("bokeh")
+        cbar = hv.Image(
+            np.linspace(0, 1, 100)[np.newaxis], ydensity=1, bounds=(0, 0, 1, 1)
+        ).opts(
+            cmap="nipy_spectral",
+            xticks=20,
+            xlabel="",
+            height=height,
+            width=width,
+            yaxis=None,
+        )
+        bokeh.io.show(hv.render(cbar))
+    else:
+        raise ValueError(
+            'Execute xomx.pl.extension("bokeh") or xomx.pl.extension("matplotlib")'
+        )
+
+
+def _custom_legend(bokeh_plot):
+    from bokeh.models import Legend
+
     if len(bokeh_plot.legend) > 0:
         bokeh_plot.legend[0].items[0].visible = False
         glyph = bokeh_plot.legend[0].items[0].renderers[0].glyph
@@ -46,7 +87,7 @@ def _custom_legend(bokeh_plot: Figure):
                 (factors[i], [bokeh_plot.scatter(size=size, color=palette[i])])
                 for i in itvl
             ]
-            legend = bokeh.models.Legend(
+            legend = Legend(
                 items=items_list,
                 label_height=height,
                 glyph_height=height,
@@ -124,7 +165,12 @@ def plot_scores(
         else:
             cm = "nipy_spectral"
         sctr = ax.scatter(
-            np.arange(len(indices)), scores, c=sample_colors, cmap=cm, s=5
+            np.arange(len(indices)),
+            scores,
+            c=sample_colors,
+            cmap=cm,
+            norm=matplotlib.colors.NoNorm(),
+            s=5,
         )
         if score_threshold is not None:
             ax.axhline(y=score_threshold, xmin=0, xmax=1, lw=1, ls="--", c="red")
@@ -190,7 +236,13 @@ def plot_scores(
 
     ####################################################################################
     # Bokeh
-    if global_xomx_extension_bokeh_or_matplotlib == "bokeh":
+    elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
+        import holoviews as hv  # lazy import
+
+        # import bokeh.plotting  # lazy import
+        import bokeh.io  # lazy import
+        from bokeh.models import HoverTool  # lazy import
+
         tmp_df = adata.obs.iloc[indices].copy()
 
         random_id = "".join(np.random.choice(list(string.ascii_letters), 10)) + "_"
@@ -277,6 +329,10 @@ def plot_scores(
         del tmp_df[random_id + "x_" + xlabel]
         del tmp_df[random_id + "y_" + ylabel]
     ####################################################################################
+    else:
+        raise ValueError(
+            'Execute xomx.pl.extension("bokeh") or xomx.pl.extension("matplotlib")'
+        )
 
 
 def _samples_by_labels(adata, sort_annot=False, subset_indices=None, equal_size=False):
@@ -478,7 +534,14 @@ def scatter(
         if sample_colors is None:
             scax = ax.scatter(x, y, s=1)
         else:
-            scax = ax.scatter(x, y, c=sample_colors, cmap=colormap, s=1)
+            scax = ax.scatter(
+                x,
+                y,
+                c=sample_colors,
+                cmap=colormap,
+                norm=matplotlib.colors.NoNorm(),
+                s=1,
+            )
             if colormap == "viridis":
                 fig.colorbar(scax, ax=ax)
 
@@ -572,7 +635,13 @@ def scatter(
 
     ####################################################################################
     # Bokeh
-    if global_xomx_extension_bokeh_or_matplotlib == "bokeh":
+    elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
+        import holoviews as hv  # lazy import
+
+        # import bokeh.plotting  # lazy import
+        import bokeh.io  # lazy import
+        from bokeh.models import HoverTool  # lazy import
+
         if subset_indices is None:
             tmp_df = adata.obs if obs_or_var == "obs" else adata.var
         else:
@@ -670,6 +739,10 @@ def scatter(
         del tmp_df[random_id + "x_" + xlabel]
         del tmp_df[random_id + "y_" + ylabel]
     ####################################################################################
+    else:
+        raise ValueError(
+            'Execute xomx.pl.extension("bokeh") or xomx.pl.extension("matplotlib")'
+        )
 
 
 def plot(
@@ -741,6 +814,7 @@ def plot_var(
             ylabel=ylabel,
             title=title,
             subset_indices=subset_indices,
+            equal_size=equal_size,
             output_file=output_file,
             width=width,
             height=height,
@@ -806,7 +880,12 @@ def plot_var(
 
         ################################################################################
         # Bokeh
-        if global_xomx_extension_bokeh_or_matplotlib == "bokeh":
+        elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
+            import holoviews as hv  # lazy import
+
+            # import bokeh.plotting  # lazy import
+            import bokeh.io  # lazy import
+
             hv.extension("bokeh")
             bounds = (0, 0, xsize, ysize)  # Coord system: (left, bottom, right, top)
             img = hv.Image(plot_array, bounds=bounds)
@@ -838,6 +917,10 @@ def plot_var(
                 bokeh.io.show(_custom_legend(hv.render(hv_plot)))
 
         ################################################################################
+        else:
+            raise ValueError(
+                'Execute xomx.pl.extension("bokeh") or xomx.pl.extension("matplotlib")'
+            )
 
 
 def plot_2d_obsm(
