@@ -45,20 +45,26 @@ def indices_per_label(labels) -> dict:
 
 def train_and_test_indices(
     adata,
-    indices_per_label_key: dict,
+    obs_indices_per_label_key: str = "obs_indices_per_label",
     test_train_ratio: float = 0.25,
     rng=np.random.default_rng(),
     # shuffle: bool = True,
 ):
     train_indices_per_label = {}
     test_indices_per_label = {}
-    for annot in adata.uns[indices_per_label_key]:
-        idxs = rng.permutation(adata.uns[indices_per_label_key][annot])
+    if obs_indices_per_label_key is not None:
+        for annot in adata.uns[obs_indices_per_label_key]:
+            idxs = rng.permutation(adata.uns[obs_indices_per_label_key][annot])
+            cut = np.floor(len(idxs) * test_train_ratio).astype("int") + 1
+            test_indices_per_label[annot] = idxs[:cut]
+            train_indices_per_label[annot] = idxs[cut:]
+        test_indices = np.concatenate(list(test_indices_per_label.values()))
+        train_indices = np.concatenate(list(train_indices_per_label.values()))
+    else:
+        idxs = rng.permutation(np.arange(adata.n_obs))
         cut = np.floor(len(idxs) * test_train_ratio).astype("int") + 1
-        test_indices_per_label[annot] = idxs[:cut]
-        train_indices_per_label[annot] = idxs[cut:]
-    train_indices = np.concatenate(list(train_indices_per_label.values()))
-    test_indices = np.concatenate(list(test_indices_per_label.values()))
+        test_indices = idxs[:cut]
+        train_indices = idxs[cut:]
     # if shuffle:
     #     rng.shuffle(train_indices)
     #     rng.shuffle(test_indices)
