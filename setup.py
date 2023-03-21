@@ -1,12 +1,18 @@
-from setuptools import setup, find_packages
-
 # Install with 'pip install -e .'
+
+from setuptools import setup, find_packages
+from pathlib import Path
+
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="xomx",
     version="0.1.0",
     author="Nicolas Perrin-Gilbert",
     description="xomx: a python library for computational omics",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/perrin-isir/xomx",
     packages=find_packages(),
     install_requires=[
