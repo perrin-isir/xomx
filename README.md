@@ -19,36 +19,44 @@ fully compatible with [Scanpy](https://scanpy.readthedocs.io).
 
 ## Install
 
-<details><summary>Option 1: pip</summary>
+<details><summary>Option 1: conda (preferred option)</summary>
 <p>
 
-    pip install git+https://github.com/perrin-isir/xomx
+This option is preferred because it relies mainly on conda-forge packages.
+
+
+    git clone https://github.com/perrin-isir/xomx.git
+    cd xomx
+    conda update conda
+    
+Install micromamba if you don't already have it (you can also simply use conda, by replacing below `micromamba create`, `micromamba update` and `micromamba activate` respectively by `conda env create`, `conda env update` and `conda activate`, but this will lead to a significantly slower installation):
+
+    conda install -c conda-forge micromamba
+
+Choose a conda environment name, for instance `xomxenv`.  
+The following command creates the `xomxenv` environment with the requirements listed in [environment.yaml](environment.yaml):
+
+    micromamba create --name xomxenv --file environment.yaml
+
+If you prefer to update an existing environment (`existing_env`):
+
+    micromamba update --name existing_env --file environment.yml
+
+Then, activate the `xomxenv` environment:
+
+    micromamba activate xomxenv
+
+Finally, to install the *xomx* library in the activated environment:
+
+    pip install -e .
 
 </p>
 </details>
 
-<details><summary>Option 2: conda</summary>
+<details><summary>Option 2: pip</summary>
 <p>
 
-    git clone https://github.com/perrin-isir/xomx.git
-    cd xomx
-
-Choose a conda environmnent name, for instance `xomxv`.  
-The following command creates the `xomxv` environment with the requirements listed in [environment.yaml](environment.yaml):
-
-    conda env create --name xomxv --file environment.yaml
-
-If you prefer to update an existing environment (`existing_env`):
-
-    conda env update --name existing_env --file environment.yml
-
-To activate the `xomxv` environment:
-
-    conda activate xomxv
-
-Finally, to install the *xomx* library in the activated virtual environment:
-
-    pip install -e .
+    pip install git+https://github.com/perrin-isir/xomx
 
 </p>
 </details>

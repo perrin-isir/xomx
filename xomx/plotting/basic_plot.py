@@ -413,7 +413,7 @@ def scatter(
     height=600,
 ):
     """Displays a scatter plot, with coordinates computed by applying two
-    functions (func1_ and func2_) to every sample or every feature, depending
+    functions (`func1_` and `func2_`) to every sample or every feature, depending
     on the value of obs_or_var which must be either "obs" or "var"
     (both functions must take indices in input)
     """
