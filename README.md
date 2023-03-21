@@ -56,7 +56,7 @@ Finally, to install the *xomx* library in the activated environment:
 <details><summary>Option 2: pip</summary>
 <p>
 
-    pip install git+https://github.com/perrin-isir/xomx
+    pip install xomx
 
 </p>
 </details>
