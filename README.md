@@ -73,8 +73,10 @@ https://github.com/perrin-isir/xomx-tutorials
 -----
 ## Acknowledgements
 
-Here is the list of people who have contributed to *xomx*:
-- Nicolas Perrin-Gilbert (ISIR)
+Maintainer and main contributor:
+- Nicolas Perrin-Gilbert (CNRS, ISIR)
+
+Other people who contributed to *xomx*:
 - Joshua J. Waterfall (Curie Institute)
 - Julien Vibert (Curie Institute)
 - Mathias Vandenbogaert (Curie Institute)
