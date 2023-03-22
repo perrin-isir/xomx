@@ -4,6 +4,8 @@ from . import data_importation as di
 from . import classifiers as cl
 from . import feature_selection as fs
 
+__version__ = "0.1.3"
+
 import sys
 
 sys.modules.update(
