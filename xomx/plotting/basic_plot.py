@@ -256,8 +256,6 @@ def plot_scores(
     # Bokeh
     elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         import holoviews as hv  # lazy import
-
-        # import bokeh.plotting  # lazy import
         import bokeh.io  # lazy import
         from bokeh.models import HoverTool  # lazy import
 
@@ -290,14 +288,37 @@ def plot_scores(
                 )
             )
         tmp_cmap = new_tmp_cmap
-
         hv.extension("bokeh")
         points = hv.Points(
             tmp_df,
             [random_id + "x_" + xlabel, random_id + "y_" + ylabel],
             list(tmp_df.keys()),
         )
+        bokeh_data = bokeh.models.ColumnDataSource(
+            tmp_df.loc[:, random_id + "name"].to_frame()
+        )
         hover = HoverTool(tooltips=tooltips)
+        div = bokeh.models.Div(width=width, height=50, height_policy="fixed")
+        cb = bokeh.models.CustomJS(
+            args=dict(
+                hvr=hover, div=div, source=bokeh_data.data, col_name=random_id + "name"
+            ),
+            code="""
+                       if (cb_data['index'].indices.length > 0) {
+                           const line_list = [];
+                           for (let i = 0; i<cb_data['index'].indices.length; i++) {
+                               var line = "<b>" + cb_data['index'].indices[i].toString()
+                               line += ":   "
+                               line += source[col_name][cb_data['index'].indices[i]]
+                               line += "</b>"
+                               line_list.push(line)
+                           }
+                           div.text = line_list.join(" --- ")
+                       }
+                   """,
+        )
+        hover.callback = cb  # callback whenever the HoverTool function is called
+
         points.opts(
             tools=[hover],
             color="labels"
@@ -339,7 +360,7 @@ def plot_scores(
         if output_file:
             hv.save(hv_plot, output_file, fmt="html")
         else:
-            bokeh.io.show(_custom_legend(hv.render(hv_plot)))
+            bokeh.io.show(bokeh.layouts.column(_custom_legend(hv.render(hv_plot)), div))
         del tmp_df[random_id + "name"]
         if text_complements is not None:
             del tmp_df[random_id + "info"]
@@ -526,6 +547,12 @@ def scatter(
         else:
             y = [func2_(i) for i in subset_indices]
             x = [func1_(i) for i in subset_indices]
+        if "colors" in adata.var:
+            colormap = "viridis"
+            if subset_indices is None:
+                sample_colors = adata.var["colors"]
+            else:
+                sample_colors = adata.var["colors"][subset_indices]
     xmax = np.max(x)
     xmin = np.min(x)
 
@@ -550,7 +577,9 @@ def scatter(
                 pc.set_alpha(0.5)
 
         if sample_colors is None:
-            scax = ax.scatter(x, y, s=1)
+            scax = ax.scatter(
+                x, y, s=1, c="#69add5" if obs_or_var == "obs" else "#fa694a"
+            )
         else:
             scax = ax.scatter(
                 x,
@@ -656,8 +685,6 @@ def scatter(
     # Bokeh
     elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         import holoviews as hv  # lazy import
-
-        # import bokeh.plotting  # lazy import
         import bokeh.io  # lazy import
         from bokeh.models import HoverTool  # lazy import
 
@@ -696,7 +723,7 @@ def scatter(
             tmp_cmap = colormap
         else:
             tmp_df[random_id + "colors"] = 0
-            tmp_cmap = "blues"
+            tmp_cmap = "blues" if obs_or_var == "obs" else "reds"
         if (
             sample_colors is not None
             and obs_or_var == "obs"
@@ -721,7 +748,9 @@ def scatter(
             [random_id + "x_" + xlabel, random_id + "y_" + ylabel],
             list(tmp_df.keys()),
         )
-        bokeh_data = bokeh.models.ColumnDataSource(tmp_df)
+        bokeh_data = bokeh.models.ColumnDataSource(
+            tmp_df.loc[:, random_id + "name"].to_frame()
+        )
         hover = HoverTool(tooltips=tooltips)
         div = bokeh.models.Div(width=width, height=50, height_policy="fixed")
         cb = bokeh.models.CustomJS(
@@ -983,10 +1012,10 @@ def plot_2d_obsm(
         return adata.obsm[obsm_key][j, 1]
 
     if var_name is not None:
-        assert "colors" not in adata.obs, (
-            'adata.obs["colors"] must not exist when using the var_name= option'
-            " to define colors"
-        )
+        if "colors" in adata.obs:
+            adata.obs.rename(
+                {"colors": "xomx_temporary_colors"}, axis="columns", inplace=True
+            )
         assert (
             var_name in adata.var_names
         ), "the var_name input must be in adata.var_names"
@@ -1010,55 +1039,112 @@ def plot_2d_obsm(
 
     if var_name is not None:
         del adata.obs["colors"]
+        if "xomx_temporary_colors" in adata.obs:
+            adata.obs.rename(
+                {"xomx_temporary_colors": "colors"}, axis="columns", inplace=True
+            )
 
 
-def plot_2d_embedding(
+def plot_2d_varm(
     adata,
-    reducer,
+    varm_key,
+    obs_name=None,
     *,
+    xlabel: str = "",
+    ylabel: str = "",
     title: str = "",
     subset_indices=None,
     output_file: Optional[str] = None,
     width: int = 900,
     height: int = 600,
 ):
-    assert (hasattr(reducer, "fit") and hasattr(reducer, "transform")) or (
-        hasattr(reducer, "fit_transform")
-    )
-    if subset_indices is None:
-        datamatrix = adata.X
-    else:
-        datamatrix = adata.X[subset_indices]
-    if hasattr(reducer, "fit_transform"):
-        print("Applying fit_transform()...")
-        embedding = reducer.fit_transform(datamatrix)
-    else:
-        print("Step 1: applying fit()...")
-        reducer.fit(datamatrix)
-        print("Step 2: applying transform()...")
-        embedding = reducer.transform(datamatrix)
-    full_embedding = np.zeros((adata.X.shape[0], 2))
-    full_embedding[subset_indices] = embedding
-    print("Done.")
-
     def embedding_x(j):
-        return full_embedding[j, 0]
+        return adata.varm[varm_key][j, 0]
 
     def embedding_y(j):
-        return full_embedding[j, 1]
+        return adata.varm[varm_key][j, 1]
+
+    if obs_name is not None:
+        if "colors" in adata.var:
+            adata.var.rename(
+                {"colors": "xomx_temporary_colors"}, axis="columns", inplace=True
+            )
+        assert (
+            obs_name in adata.obs_names
+        ), "the obs_name input must be in adata.obs_names"
+        adata.var["colors"] = np.array(_to_dense(adata[obs_name, :].X))
 
     scatter(
         adata,
         embedding_x,
         embedding_y,
-        "obs",
+        "var",
         xlog_scale=False,
         ylog_scale=False,
-        xlabel="",
-        ylabel="",
+        xlabel=xlabel,
+        ylabel=ylabel,
         title=title,
         subset_indices=subset_indices,
         output_file=output_file,
         width=width,
         height=height,
     )
+
+    if obs_name is not None:
+        del adata.var["colors"]
+        if "xomx_temporary_colors" in adata.var:
+            adata.var.rename(
+                {"xomx_temporary_colors": "colors"}, axis="columns", inplace=True
+            )
+
+
+# def plot_2d_embedding(
+#     adata,
+#     reducer,
+#     *,
+#     title: str = "",
+#     subset_indices=None,
+#     output_file: Optional[str] = None,
+#     width: int = 900,
+#     height: int = 600,
+# ):
+#     assert (hasattr(reducer, "fit") and hasattr(reducer, "transform")) or (
+#         hasattr(reducer, "fit_transform")
+#     )
+#     if subset_indices is None:
+#         datamatrix = adata.X
+#     else:
+#         datamatrix = adata.X[subset_indices]
+#     if hasattr(reducer, "fit_transform"):
+#         print("Applying fit_transform()...")
+#         embedding = reducer.fit_transform(datamatrix)
+#     else:
+#         print("Step 1: applying fit()...")
+#         reducer.fit(datamatrix)
+#         print("Step 2: applying transform()...")
+#         embedding = reducer.transform(datamatrix)
+#     full_embedding = np.zeros((adata.X.shape[0], 2))
+#     full_embedding[subset_indices] = embedding
+#     print("Done.")
+#
+#     def embedding_x(j):
+#         return full_embedding[j, 0]
+#
+#     def embedding_y(j):
+#         return full_embedding[j, 1]
+#
+#     scatter(
+#         adata,
+#         embedding_x,
+#         embedding_y,
+#         "obs",
+#         xlog_scale=False,
+#         ylog_scale=False,
+#         xlabel="",
+#         ylabel="",
+#         title=title,
+#         subset_indices=subset_indices,
+#         output_file=output_file,
+#         width=width,
+#         height=height,
+#     )
