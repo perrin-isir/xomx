@@ -7,16 +7,33 @@ import string
 from xomx.tools.utils import _to_dense
 
 
+global_xomx_force_extension = False
 global_xomx_extension_bokeh_or_matplotlib = "bokeh"
 
 
-def extension(bokeh_or_matplotlib: str):
-    global global_xomx_extension_bokeh_or_matplotlib
+def force_extension(bokeh_or_matplotlib: str):
+    global global_xomx_force_extension, global_xomx_extension_bokeh_or_matplotlib
     assert bokeh_or_matplotlib in [
         "bokeh",
         "matplotlib",
     ], 'Input must be "bokeh" or "matplotlib".'
+    global_xomx_force_extension = True
     global_xomx_extension_bokeh_or_matplotlib = bokeh_or_matplotlib
+
+
+def extension(bokeh_or_matplotlib: str):
+    global global_xomx_force_extension, global_xomx_extension_bokeh_or_matplotlib
+    assert bokeh_or_matplotlib in [
+        "bokeh",
+        "matplotlib",
+    ], 'Input must be "bokeh" or "matplotlib".'
+    if not global_xomx_force_extension:
+        global_xomx_extension_bokeh_or_matplotlib = bokeh_or_matplotlib
+    else:
+        print(
+            f"Warning: a call to xomx.pl.force_extension() was previously made. "
+            f"The extension remains: {global_xomx_extension_bokeh_or_matplotlib}"
+        )
 
 
 def colormap(
@@ -204,6 +221,7 @@ def plot_scores(
             if text_complements is not None:
                 text += text_complements[ind["ind"][0]]
             ann.set_text(text)
+            print(text)
 
         fig.canvas.mpl_connect(
             "motion_notify_event",
@@ -590,6 +608,7 @@ def scatter(
                 else:
                     text = "{}".format(adata.var_names[subset_indices[ind["ind"][0]]])
             ann.set_text(text)
+            print(text)
 
         fig.canvas.mpl_connect(
             "motion_notify_event",
@@ -702,7 +721,28 @@ def scatter(
             [random_id + "x_" + xlabel, random_id + "y_" + ylabel],
             list(tmp_df.keys()),
         )
+        bokeh_data = bokeh.models.ColumnDataSource(tmp_df)
         hover = HoverTool(tooltips=tooltips)
+        div = bokeh.models.Div(width=width, height=50, height_policy="fixed")
+        cb = bokeh.models.CustomJS(
+            args=dict(
+                hvr=hover, div=div, source=bokeh_data.data, col_name=random_id + "name"
+            ),
+            code="""
+                if (cb_data['index'].indices.length > 0) {
+                    const line_list = [];
+                    for (let i = 0; i<cb_data['index'].indices.length; i++) {
+                        var line = "<b>" + cb_data['index'].indices[i].toString()
+                        line += ":   "
+                        line += source[col_name][cb_data['index'].indices[i]] + "</b>"
+                        line_list.push(line)
+                    }
+                    div.text = line_list.join(" --- ")
+                }
+            """,
+        )
+        hover.callback = cb  # callback whenever the HoverTool function is called
+
         points.opts(
             tools=[hover],
             color="labels"
@@ -733,7 +773,7 @@ def scatter(
         if output_file:
             hv.save(hv_plot, output_file, fmt="html")
         else:
-            bokeh.io.show(_custom_legend(hv.render(hv_plot)))
+            bokeh.io.show(bokeh.layouts.column(_custom_legend(hv.render(hv_plot)), div))
         del tmp_df[random_id + "name"]
         del tmp_df[random_id + "colors"]
         del tmp_df[random_id + "x_" + xlabel]

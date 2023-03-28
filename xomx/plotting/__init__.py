@@ -1,4 +1,5 @@
 from .basic_plot import (
+    force_extension,
     extension,
     colormap,
     scatter,
