@@ -45,25 +45,26 @@ def colormap(
         rcParams["figure.dpi"] = 100
         rcParams["figure.figsize"] = (
             900 / rcParams["figure.dpi"],
-            150 / rcParams["figure.dpi"],
+            350 / rcParams["figure.dpi"],
         )
-        fig, ax = plt.subplots()
-        cm = "nipy_spectral"
-        ax.imshow(
-            np.vstack((np.linspace(0, 1, 100), np.linspace(0, 1, 100))),
-            extent=[0, 1, 0, 1],
-            aspect="auto",
-            cmap=cm,
-        )
-        ax.get_yaxis().set_visible(False)
-        ax.locator_params(axis="x", nbins=20)
+        fig, axes = plt.subplots(2, 1)
+        cm = ["nipy_spectral", "viridis"]
+        for i in range(2):
+            axes[i].imshow(
+                np.vstack((np.linspace(0, 1, 100), np.linspace(0, 1, 100))),
+                extent=[0, 1, 0, 1],
+                aspect="auto",
+                cmap=cm[i],
+            )
+            axes[i].get_yaxis().set_visible(False)
+            axes[i].locator_params(axis="x", nbins=20)
         plt.show()
     elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         import holoviews as hv  # lazy import
         import bokeh.io  # lazy import
 
         hv.extension("bokeh")
-        cbar = hv.Image(
+        cbar_nipy_spectral = hv.Image(
             np.linspace(0, 1, 100)[np.newaxis], ydensity=1, bounds=(0, 0, 1, 1)
         ).opts(
             cmap="nipy_spectral",
@@ -73,7 +74,19 @@ def colormap(
             width=width,
             yaxis=None,
         )
-        bokeh.io.show(hv.render(cbar))
+        cbar_viridis = hv.Image(
+            np.linspace(0, 1, 100)[np.newaxis], ydensity=1, bounds=(0, 0, 1, 1)
+        ).opts(
+            cmap="viridis",
+            xticks=20,
+            xlabel="",
+            height=height,
+            width=width,
+            yaxis=None,
+        )
+        bokeh.io.show(
+            bokeh.layouts.column(hv.render(cbar_nipy_spectral), hv.render(cbar_viridis))
+        )
     else:
         raise ValueError(
             'Execute xomx.pl.extension("bokeh") or xomx.pl.extension("matplotlib")'
@@ -468,6 +481,8 @@ def scatter(
     violinplots_done = False
     sample_colors = None
     colormap = None
+    color_min = 0.0
+    color_max = 0.0
     if global_xomx_extension_bokeh_or_matplotlib == "matplotlib":
         rcParams["figure.dpi"] = 100
         rcParams["figure.figsize"] = (
@@ -520,8 +535,16 @@ def scatter(
         if "colors" in adata.obs:
             colormap = "viridis"
             if subset_indices is None:
+                color_min = adata.obs["colors"].min()
+                color_max = adata.obs["colors"].max()
+                if color_max - color_min < 1e-7:
+                    color_max += 1e-7
                 sample_colors = adata.obs["colors"]
             else:
+                color_min = adata.obs["colors"][subset_indices].min()
+                color_max = adata.obs["colors"][subset_indices].max()
+                if color_max - color_min < 1e-7:
+                    color_max += 1e-7
                 sample_colors = adata.obs["colors"][subset_indices]
         elif "all_labels" in adata.uns and "labels" in adata.obs:
             annot_colors = {}
@@ -550,14 +573,25 @@ def scatter(
         if "colors" in adata.var:
             colormap = "viridis"
             if subset_indices is None:
+                color_min = adata.var["colors"].min()
+                color_max = adata.var["colors"].max()
+                if color_max - color_min < 1e-7:
+                    color_max += 1e-7
                 sample_colors = adata.var["colors"]
             else:
+                color_min = adata.var["colors"].min()
+                color_max = adata.var["colors"].max()
+                if color_max - color_min < 1e-7:
+                    color_max += 1e-7
                 sample_colors = adata.var["colors"][subset_indices]
     xmax = np.max(x)
     xmin = np.min(x)
 
     if colormap is None:
         colormap = "nipy_spectral"
+    if color_min >= 0.0 and color_max <= 1.0:
+        color_min = 0.0
+        color_max = 1.0
 
     if global_xomx_extension_bokeh_or_matplotlib == "matplotlib":
         if violinplot and not violinplots_done:
@@ -586,11 +620,21 @@ def scatter(
                 y,
                 c=sample_colors,
                 cmap=colormap,
-                norm=matplotlib.colors.NoNorm(),
+                norm=matplotlib.colors.Normalize(vmin=color_min, vmax=color_max),
                 s=1,
             )
             if colormap == "viridis":
-                fig.colorbar(scax, ax=ax)
+                cbar = fig.colorbar(
+                    matplotlib.cm.ScalarMappable(
+                        norm=matplotlib.colors.Normalize(
+                            vmin=color_min, vmax=color_max
+                        ),
+                        cmap=colormap,
+                    ),
+                    ax=ax,
+                )
+                cbar.formatter.set_scientific(False)
+                cbar.formatter.set_useOffset(False)
 
         ann = ax.annotate(
             "",
@@ -793,6 +837,7 @@ def scatter(
             logx=xlog_scale,
             logy=ylog_scale,
             colorbar=True if tmp_cmap == "viridis" else False,
+            clim=(color_min, color_max),
         )
         if set_xticks is not None:
             points.opts(
