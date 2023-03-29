@@ -996,8 +996,6 @@ def plot_var(
         # Bokeh
         elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
             import holoviews as hv  # lazy import
-
-            # import bokeh.plotting  # lazy import
             import bokeh.io  # lazy import
 
             hv.extension("bokeh")

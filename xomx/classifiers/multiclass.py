@@ -18,7 +18,7 @@ class ScoreBasedMulticlass:
         predictions = np.argmax([scores[annot] for annot in self.annotations], axis=0)
         return np.array([self.annotations[i] for i in predictions])
 
-    def pred_score(self, x):
+    def _pred_score(self, x):
         scores = {}
         for annot in self.annotations:
             scores[annot] = self.binary_classifiers[annot].score(x)
@@ -51,7 +51,7 @@ class ScoreBasedMulticlass:
                 )
             )
             indices = self.adata.uns["test_indices"][idxs]
-        predictions, res = self.pred_score(
+        predictions, res = self._pred_score(
             np.asarray(_to_dense(self.adata[indices, :].X))
         )
         plot_scores(
