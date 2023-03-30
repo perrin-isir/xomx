@@ -1,4 +1,5 @@
 import os
+import copy
 import numpy as np
 from xomx.tools.utils import _to_dense, confusion_matrix
 from xomx.plotting.basic_plot import plot_scores
@@ -67,6 +68,7 @@ class RFEExtraTrees:
 
         if n < self.data_train.shape[1]:
             if selected_feats is not None:
+                assert len(selected_feats) == n
                 reduced_feats = selected_feats
             else:
                 sorted_feats = np.argsort(self.forest.feature_importances_)[::-1]
@@ -163,6 +165,9 @@ class RFEExtraTrees:
             return True
         else:
             return False
+
+    def copy(self):
+        return copy.deepcopy(self)
 
     def plot(
         self,

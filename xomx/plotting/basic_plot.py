@@ -766,7 +766,7 @@ def scatter(
             tmp_df[random_id + "colors"] = sample_colors
             tmp_cmap = colormap
         else:
-            tmp_df[random_id + "colors"] = 0
+            tmp_df[random_id + "colors"] = 0.5
             tmp_cmap = "blues" if obs_or_var == "obs" else "reds"
         if (
             sample_colors is not None

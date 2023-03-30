@@ -1,4 +1,5 @@
 import os
+import copy
 import numpy as np
 from xomx.tools.utils import _to_dense, confusion_matrix
 from xomx.plotting.basic_plot import plot_scores
@@ -97,6 +98,9 @@ class ExtraTrees:
             return True
         else:
             return False
+
+    def copy(self):
+        return copy.deepcopy(self)
 
     def plot(
         self,
