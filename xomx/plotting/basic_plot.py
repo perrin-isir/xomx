@@ -48,7 +48,7 @@ def colormap(
             350 / rcParams["figure.dpi"],
         )
         fig, axes = plt.subplots(2, 1)
-        cm = ["nipy_spectral", "viridis"]
+        cm = ["nipy_spectral", "cividis"]
         for i in range(2):
             axes[i].imshow(
                 np.vstack((np.linspace(0, 1, 100), np.linspace(0, 1, 100))),
@@ -74,10 +74,10 @@ def colormap(
             width=width,
             yaxis=None,
         )
-        cbar_viridis = hv.Image(
+        cbar_cividis = hv.Image(
             np.linspace(0, 1, 100)[np.newaxis], ydensity=1, bounds=(0, 0, 1, 1)
         ).opts(
-            cmap="viridis",
+            cmap="cividis",
             xticks=20,
             xlabel="",
             height=height,
@@ -85,7 +85,7 @@ def colormap(
             yaxis=None,
         )
         bokeh.io.show(
-            bokeh.layouts.column(hv.render(cbar_nipy_spectral), hv.render(cbar_viridis))
+            bokeh.layouts.column(hv.render(cbar_nipy_spectral), hv.render(cbar_cividis))
         )
     else:
         raise ValueError(
@@ -549,7 +549,7 @@ def scatter2d_and_3d(
                 else:
                     z = None
         if "colors" in adata.obs:
-            colormap = "viridis"
+            colormap = "cividis"
             if subset_indices is None:
                 color_min = adata.obs["colors"].min()
                 color_max = adata.obs["colors"].max()
@@ -595,7 +595,7 @@ def scatter2d_and_3d(
             else:
                 z = None
         if "colors" in adata.var:
-            colormap = "viridis"
+            colormap = "cividis"
             if subset_indices is None:
                 color_min = adata.var["colors"].min()
                 color_max = adata.var["colors"].max()
@@ -619,7 +619,7 @@ def scatter2d_and_3d(
         if sample_colors is None:
             if not mode3d:
                 scax = ax.scatter(
-                    x, y, s=1, c="#69add5" if obs_or_var == "obs" else "#fa694a"
+                    x, y, s=2, c="#69add5" if obs_or_var == "obs" else "#fa694a"
                 )
             else:
                 scax = ax.scatter(
@@ -630,7 +630,7 @@ def scatter2d_and_3d(
                 scax = ax.scatter(
                     x,
                     y,
-                    s=1,
+                    s=2,
                     c=sample_colors,
                     cmap=colormap,
                     norm=matplotlib.colors.Normalize(vmin=color_min, vmax=color_max),
@@ -645,7 +645,7 @@ def scatter2d_and_3d(
                     cmap=colormap,
                     norm=matplotlib.colors.Normalize(vmin=color_min, vmax=color_max),
                 )
-            if colormap == "viridis":
+            if colormap == "cividis":
                 cbar = fig.colorbar(
                     matplotlib.cm.ScalarMappable(
                         norm=matplotlib.colors.Normalize(
@@ -715,7 +715,7 @@ def scatter2d_and_3d(
             obs_or_var == "obs"
             and "all_labels" in adata.uns
             and "labels" in adata.obs
-            and not colormap == "viridis"
+            and not colormap == "cividis"
         ):
 
             def lp(i):
@@ -822,7 +822,7 @@ def scatter2d_and_3d(
             and obs_or_var == "obs"
             and "all_labels" in adata.uns
             and "labels" in adata.obs
-            and not tmp_cmap == "viridis"
+            and not tmp_cmap == "cividis"
         ):
             new_tmp_cmap = {}
             for i, lbl in enumerate(adata.uns["all_labels"]):
@@ -872,7 +872,7 @@ def scatter2d_and_3d(
                 obs_or_var == "obs"
                 and "all_labels" in adata.uns
                 and "labels" in adata.obs
-                and not tmp_cmap == "viridis"
+                and not tmp_cmap == "cividis"
             )
             else random_id + "colors",
             cmap=tmp_cmap,
@@ -885,7 +885,7 @@ def scatter2d_and_3d(
             ylabel=ylabel,
             logx=xlog_scale,
             logy=ylog_scale,
-            colorbar=True if tmp_cmap == "viridis" else False,
+            colorbar=True if tmp_cmap == "cividis" else False,
             clim=(color_min, color_max),
         )
         if set_xticks is not None:
@@ -1089,7 +1089,7 @@ def plot_var(
             bounds = (0, 0, xsize, ysize)  # Coord system: (left, bottom, right, top)
             img = hv.Image(plot_array, bounds=bounds)
             img.opts(
-                cmap="viridis",
+                cmap="cividis",
                 width=width,
                 height=height,
                 title=title,
