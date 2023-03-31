@@ -48,7 +48,7 @@ def colormap(
             350 / rcParams["figure.dpi"],
         )
         fig, axes = plt.subplots(2, 1)
-        cm = ["nipy_spectral", "cividis"]
+        cm = ["nipy_spectral", "jet"]
         for i in range(2):
             axes[i].imshow(
                 np.vstack((np.linspace(0, 1, 100), np.linspace(0, 1, 100))),
@@ -74,10 +74,10 @@ def colormap(
             width=width,
             yaxis=None,
         )
-        cbar_cividis = hv.Image(
+        cbar_jet = hv.Image(
             np.linspace(0, 1, 100)[np.newaxis], ydensity=1, bounds=(0, 0, 1, 1)
         ).opts(
-            cmap="cividis",
+            cmap="jet",
             xticks=20,
             xlabel="",
             height=height,
@@ -85,7 +85,7 @@ def colormap(
             yaxis=None,
         )
         bokeh.io.show(
-            bokeh.layouts.column(hv.render(cbar_nipy_spectral), hv.render(cbar_cividis))
+            bokeh.layouts.column(hv.render(cbar_nipy_spectral), hv.render(cbar_jet))
         )
     else:
         raise ValueError(
@@ -549,7 +549,7 @@ def scatter2d_and_3d(
                 else:
                     z = None
         if "colors" in adata.obs:
-            colormap = "cividis"
+            colormap = "jet"
             if subset_indices is None:
                 color_min = adata.obs["colors"].min()
                 color_max = adata.obs["colors"].max()
@@ -595,7 +595,7 @@ def scatter2d_and_3d(
             else:
                 z = None
         if "colors" in adata.var:
-            colormap = "cividis"
+            colormap = "jet"
             if subset_indices is None:
                 color_min = adata.var["colors"].min()
                 color_max = adata.var["colors"].max()
@@ -645,7 +645,7 @@ def scatter2d_and_3d(
                     cmap=colormap,
                     norm=matplotlib.colors.Normalize(vmin=color_min, vmax=color_max),
                 )
-            if colormap == "cividis":
+            if colormap == "jet":
                 cbar = fig.colorbar(
                     matplotlib.cm.ScalarMappable(
                         norm=matplotlib.colors.Normalize(
@@ -715,7 +715,7 @@ def scatter2d_and_3d(
             obs_or_var == "obs"
             and "all_labels" in adata.uns
             and "labels" in adata.obs
-            and not colormap == "cividis"
+            and not colormap == "jet"
         ):
 
             def lp(i):
@@ -822,7 +822,7 @@ def scatter2d_and_3d(
             and obs_or_var == "obs"
             and "all_labels" in adata.uns
             and "labels" in adata.obs
-            and not tmp_cmap == "cividis"
+            and not tmp_cmap == "jet"
         ):
             new_tmp_cmap = {}
             for i, lbl in enumerate(adata.uns["all_labels"]):
@@ -872,7 +872,7 @@ def scatter2d_and_3d(
                 obs_or_var == "obs"
                 and "all_labels" in adata.uns
                 and "labels" in adata.obs
-                and not tmp_cmap == "cividis"
+                and not tmp_cmap == "jet"
             )
             else random_id + "colors",
             cmap=tmp_cmap,
@@ -885,7 +885,7 @@ def scatter2d_and_3d(
             ylabel=ylabel,
             logx=xlog_scale,
             logy=ylog_scale,
-            colorbar=True if tmp_cmap == "cividis" else False,
+            colorbar=True if tmp_cmap == "jet" else False,
             clim=(color_min, color_max),
         )
         if set_xticks is not None:
@@ -1089,7 +1089,7 @@ def plot_var(
             bounds = (0, 0, xsize, ysize)  # Coord system: (left, bottom, right, top)
             img = hv.Image(plot_array, bounds=bounds)
             img.opts(
-                cmap="cividis",
+                cmap="jet",
                 width=width,
                 height=height,
                 title=title,
