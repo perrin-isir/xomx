@@ -23,7 +23,7 @@ fully compatible with [Scanpy](https://scanpy.readthedocs.io).
 <details><summary>Option 1: conda (preferred option)</summary>
 <p>
 
-This option is preferred because it relies mainly on conda-forge packages.
+This option is preferred because it relies mainly on conda-forge  (which among other things simplifies the installation of JAX).
 
 
     git clone https://github.com/perrin-isir/xomx.git
@@ -57,7 +57,27 @@ Finally, to install the *xomx* library in the activated environment:
 <details><summary>Option 2: pip</summary>
 <p>
 
+For the pip install, you need to properly install JAX yourself. Otherwise, if JAX is installed automatically as a pip dependency of *xomx*, it will probably not work as desired (e.g. it will not be GPU-compatible). So you should install it beforehand, following these guidelines: 
+
+[https://github.com/google/jax#installation](https://github.com/google/jax#installation) 
+
+Then, install *xomx* with:
+
     pip install xomx
+
+</p>
+</details>
+
+<details><summary>JAX</summary>
+<p>
+
+The neural network-based machine learning algorithms in *xomx* are written in JAX (and flax), so it needs to be installed properly for them to work.
+
+To verify that the JAX installation went well, check the backend used by JAX with the following command:
+```
+python -c "import jax; print(jax.lib.xla_bridge.get_backend().platform)"
+```
+It will print "cpu", "gpu" or "tpu" depending on the platform JAX is using.
 
 </p>
 </details>
