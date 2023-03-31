@@ -1,6 +1,6 @@
 # ![alt text](https://raw.githubusercontent.com/perrin-isir/xomx/master/logo.png "xomx logo")
 
-![version](https://img.shields.io/badge/version-0.1.3-blue)
+![version](https://img.shields.io/badge/version-0.1.4-blue)
 [![codestyle](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Documentation](https://img.shields.io/github/actions/workflow/status/perrin-isir/xomx/docs.yml?branch=master&label=docs)](https://perrin-isir.github.io/xomx/)
 [![PyPI version](https://img.shields.io/pypi/v/xomx)](https://pypi.org/project/xomx/)

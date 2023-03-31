@@ -2,9 +2,10 @@ from . import plotting as pl
 from . import tools as tl
 from . import data_importation as di
 from . import classifiers as cl
+from . import embeddings as em
 from . import feature_selection as fs
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"  # -version-
 
 import sys
 
@@ -16,6 +17,7 @@ sys.modules.update(
             "tl",
             "di",
             "cl",
+            "em",
             "fs",
         ]
     }

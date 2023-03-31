@@ -15,5 +15,8 @@ dependencies:
 - requests>=2.23.0
 - holoviews>=1.15.0
 - bokeh>=2.4.3
+- jax>=0.3.23
 - pip:
     - leidenalg>=0.8.8
+    - optax>=0.1.2
+    - flax>=0.6.3

@@ -447,16 +447,19 @@ def _identity_func(x):
     return x
 
 
-def scatter(
+def scatter2d_and_3d(
     adata,
     func1_=_identity_func,
     func2_=_identity_func,
+    func3_=None,
     obs_or_var: str = "obs",
     *,
     xlog_scale: bool = False,
     ylog_scale: bool = False,
+    zlog_scale: bool = False,
     xlabel: str = "",
     ylabel: str = "",
+    zlabel: str = "",
     title: str = "",
     subset_indices=None,
     equal_size=False,
@@ -472,13 +475,16 @@ def scatter(
     global global_xomx_extension_bokeh_or_matplotlib
     if func1_ == _identity_func:
         function_plot_ = True
+        mode3d = False
     else:
         function_plot_ = False
-    violinplot = False
+        if func3_ is None:
+            mode3d = False
+        else:
+            mode3d = True
     assert obs_or_var == "obs" or obs_or_var == "var"
     set_xticks = None
     set_xticks_text = None
-    violinplots_done = False
     sample_colors = None
     colormap = None
     color_min = 0.0
@@ -489,10 +495,13 @@ def scatter(
             width / rcParams["figure.dpi"],
             height / rcParams["figure.dpi"],
         )
-        fig, ax = plt.subplots()
+        if not mode3d:
+            fig, ax = plt.subplots()
+        else:
+            fig = plt.figure()
+            ax = fig.add_subplot(projection="3d")
     if obs_or_var == "obs":
         if "all_labels" in adata.uns and "labels" in adata.obs and function_plot_:
-            violinplot = True
             (
                 list_samples,
                 set_xticks,
@@ -508,30 +517,37 @@ def scatter(
             x = [i for i in range(len(y))]
             subset_indices = list_samples
             if global_xomx_extension_bokeh_or_matplotlib == "matplotlib":
-                if violinplot:
-                    for i in range(len(boundaries) - 1):
-                        parts = ax.violinplot(
-                            y[boundaries[i] : boundaries[i + 1]],
-                            [(boundaries[i + 1] + boundaries[i]) / 2.0],
-                            points=60,
-                            widths=(boundaries[i + 1] - boundaries[i]) * 0.8,
-                            showmeans=False,
-                            showextrema=False,
-                            showmedians=False,
-                            bw_method=0.5,
-                        )
-                        for pc in parts["bodies"]:
-                            pc.set_facecolor("#D43F3A")
-                            pc.set_edgecolor("grey")
-                            pc.set_alpha(0.5)
-            violinplots_done = True
+                # violin plots
+                for i in range(len(boundaries) - 1):
+                    parts = ax.violinplot(
+                        y[boundaries[i] : boundaries[i + 1]],
+                        [(boundaries[i + 1] + boundaries[i]) / 2.0],
+                        points=60,
+                        widths=(boundaries[i + 1] - boundaries[i]) * 0.8,
+                        showmeans=False,
+                        showextrema=False,
+                        showmedians=False,
+                        bw_method=0.5,
+                    )
+                    for pc in parts["bodies"]:
+                        pc.set_facecolor("#D43F3A")
+                        pc.set_edgecolor("grey")
+                        pc.set_alpha(0.5)
         else:
             if subset_indices is None:
                 y = [func2_(i) for i in range(adata.n_obs)]
                 x = [func1_(i) for i in range(adata.n_obs)]
+                if mode3d:
+                    z = [func3_(i) for i in range(adata.n_obs)]
+                else:
+                    z = None
             else:
                 y = [func2_(i) for i in subset_indices]
                 x = [func1_(i) for i in subset_indices]
+                if mode3d:
+                    z = [func3_(i) for i in subset_indices]
+                else:
+                    z = None
         if "colors" in adata.obs:
             colormap = "viridis"
             if subset_indices is None:
@@ -567,9 +583,17 @@ def scatter(
         if subset_indices is None:
             y = [func2_(i) for i in range(adata.n_vars)]
             x = [func1_(i) for i in range(adata.n_vars)]
+            if mode3d:
+                z = [func3_(i) for i in range(adata.n_vars)]
+            else:
+                z = None
         else:
             y = [func2_(i) for i in subset_indices]
             x = [func1_(i) for i in subset_indices]
+            if mode3d:
+                z = [func3_(i) for i in subset_indices]
+            else:
+                z = None
         if "colors" in adata.var:
             colormap = "viridis"
             if subset_indices is None:
@@ -584,8 +608,6 @@ def scatter(
                 if color_max - color_min < 1e-7:
                     color_max += 1e-7
                 sample_colors = adata.var["colors"][subset_indices]
-    xmax = np.max(x)
-    xmin = np.min(x)
 
     if colormap is None:
         colormap = "nipy_spectral"
@@ -594,35 +616,35 @@ def scatter(
         color_max = 1.0
 
     if global_xomx_extension_bokeh_or_matplotlib == "matplotlib":
-        if violinplot and not violinplots_done:
-            parts = ax.violinplot(
-                y,
-                [(xmax + xmin) / 2.0],
-                points=60,
-                widths=xmax - xmin,
-                showmeans=False,
-                showextrema=False,
-                showmedians=False,
-                bw_method=0.5,
-            )
-            for pc in parts["bodies"]:
-                pc.set_facecolor("#D43F3A")
-                pc.set_edgecolor("grey")
-                pc.set_alpha(0.5)
-
         if sample_colors is None:
-            scax = ax.scatter(
-                x, y, s=1, c="#69add5" if obs_or_var == "obs" else "#fa694a"
-            )
+            if not mode3d:
+                scax = ax.scatter(
+                    x, y, s=1, c="#69add5" if obs_or_var == "obs" else "#fa694a"
+                )
+            else:
+                scax = ax.scatter(
+                    x, y, z, s=2, c="#69add5" if obs_or_var == "obs" else "#fa694a"
+                )
         else:
-            scax = ax.scatter(
-                x,
-                y,
-                c=sample_colors,
-                cmap=colormap,
-                norm=matplotlib.colors.Normalize(vmin=color_min, vmax=color_max),
-                s=1,
-            )
+            if not mode3d:
+                scax = ax.scatter(
+                    x,
+                    y,
+                    s=1,
+                    c=sample_colors,
+                    cmap=colormap,
+                    norm=matplotlib.colors.Normalize(vmin=color_min, vmax=color_max),
+                )
+            else:
+                scax = ax.scatter(
+                    x,
+                    y,
+                    z,
+                    s=2,
+                    c=sample_colors,
+                    cmap=colormap,
+                    norm=matplotlib.colors.Normalize(vmin=color_min, vmax=color_max),
+                )
             if colormap == "viridis":
                 cbar = fig.colorbar(
                     matplotlib.cm.ScalarMappable(
@@ -649,37 +671,38 @@ def scatter(
         def update_annot(ind, scax_):
             pos = scax_.get_offsets()[ind["ind"][0]]
             ann.xy = pos
+            idx_from_ind = ind["ind"][0]
             if obs_or_var == "obs":
                 if (
                     "all_labels" in adata.uns
                     and "labels" in adata.obs
                     and function_plot_
                 ):
-                    text = "{}".format(adata.obs_names[subset_indices[ind["ind"][0]]])
+                    text = "{}".format(adata.obs_names[subset_indices[idx_from_ind]])
                 else:
                     if sample_colors is None:
                         if subset_indices is None:
-                            text = "{}".format(adata.obs_names[ind["ind"][0]])
+                            text = "{}".format(adata.obs_names[idx_from_ind])
                         else:
                             text = "{}".format(
-                                adata.obs_names[subset_indices[ind["ind"][0]]]
+                                adata.obs_names[subset_indices[idx_from_ind]]
                             )
                     else:
                         if subset_indices is None:
                             text = "{}: {}".format(
-                                adata.obs_names[ind["ind"][0]],
-                                str(adata.obs["labels"][ind["ind"][0]]),
+                                adata.obs_names[idx_from_ind],
+                                str(adata.obs["labels"][idx_from_ind]),
                             )
                         else:
                             text = "{}: {}".format(
-                                adata.obs_names[subset_indices[ind["ind"][0]]],
-                                str(adata.obs["labels"][subset_indices[ind["ind"][0]]]),
+                                adata.obs_names[subset_indices[idx_from_ind]],
+                                str(adata.obs["labels"][subset_indices[idx_from_ind]]),
                             )
             else:
                 if subset_indices is None:
-                    text = "{}".format(adata.var_names[ind["ind"][0]])
+                    text = "{}".format(adata.var_names[idx_from_ind])
                 else:
-                    text = "{}".format(adata.var_names[subset_indices[ind["ind"][0]]])
+                    text = "{}".format(adata.var_names[subset_indices[idx_from_ind]])
             ann.set_text(text)
             print(text)
 
@@ -697,15 +720,27 @@ def scatter(
 
             def lp(i):
                 val_ = adata.uns["all_labels"][i]
-                return plt.plot(
-                    [],
-                    color=scax.cmap(scax.norm(annot_colors[val_])),
-                    ms=5,
-                    mec="none",
-                    label=val_,
-                    ls="",
-                    marker="o",
-                )[0]
+                if not mode3d:
+                    return plt.plot(
+                        [],
+                        color=scax.cmap(scax.norm(annot_colors[val_])),
+                        ms=5,
+                        mec="none",
+                        label=val_,
+                        ls="",
+                        marker="o",
+                    )[0]
+                else:
+                    return plt.plot(
+                        [],
+                        [],
+                        color=scax.cmap(scax.norm(annot_colors[val_])),
+                        ms=5,
+                        mec="none",
+                        label=val_,
+                        ls="",
+                        marker="o",
+                    )[0]
 
             handles = [lp(i) for i in range(len(adata.uns["all_labels"]))]
             plt.legend(handles=handles, loc="lower left", bbox_to_anchor=(1.0, 0.0))
@@ -713,13 +748,26 @@ def scatter(
 
         if set_xticks is not None:
             plt.xticks(set_xticks, set_xticks_text)
-        if xlog_scale:
-            plt.xscale("log")
-        if ylog_scale:
-            plt.yscale("log")
+        if not mode3d:
+            if xlog_scale:
+                plt.xscale("log")
+            if ylog_scale:
+                plt.yscale("log")
+        else:
+            if xlog_scale:
+                ax.set_xscale("log")
+            if ylog_scale:
+                ax.set_yscale("log")
+            if zlog_scale:
+                ax.set_zscale("log")
         plt.title(title)
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
+        if not mode3d:
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel)
+        else:
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel(ylabel)
+            ax.set_zlabel(zlabel)
         if output_file:
             plt.savefig(output_file, dpi=200)
         else:
@@ -728,6 +776,7 @@ def scatter(
     ####################################################################################
     # Bokeh
     elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
+        assert not mode3d, "The extension must be matplotlib for 3d plots."
         import holoviews as hv  # lazy import
         import bokeh.io  # lazy import
         from bokeh.models import HoverTool  # lazy import
@@ -857,6 +906,44 @@ def scatter(
         raise ValueError(
             'Execute xomx.pl.extension("bokeh") or xomx.pl.extension("matplotlib")'
         )
+
+
+def scatter(
+    adata,
+    func1_=_identity_func,
+    func2_=_identity_func,
+    obs_or_var: str = "obs",
+    *,
+    xlog_scale: bool = False,
+    ylog_scale: bool = False,
+    xlabel: str = "",
+    ylabel: str = "",
+    title: str = "",
+    subset_indices=None,
+    equal_size=False,
+    output_file: Optional[str] = None,
+    width=900,
+    height=600,
+):
+    scatter2d_and_3d(
+        adata,
+        func1_,
+        func2_,
+        None,
+        obs_or_var,
+        xlog_scale=xlog_scale,
+        ylog_scale=ylog_scale,
+        zlog_scale=False,
+        xlabel=xlabel,
+        ylabel=ylabel,
+        zlabel="",
+        title=title,
+        subset_indices=subset_indices,
+        equal_size=equal_size,
+        output_file=output_file,
+        width=width,
+        height=height,
+    )
 
 
 def plot(
@@ -1088,6 +1175,66 @@ def plot_2d_obsm(
             )
 
 
+def plot_3d_obsm(
+    adata,
+    obsm_key,
+    var_name=None,
+    *,
+    xlabel: str = "",
+    ylabel: str = "",
+    zlabel: str = "",
+    title: str = "",
+    subset_indices=None,
+    output_file: Optional[str] = None,
+    width: int = 900,
+    height: int = 600,
+):
+    def embedding_x(j):
+        return adata.obsm[obsm_key][j, 0]
+
+    def embedding_y(j):
+        return adata.obsm[obsm_key][j, 1]
+
+    def embedding_z(j):
+        return adata.obsm[obsm_key][j, 2]
+
+    if var_name is not None:
+        if "colors" in adata.obs:
+            adata.obs.rename(
+                {"colors": "xomx_temporary_colors"}, axis="columns", inplace=True
+            )
+        assert (
+            var_name in adata.var_names
+        ), "the var_name input must be in adata.var_names"
+        adata.obs["colors"] = np.array(_to_dense(adata[:, var_name].X))
+
+    scatter2d_and_3d(
+        adata,
+        embedding_x,
+        embedding_y,
+        embedding_z,
+        "obs",
+        xlog_scale=False,
+        ylog_scale=False,
+        zlog_scale=False,
+        xlabel=xlabel,
+        ylabel=ylabel,
+        zlabel=zlabel,
+        title=title,
+        subset_indices=subset_indices,
+        output_file=output_file,
+        width=width,
+        height=height,
+    )
+
+    if var_name is not None:
+        del adata.obs["colors"]
+        if "xomx_temporary_colors" in adata.obs:
+            adata.obs.rename(
+                {"xomx_temporary_colors": "colors"}, axis="columns", inplace=True
+            )
+
+
 def plot_2d_varm(
     adata,
     varm_key,
@@ -1141,53 +1288,61 @@ def plot_2d_varm(
             )
 
 
-# def plot_2d_embedding(
-#     adata,
-#     reducer,
-#     *,
-#     title: str = "",
-#     subset_indices=None,
-#     output_file: Optional[str] = None,
-#     width: int = 900,
-#     height: int = 600,
-# ):
-#     assert (hasattr(reducer, "fit") and hasattr(reducer, "transform")) or (
-#         hasattr(reducer, "fit_transform")
-#     )
-#     if subset_indices is None:
-#         datamatrix = adata.X
-#     else:
-#         datamatrix = adata.X[subset_indices]
-#     if hasattr(reducer, "fit_transform"):
-#         print("Applying fit_transform()...")
-#         embedding = reducer.fit_transform(datamatrix)
-#     else:
-#         print("Step 1: applying fit()...")
-#         reducer.fit(datamatrix)
-#         print("Step 2: applying transform()...")
-#         embedding = reducer.transform(datamatrix)
-#     full_embedding = np.zeros((adata.X.shape[0], 2))
-#     full_embedding[subset_indices] = embedding
-#     print("Done.")
-#
-#     def embedding_x(j):
-#         return full_embedding[j, 0]
-#
-#     def embedding_y(j):
-#         return full_embedding[j, 1]
-#
-#     scatter(
-#         adata,
-#         embedding_x,
-#         embedding_y,
-#         "obs",
-#         xlog_scale=False,
-#         ylog_scale=False,
-#         xlabel="",
-#         ylabel="",
-#         title=title,
-#         subset_indices=subset_indices,
-#         output_file=output_file,
-#         width=width,
-#         height=height,
-#     )
+def plot_3d_varm(
+    adata,
+    varm_key,
+    obs_name=None,
+    *,
+    xlabel: str = "",
+    ylabel: str = "",
+    zlabel: str = "",
+    title: str = "",
+    subset_indices=None,
+    output_file: Optional[str] = None,
+    width: int = 900,
+    height: int = 600,
+):
+    def embedding_x(j):
+        return adata.varm[varm_key][j, 0]
+
+    def embedding_y(j):
+        return adata.varm[varm_key][j, 1]
+
+    def embedding_z(j):
+        return adata.varm[varm_key][j, 2]
+
+    if obs_name is not None:
+        if "colors" in adata.var:
+            adata.var.rename(
+                {"colors": "xomx_temporary_colors"}, axis="columns", inplace=True
+            )
+        assert (
+            obs_name in adata.obs_names
+        ), "the obs_name input must be in adata.obs_names"
+        adata.var["colors"] = np.array(_to_dense(adata[obs_name, :].X))
+
+    scatter2d_and_3d(
+        adata,
+        embedding_x,
+        embedding_y,
+        embedding_z,
+        "var",
+        xlog_scale=False,
+        ylog_scale=False,
+        zlog_scale=False,
+        xlabel=xlabel,
+        ylabel=ylabel,
+        zlabel=zlabel,
+        title=title,
+        subset_indices=subset_indices,
+        output_file=output_file,
+        width=width,
+        height=height,
+    )
+
+    if obs_name is not None:
+        del adata.var["colors"]
+        if "xomx_temporary_colors" in adata.var:
+            adata.var.rename(
+                {"xomx_temporary_colors": "colors"}, axis="columns", inplace=True
+            )

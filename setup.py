@@ -8,7 +8,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="xomx",
-    version="0.1.3",
+    version="0.1.4",  # -version-
     author="Nicolas Perrin-Gilbert",
     description="xomx: a python library for computational omics",
     long_description=long_description,
@@ -27,6 +27,9 @@ setup(
         "holoviews>=1.15.0",
         "bokeh>=2.4.3",
         "leidenalg>=0.8.8",
+        "jax>=0.3.23",
+        "optax>=0.1.2",
+        "flax>=0.6.3",
     ],
     license="LICENSE",
 )

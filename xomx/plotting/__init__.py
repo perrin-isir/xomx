@@ -7,6 +7,9 @@ from .basic_plot import (
     plot_scores,
     plot_var,
     plot_2d_obsm,
+    plot_3d_obsm,
+    plot_2d_varm,
+    plot_3d_varm,
 )
 
 import matplotlib.pyplot as plt
