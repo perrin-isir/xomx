@@ -150,6 +150,7 @@ def plot_scores(
     indices,
     label=None,
     *,
+    s: int = 5,
     output_file: Optional[str] = None,
     text_complements=None,
     lines: bool = False,
@@ -200,7 +201,7 @@ def plot_scores(
             c=sample_colors,
             cmap=cm,
             norm=matplotlib.colors.NoNorm(),
-            s=5,
+            s=s,
         )
         if score_threshold is not None:
             ax.axhline(y=score_threshold, xmin=0, xmax=1, lw=1, ls="--", c="red")
@@ -338,7 +339,7 @@ def plot_scores(
             if ("all_labels" in adata.uns and "labels" in adata.obs)
             else random_id + "colors",
             cmap=tmp_cmap,
-            size=4,
+            size=s,
             width=width,
             height=height,
             show_grid=False,
@@ -454,6 +455,7 @@ def scatter2d_and_3d(
     func3_=None,
     obs_or_var: str = "obs",
     *,
+    s: int = 3,
     xlog_scale: bool = False,
     ylog_scale: bool = False,
     zlog_scale: bool = False,
@@ -473,6 +475,7 @@ def scatter2d_and_3d(
     (both functions must take indices in input)
     """
     global global_xomx_extension_bokeh_or_matplotlib
+    point_size = s
     if func1_ == _identity_func:
         function_plot_ = True
         mode3d = False
@@ -619,18 +622,25 @@ def scatter2d_and_3d(
         if sample_colors is None:
             if not mode3d:
                 scax = ax.scatter(
-                    x, y, s=3, c="#69add5" if obs_or_var == "obs" else "#fa694a"
+                    x,
+                    y,
+                    s=point_size,
+                    c="#69add5" if obs_or_var == "obs" else "#fa694a",
                 )
             else:
                 scax = ax.scatter(
-                    x, y, z, s=3, c="#69add5" if obs_or_var == "obs" else "#fa694a"
+                    x,
+                    y,
+                    z,
+                    s=point_size,
+                    c="#69add5" if obs_or_var == "obs" else "#fa694a",
                 )
         else:
             if not mode3d:
                 scax = ax.scatter(
                     x,
                     y,
-                    s=3,
+                    s=point_size,
                     c=sample_colors,
                     cmap=colormap,
                     norm=matplotlib.colors.Normalize(vmin=color_min, vmax=color_max),
@@ -640,7 +650,7 @@ def scatter2d_and_3d(
                     x,
                     y,
                     z,
-                    s=3,
+                    s=point_size,
                     c=sample_colors,
                     cmap=colormap,
                     norm=matplotlib.colors.Normalize(vmin=color_min, vmax=color_max),
@@ -876,7 +886,7 @@ def scatter2d_and_3d(
             )
             else random_id + "colors",
             cmap=tmp_cmap,
-            size=4,
+            size=point_size,
             width=width,
             height=height,
             show_grid=False,
@@ -914,6 +924,7 @@ def scatter(
     func2_=_identity_func,
     obs_or_var: str = "obs",
     *,
+    s: int = 3,
     xlog_scale: bool = False,
     ylog_scale: bool = False,
     xlabel: str = "",
@@ -931,6 +942,7 @@ def scatter(
         func2_,
         None,
         obs_or_var,
+        s=s,
         xlog_scale=xlog_scale,
         ylog_scale=ylog_scale,
         zlog_scale=False,
@@ -951,6 +963,7 @@ def plot(
     func=_identity_func,
     obs_or_var="obs",
     *,
+    s: int = 5,
     ylog_scale=False,
     xlabel="",
     ylabel="",
@@ -969,6 +982,7 @@ def plot(
         _identity_func,
         func,
         obs_or_var,
+        s=s,
         xlog_scale=False,
         ylog_scale=ylog_scale,
         xlabel=xlabel,
@@ -986,6 +1000,7 @@ def plot_var(
     adata,
     features=None,
     *,
+    s: int = 5,
     ylog_scale=False,
     xlabel="",
     ylabel="",
@@ -1010,6 +1025,7 @@ def plot_var(
             adata,
             lambda i: adata.X[i, idx],
             "obs",
+            s=s,
             ylog_scale=ylog_scale,
             xlabel=xlabel,
             ylabel=ylabel,
@@ -1127,6 +1143,7 @@ def plot_2d_obsm(
     obsm_key,
     var_name=None,
     *,
+    s: int = 3,
     xlabel: str = "",
     ylabel: str = "",
     title: str = "",
@@ -1156,6 +1173,7 @@ def plot_2d_obsm(
         embedding_x,
         embedding_y,
         "obs",
+        s=s,
         xlog_scale=False,
         ylog_scale=False,
         xlabel=xlabel,
@@ -1180,6 +1198,7 @@ def plot_3d_obsm(
     obsm_key,
     var_name=None,
     *,
+    s: int = 3,
     xlabel: str = "",
     ylabel: str = "",
     zlabel: str = "",
@@ -1214,6 +1233,7 @@ def plot_3d_obsm(
         embedding_y,
         embedding_z,
         "obs",
+        s=s,
         xlog_scale=False,
         ylog_scale=False,
         zlog_scale=False,
@@ -1240,6 +1260,7 @@ def plot_2d_varm(
     varm_key,
     obs_name=None,
     *,
+    s: int = 3,
     xlabel: str = "",
     ylabel: str = "",
     title: str = "",
@@ -1269,6 +1290,7 @@ def plot_2d_varm(
         embedding_x,
         embedding_y,
         "var",
+        s=s,
         xlog_scale=False,
         ylog_scale=False,
         xlabel=xlabel,
@@ -1293,6 +1315,7 @@ def plot_3d_varm(
     varm_key,
     obs_name=None,
     *,
+    s: int = 3,
     xlabel: str = "",
     ylabel: str = "",
     zlabel: str = "",
@@ -1327,6 +1350,7 @@ def plot_3d_varm(
         embedding_y,
         embedding_z,
         "var",
+        s=s,
         xlog_scale=False,
         ylog_scale=False,
         zlog_scale=False,

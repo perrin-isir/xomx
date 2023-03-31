@@ -33,6 +33,8 @@ class ScoreBasedMulticlass:
     def plot(
         self,
         label=None,
+        *,
+        s: int = 5,
         output_file: Optional[str] = None,
         title: str = "",
         random_subset_size=None,
@@ -60,6 +62,7 @@ class ScoreBasedMulticlass:
             None,
             indices,
             label,
+            s=s,
             output_file=output_file,
             text_complements=[
                 " | prediction: " + str(att_) for att_ in self.annotations[predictions]
