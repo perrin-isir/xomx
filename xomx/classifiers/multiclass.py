@@ -24,11 +24,11 @@ class ScoreBasedMulticlass:
             scores[annot] = self.binary_classifiers[annot].score(x)
         scores_list = [scores[annot] for annot in self.annotations]
         predictions = np.argmax(scores_list, axis=0)
-        add_score = np.max(softmax(scores_list, axis=0), axis=0).astype(np.float)
+        add_score = np.max(softmax(scores_list, axis=0), axis=0).astype(float)
         maxas = max(add_score)
         minas = min(add_score)
         add_score = ((add_score - minas) / (maxas - minas),)
-        return predictions, predictions.astype(np.float) + add_score
+        return predictions, predictions.astype(float) + add_score
 
     def plot(
         self,
@@ -58,7 +58,7 @@ class ScoreBasedMulticlass:
         )
         plot_scores(
             self.adata,
-            res.astype(np.float),
+            res.astype(float),
             None,
             indices,
             label,
