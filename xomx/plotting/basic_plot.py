@@ -914,8 +914,8 @@ def scatter2d_and_3d(
         data_dict[random_id + "y_" + ylabel] = [np.inf]
         new_source = bokeh.models.ColumnDataSource(data=data_dict)
         points_bokeh_plot = bkp.figure(
-            plot_width=width,
-            plot_height=height,
+            width=width,
+            height=height,
             title=title,
             x_axis_type="log" if xlog_scale else "linear",
             y_axis_type="log" if ylog_scale else "linear",
