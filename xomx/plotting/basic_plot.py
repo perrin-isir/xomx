@@ -325,8 +325,7 @@ def plot_scores(
                        if (cb_data['index'].indices.length > 0) {
                            const line_list = [];
                            for (let i = 0; i<cb_data['index'].indices.length; i++) {
-                               var line = "<b>" + cb_data['index'].indices[i].toString()
-                               line += ":   "
+                               var line = "<b>"
                                line += source[col_name][cb_data['index'].indices[i]]
                                line += "</b>"
                                line_list.push(line)
@@ -1003,7 +1002,7 @@ def scatter2d_and_3d(
             random_id + "x_" + xlabel,
             random_id + "y_" + ylabel,
             source=new_source,
-            size=point_size * 2,
+            size=max(point_size * 2, 10),
             marker="circle",
             color="orange",
             line_color="black",
