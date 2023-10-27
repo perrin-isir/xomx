@@ -5,7 +5,7 @@ from . import classifiers as cl
 from . import embeddings as em
 from . import feature_selection as fs
 
-__version__ = "0.1.6"  # -version-
+__version__ = "0.1.7"  # -version-
 
 import sys
 
