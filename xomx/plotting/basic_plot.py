@@ -61,7 +61,7 @@ def colormap(
         plt.show()
     elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         import holoviews as hv  # lazy import
-        import bokeh.io  # lazy import
+        import bokeh  # lazy import
 
         hv.extension("bokeh")
         cbar_nipy_spectral = hv.Image(
@@ -270,7 +270,7 @@ def plot_scores(
     # Bokeh
     elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         import holoviews as hv  # lazy import
-        import bokeh.io  # lazy import
+        import bokeh  # lazy import
         from bokeh.models import HoverTool  # lazy import
 
         tmp_df = adata.obs.iloc[indices].copy()
@@ -788,8 +788,9 @@ def scatter2d_and_3d(
     elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         assert not mode3d, "The extension must be matplotlib for 3d plots."
         # import holoviews as hv  # lazy import
-        import bokeh.io  # lazy import
+        import bokeh  # lazy import
         from bokeh.models import HoverTool  # lazy import
+        import bokeh.plotting as bkp  # lazy import
 
         if subset_indices is None:
             tmp_df = adata.obs if obs_or_var == "obs" else adata.var
@@ -912,7 +913,7 @@ def scatter2d_and_3d(
         data_dict[random_id + "x_" + xlabel] = [np.inf]
         data_dict[random_id + "y_" + ylabel] = [np.inf]
         new_source = bokeh.models.ColumnDataSource(data=data_dict)
-        points_bokeh_plot = bokeh.plotting.figure(
+        points_bokeh_plot = bkp.figure(
             plot_width=width,
             plot_height=height,
             title=title,
@@ -1025,7 +1026,7 @@ def scatter2d_and_3d(
         offset_text.js_on_change("value", thecallback)
 
         if output_file:
-            bokeh.plotting.output_file(output_file)
+            bkp.output_file(output_file)
             bokeh.io.save(
                 bokeh.layouts.column(
                     _custom_legend(points_bokeh_plot), offset_text, div
@@ -1232,7 +1233,9 @@ def plot_var(
         # Bokeh
         elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
             import holoviews as hv  # lazy import
-            import bokeh.io  # lazy import
+            import bokeh  # lazy import
+
+            # import bokeh.plotting as bkp  # lazy import
 
             hv.extension("bokeh")
             bounds = (0, 0, xsize, ysize)  # Coord system: (left, bottom, right, top)
