@@ -787,7 +787,7 @@ def scatter2d_and_3d(
     # Bokeh
     elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         assert not mode3d, "The extension must be matplotlib for 3d plots."
-        import holoviews as hv  # lazy import
+        # import holoviews as hv  # lazy import
         import bokeh.io  # lazy import
         from bokeh.models import HoverTool  # lazy import
 
@@ -834,6 +834,7 @@ def scatter2d_and_3d(
             and "labels" in adata.obs
             and not tmp_cmap == "viridis"
         ):
+            # Is this all and only the nipy_spectral cases?
             new_tmp_cmap = {}
             for i, lbl in enumerate(adata.uns["all_labels"]):
                 new_tmp_cmap[lbl] = matplotlib.colors.rgb2hex(
@@ -845,15 +846,17 @@ def scatter2d_and_3d(
                 )
             tmp_cmap = new_tmp_cmap
 
-        hv.extension("bokeh")
-        points = hv.Points(
-            tmp_df,
-            [random_id + "x_" + xlabel, random_id + "y_" + ylabel],
-            list(tmp_df.keys()),
-        )
+        # hv.extension("bokeh")
+        # points = hv.Points(
+        #     tmp_df,
+        #     [random_id + "x_" + xlabel, random_id + "y_" + ylabel],
+        #     list(tmp_df.keys()),
+        # )
+
         bokeh_data = bokeh.models.ColumnDataSource(
             tmp_df.loc[:, random_id + "name"].to_frame()
         )
+
         hover = HoverTool(tooltips=tooltips)
         div = bokeh.models.Div(width=width, height=50, height_policy="fixed")
         cb = bokeh.models.CustomJS(
@@ -864,49 +867,179 @@ def scatter2d_and_3d(
                 if (cb_data['index'].indices.length > 0) {
                     const line_list = [];
                     for (let i = 0; i<cb_data['index'].indices.length; i++) {
-                        var line = "<b>" + cb_data['index'].indices[i].toString()
-                        line += ":   "
+                        var line = "<b>"
                         line += source[col_name][cb_data['index'].indices[i]] + "</b>"
                         line_list.push(line)
                     }
-                    div.text = line_list.join(" --- ")
+                    div.text = line_list.join(" --- ");
                 }
             """,
         )
         hover.callback = cb  # callback whenever the HoverTool function is called
 
-        points.opts(
-            tools=[hover],
-            color="labels"
-            if (
-                obs_or_var == "obs"
-                and "all_labels" in adata.uns
-                and "labels" in adata.obs
-                and not tmp_cmap == "viridis"
-            )
-            else random_id + "colors",
-            cmap=tmp_cmap,
-            size=point_size,
-            width=width,
-            height=height,
-            show_grid=False,
+        # points.opts(
+        #     tools=[hover],
+        #     color="labels"
+        #     if (
+        #         obs_or_var == "obs"
+        #         and "all_labels" in adata.uns
+        #         and "labels" in adata.obs
+        #         and not tmp_cmap == "viridis"
+        #     )
+        #     else random_id + "colors",
+        #     cmap=tmp_cmap,
+        #     size=point_size,
+        #     width=width,
+        #     height=height,
+        #     show_grid=False,
+        #     title=title,
+        #     xlabel=xlabel,
+        #     ylabel=ylabel,
+        #     logx=xlog_scale,
+        #     logy=ylog_scale,
+        #     colorbar=True if tmp_cmap == "viridis" else False,
+        #     clim=(color_min, color_max),
+        # )
+        # if set_xticks is not None:
+        #     points.opts(
+        #         xticks=list(zip([float(x) for x in set_xticks], set_xticks_text))
+        #     )
+        # hv_plot = points
+
+        data_dict = {}
+        for k in tmp_df.keys():
+            data_dict[k] = [None]
+        data_dict[random_id + "x_" + xlabel] = [np.inf]
+        data_dict[random_id + "y_" + ylabel] = [np.inf]
+        new_source = bokeh.models.ColumnDataSource(data=data_dict)
+        points_bokeh_plot = bokeh.plotting.figure(
+            plot_width=width,
+            plot_height=height,
             title=title,
-            xlabel=xlabel,
-            ylabel=ylabel,
-            logx=xlog_scale,
-            logy=ylog_scale,
-            colorbar=True if tmp_cmap == "viridis" else False,
-            clim=(color_min, color_max),
+            x_axis_type="log" if xlog_scale else "linear",
+            y_axis_type="log" if ylog_scale else "linear",
         )
+        points_bokeh_plot.xgrid.grid_line_color = None
+        points_bokeh_plot.ygrid.grid_line_color = None
+        points_bokeh_plot.xaxis.axis_label = xlabel
+        points_bokeh_plot.yaxis.axis_label = ylabel
         if set_xticks is not None:
-            points.opts(
-                xticks=list(zip([float(x) for x in set_xticks], set_xticks_text))
+            # we should use float(..) instead of int(..) but with float(..) the labels
+            # are not overridden
+            points_bokeh_plot.xaxis.ticker = [int(x) for x in set_xticks]
+            points_bokeh_plot.xaxis.major_label_overrides = {
+                int(set_xticks[i]): set_xticks_text[i] for i in range(len(set_xticks))
+            }
+
+        if isinstance(tmp_cmap, dict):
+            color_mapper = bokeh.models.CategoricalColorMapper(
+                factors=list(tmp_cmap.keys()), palette=list(tmp_cmap.values())
             )
-        hv_plot = points
-        if output_file:
-            hv.save(hv_plot, output_file, fmt="html")
+        if tmp_cmap == "blues":
+            color_arg = "#69add5"
+        elif tmp_cmap == "reds":
+            color_arg = "#fa694a"
+        elif tmp_cmap == "viridis":
+            color_mapper = bokeh.models.LinearColorMapper(
+                palette="Viridis256", low=color_min, high=color_max
+            )
+            color_arg = {"field": random_id + "colors", "transform": color_mapper}
         else:
-            bokeh.io.show(bokeh.layouts.column(_custom_legend(hv.render(hv_plot)), div))
+            assert isinstance(tmp_cmap, dict)
+            color_mapper = bokeh.models.CategoricalColorMapper(
+                factors=list(tmp_cmap.keys()), palette=list(tmp_cmap.values())
+            )
+            color_arg = {
+                "field": "labels"
+                if (
+                    obs_or_var == "obs"
+                    and "all_labels" in adata.uns
+                    and "labels" in adata.obs
+                )
+                else random_id + "colors",
+                "transform": color_mapper,
+            }
+
+        if (
+            obs_or_var == "obs"
+            and "all_labels" in adata.uns
+            and "labels" in adata.obs
+            and not tmp_cmap == "viridis"
+        ):
+            points_bokeh_plot.scatter(
+                random_id + "x_" + xlabel,
+                random_id + "y_" + ylabel,
+                source=tmp_df,
+                fill_alpha=1.0,
+                size=point_size,
+                color=color_arg,
+                legend_field="labels",
+            )
+        else:
+            points_bokeh_plot.scatter(
+                random_id + "x_" + xlabel,
+                random_id + "y_" + ylabel,
+                source=tmp_df,
+                fill_alpha=1.0,
+                size=point_size,
+                color=color_arg,
+            )
+        if tmp_cmap == "viridis":
+            color_bar = bokeh.models.ColorBar(
+                color_mapper=color_mapper,
+                # label_standoff=12,
+                # border_line_color=None,
+                location=(0, 0),
+            )
+            points_bokeh_plot.add_layout(color_bar, "right")
+        points_bokeh_plot.scatter(
+            random_id + "x_" + xlabel,
+            random_id + "y_" + ylabel,
+            source=new_source,
+            size=point_size * 2,
+            marker="circle",
+            color="orange",
+            line_color="black",
+            line_width=2,
+        )
+        points_bokeh_plot.add_tools(hover)
+        offset_text = bokeh.models.TextInput(value="", title="Search:", name="texty")
+        thecallback = bokeh.models.CustomJS(
+            args=dict(
+                source=new_source,
+                main_source=bokeh.models.ColumnDataSource(tmp_df),
+                dict_index={k: v for v, k in enumerate(tmp_df.index)},
+                ot=offset_text,
+            ),
+            # os=offset_slider),
+            code="""
+                const data = source.data;
+                // everything below here is unaltered
+                for (const key in data) {
+                    const valref = data[key];
+                    valref[0] = main_source.data[key][dict_index[ot.value]];
+                }
+                source.change.emit();
+            """,
+        )
+        offset_text.js_on_change("value", thecallback)
+
+        if output_file:
+            bokeh.plotting.output_file(output_file)
+            bokeh.io.save(
+                bokeh.layouts.column(
+                    _custom_legend(points_bokeh_plot), offset_text, div
+                )
+            )
+            # hv.save(hv_plot, output_file, fmt="html")
+        else:
+            bokeh.io.show(
+                bokeh.layouts.column(
+                    _custom_legend(points_bokeh_plot), offset_text, div
+                )
+            )
+            # bokeh.io.show(
+            #     bokeh.layouts.column(_custom_legend(hv.render(hv_plot)), div))
         del tmp_df[random_id + "name"]
         del tmp_df[random_id + "colors"]
         del tmp_df[random_id + "x_" + xlabel]
