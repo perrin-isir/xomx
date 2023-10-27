@@ -61,7 +61,9 @@ def colormap(
         plt.show()
     elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         import holoviews as hv  # lazy import
-        import bokeh  # lazy import
+        import bokeh.models  # lazy import
+        import bokeh.io  # lazy import
+        import bokeh.layouts  # lazy import
 
         hv.extension("bokeh")
         cbar_nipy_spectral = hv.Image(
@@ -270,7 +272,9 @@ def plot_scores(
     # Bokeh
     elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         import holoviews as hv  # lazy import
-        import bokeh  # lazy import
+        import bokeh.models  # lazy import
+        import bokeh.io  # lazy import
+        import bokeh.layouts  # lazy import
         from bokeh.models import HoverTool  # lazy import
 
         tmp_df = adata.obs.iloc[indices].copy()
@@ -788,7 +792,9 @@ def scatter2d_and_3d(
     elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
         assert not mode3d, "The extension must be matplotlib for 3d plots."
         # import holoviews as hv  # lazy import
-        import bokeh  # lazy import
+        import bokeh.models  # lazy import
+        import bokeh.io  # lazy import
+        import bokeh.layouts  # lazy import
         from bokeh.models import HoverTool  # lazy import
         import bokeh.plotting as bkp  # lazy import
 
@@ -1004,7 +1010,9 @@ def scatter2d_and_3d(
             line_width=2,
         )
         points_bokeh_plot.add_tools(hover)
-        offset_text = bokeh.models.TextInput(value="", title="Search:", name="texty")
+        offset_text = bokeh.models.TextInput(
+            value="", title="Search:", name="texty", width=width
+        )
         thecallback = bokeh.models.CustomJS(
             args=dict(
                 source=new_source,
@@ -1233,7 +1241,9 @@ def plot_var(
         # Bokeh
         elif global_xomx_extension_bokeh_or_matplotlib == "bokeh":
             import holoviews as hv  # lazy import
-            import bokeh  # lazy import
+            import bokeh.models  # lazy import
+            import bokeh.io  # lazy import
+            import bokeh.layouts  # lazy import
 
             # import bokeh.plotting as bkp  # lazy import
 
