@@ -8,7 +8,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="xomx",
-    version="0.1.13",  # -version-
+    version="0.1.14",  # -version-
     author="Nicolas Perrin-Gilbert",
     description="xomx: a python library for computational omics",
     long_description=long_description,
@@ -16,7 +16,7 @@ setup(
     url="https://github.com/perrin-isir/xomx",
     packages=find_packages(),
     install_requires=[
-        "pandas>=1.3.0",
+        "pandas>=1.3.0,<=2.1.0",
         "numpy>=1.21.1",
         "anndata>=0.7.6",
         "scipy>=1.4.1",
