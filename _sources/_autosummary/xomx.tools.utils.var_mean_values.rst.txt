@@ -1,0 +1,6 @@
+xomx.tools.utils.var\_mean\_values
+==================================
+
+.. currentmodule:: xomx.tools.utils
+
+.. autofunction:: var_mean_values

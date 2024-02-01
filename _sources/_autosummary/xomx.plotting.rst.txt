@@ -1,0 +1,30 @@
+﻿xomx.plotting
+=============
+
+.. automodule:: xomx.plotting
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   xomx.plotting.basic_plot
+

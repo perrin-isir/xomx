@@ -1,0 +1,35 @@
+xomx.tools.bio
+==============
+
+.. automodule:: xomx.tools.bio
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      compute_logomaker_df
+      onehot
+      onehot_inverse
+      to_float
+      to_float_inverse
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

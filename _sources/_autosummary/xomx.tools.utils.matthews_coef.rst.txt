@@ -1,0 +1,6 @@
+xomx.tools.utils.matthews\_coef
+===============================
+
+.. currentmodule:: xomx.tools.utils
+
+.. autofunction:: matthews_coef

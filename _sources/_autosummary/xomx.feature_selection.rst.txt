@@ -1,0 +1,30 @@
+﻿xomx.feature\_selection
+=======================
+
+.. automodule:: xomx.feature_selection
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   xomx.feature_selection.RFEExtraTrees
+

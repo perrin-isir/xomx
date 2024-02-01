@@ -1,0 +1,6 @@
+xomx.tools.utils.train\_and\_test\_indices
+==========================================
+
+.. currentmodule:: xomx.tools.utils
+
+.. autofunction:: train_and_test_indices

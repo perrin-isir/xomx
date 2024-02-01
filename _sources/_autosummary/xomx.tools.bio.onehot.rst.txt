@@ -1,0 +1,6 @@
+xomx.tools.bio.onehot
+=====================
+
+.. currentmodule:: xomx.tools.bio
+
+.. autofunction:: onehot

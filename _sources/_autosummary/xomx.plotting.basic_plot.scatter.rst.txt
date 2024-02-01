@@ -1,0 +1,6 @@
+xomx.plotting.basic\_plot.scatter
+=================================
+
+.. currentmodule:: xomx.plotting.basic_plot
+
+.. autofunction:: scatter

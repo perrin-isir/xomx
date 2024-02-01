@@ -1,0 +1,23 @@
+xomx.feature\_selection.RFEExtraTrees
+=====================================
+
+.. automodule:: xomx.feature_selection.RFEExtraTrees
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

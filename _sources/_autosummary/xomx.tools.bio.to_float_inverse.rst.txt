@@ -1,0 +1,6 @@
+xomx.tools.bio.to\_float\_inverse
+=================================
+
+.. currentmodule:: xomx.tools.bio
+
+.. autofunction:: to_float_inverse

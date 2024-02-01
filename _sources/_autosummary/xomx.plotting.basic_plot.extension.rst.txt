@@ -1,0 +1,6 @@
+xomx.plotting.basic\_plot.extension
+===================================
+
+.. currentmodule:: xomx.plotting.basic_plot
+
+.. autofunction:: extension

@@ -1,0 +1,39 @@
+xomx.tools.utils
+================
+
+.. automodule:: xomx.tools.utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      all_labels
+      confusion_matrix
+      indices_per_label
+      matthews_coef
+      obs_indices
+      train_and_test_indices
+      var_indices
+      var_mean_values
+      var_standard_deviations
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

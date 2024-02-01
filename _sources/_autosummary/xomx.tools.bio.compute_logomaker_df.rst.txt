@@ -1,0 +1,6 @@
+xomx.tools.bio.compute\_logomaker\_df
+=====================================
+
+.. currentmodule:: xomx.tools.bio
+
+.. autofunction:: compute_logomaker_df

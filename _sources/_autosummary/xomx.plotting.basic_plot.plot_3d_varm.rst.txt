@@ -1,0 +1,6 @@
+xomx.plotting.basic\_plot.plot\_3d\_varm
+========================================
+
+.. currentmodule:: xomx.plotting.basic_plot
+
+.. autofunction:: plot_3d_varm

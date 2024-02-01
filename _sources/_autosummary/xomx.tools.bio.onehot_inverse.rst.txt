@@ -1,0 +1,6 @@
+xomx.tools.bio.onehot\_inverse
+==============================
+
+.. currentmodule:: xomx.tools.bio
+
+.. autofunction:: onehot_inverse

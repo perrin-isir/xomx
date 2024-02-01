@@ -1,0 +1,6 @@
+xomx.plotting.basic\_plot.plot\_scores
+======================================
+
+.. currentmodule:: xomx.plotting.basic_plot
+
+.. autofunction:: plot_scores

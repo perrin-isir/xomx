@@ -1,0 +1,6 @@
+xomx.tools.utils.indices\_per\_label
+====================================
+
+.. currentmodule:: xomx.tools.utils
+
+.. autofunction:: indices_per_label

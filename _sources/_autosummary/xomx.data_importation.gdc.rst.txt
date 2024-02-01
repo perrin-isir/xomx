@@ -1,0 +1,32 @@
+xomx.data\_importation.gdc
+==========================
+
+.. automodule:: xomx.data_importation.gdc
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      gdc_create_data_matrix
+      gdc_create_manifest
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

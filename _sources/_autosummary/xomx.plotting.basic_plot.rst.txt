@@ -1,0 +1,42 @@
+xomx.plotting.basic\_plot
+=========================
+
+.. automodule:: xomx.plotting.basic_plot
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      colormap
+      extension
+      force_extension
+      plot
+      plot_2d_obsm
+      plot_2d_varm
+      plot_3d_obsm
+      plot_3d_varm
+      plot_scores
+      plot_var
+      scatter
+      scatter2d_and_3d
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

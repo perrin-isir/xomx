@@ -1,0 +1,30 @@
+﻿xomx.data\_importation
+======================
+
+.. automodule:: xomx.data_importation
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   xomx.data_importation.gdc
+

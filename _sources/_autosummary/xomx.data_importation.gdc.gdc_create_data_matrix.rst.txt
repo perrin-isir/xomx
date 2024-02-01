@@ -1,0 +1,6 @@
+xomx.data\_importation.gdc.gdc\_create\_data\_matrix
+====================================================
+
+.. currentmodule:: xomx.data_importation.gdc
+
+.. autofunction:: gdc_create_data_matrix

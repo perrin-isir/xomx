@@ -1,0 +1,6 @@
+xomx.plotting.basic\_plot.scatter2d\_and\_3d
+============================================
+
+.. currentmodule:: xomx.plotting.basic_plot
+
+.. autofunction:: scatter2d_and_3d

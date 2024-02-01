@@ -1,0 +1,31 @@
+﻿xomx.classifiers
+================
+
+.. automodule:: xomx.classifiers
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   xomx.classifiers.ExtraTrees
+   xomx.classifiers.multiclass
+

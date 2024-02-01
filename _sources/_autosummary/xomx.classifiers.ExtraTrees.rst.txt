@@ -1,0 +1,23 @@
+xomx.classifiers.ExtraTrees
+===========================
+
+.. automodule:: xomx.classifiers.ExtraTrees
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

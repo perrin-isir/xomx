@@ -1,0 +1,6 @@
+xomx.plotting.basic\_plot.force\_extension
+==========================================
+
+.. currentmodule:: xomx.plotting.basic_plot
+
+.. autofunction:: force_extension

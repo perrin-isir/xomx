@@ -1,0 +1,26 @@
+xomx.classifiers.multiclass.ScoreBasedMulticlass
+================================================
+
+.. currentmodule:: xomx.classifiers.multiclass
+
+.. autoclass:: ScoreBasedMulticlass
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ScoreBasedMulticlass.plot
+      ~ScoreBasedMulticlass.predict
+   
+   
+
+   
+   
+   

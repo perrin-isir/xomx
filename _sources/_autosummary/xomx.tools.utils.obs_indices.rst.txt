@@ -1,0 +1,6 @@
+xomx.tools.utils.obs\_indices
+=============================
+
+.. currentmodule:: xomx.tools.utils
+
+.. autofunction:: obs_indices
