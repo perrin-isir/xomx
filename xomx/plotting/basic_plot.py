@@ -152,7 +152,7 @@ def plot_scores(
     indices,
     label=None,
     *,
-    s: int = 5,
+    pointsize: int = 5,
     output_file: Optional[str] = None,
     text_complements=None,
     lines: bool = False,
@@ -203,7 +203,7 @@ def plot_scores(
             c=sample_colors,
             cmap=cm,
             norm=matplotlib.colors.NoNorm(),
-            s=s,
+            s=pointsize,
         )
         if score_threshold is not None:
             ax.axhline(y=score_threshold, xmin=0, xmax=1, lw=1, ls="--", c="red")
@@ -342,7 +342,7 @@ def plot_scores(
             if ("all_labels" in adata.uns and "labels" in adata.obs)
             else random_id + "colors",
             cmap=tmp_cmap,
-            size=s,
+            size=pointsize,
             width=width,
             height=height,
             show_grid=False,
@@ -453,12 +453,12 @@ def _identity_func(x):
 
 def scatter2d_and_3d(
     adata,
-    func1_=_identity_func,
-    func2_=_identity_func,
+    func1=_identity_func,
+    func2=_identity_func,
     func3_=None,
     obs_or_var: str = "obs",
     *,
-    s: int = 3,
+    pointsize: int = 3,
     xlog_scale: bool = False,
     ylog_scale: bool = False,
     zlog_scale: bool = False,
@@ -473,13 +473,13 @@ def scatter2d_and_3d(
     height=600,
 ):
     """Displays a scatter plot, with coordinates computed by applying two
-    functions (`func1_` and `func2_`) to every sample or every feature, depending
+    functions (`func1` and `func2`) to every sample or every feature, depending
     on the value of obs_or_var which must be either "obs" or "var"
     (both functions must take indices in input)
     """
     global global_xomx_extension_bokeh_or_matplotlib
-    point_size = s
-    if func1_ == _identity_func:
+    point_size = pointsize
+    if func1 == _identity_func:
         function_plot_ = True
         mode3d = False
     else:
@@ -519,7 +519,7 @@ def scatter2d_and_3d(
                 subset_indices=subset_indices,
                 equal_size=equal_size,
             )
-            y = [func2_(i) for i in list_samples]
+            y = [func2(i) for i in list_samples]
             x = [i for i in range(len(y))]
             subset_indices = list_samples
             if global_xomx_extension_bokeh_or_matplotlib == "matplotlib":
@@ -541,15 +541,15 @@ def scatter2d_and_3d(
                         pc.set_alpha(0.5)
         else:
             if subset_indices is None:
-                y = [func2_(i) for i in range(adata.n_obs)]
-                x = [func1_(i) for i in range(adata.n_obs)]
+                y = [func2(i) for i in range(adata.n_obs)]
+                x = [func1(i) for i in range(adata.n_obs)]
                 if mode3d:
                     z = [func3_(i) for i in range(adata.n_obs)]
                 else:
                     z = None
             else:
-                y = [func2_(i) for i in subset_indices]
-                x = [func1_(i) for i in subset_indices]
+                y = [func2(i) for i in subset_indices]
+                x = [func1(i) for i in subset_indices]
                 if mode3d:
                     z = [func3_(i) for i in subset_indices]
                 else:
@@ -587,15 +587,15 @@ def scatter2d_and_3d(
                     ]
     else:
         if subset_indices is None:
-            y = [func2_(i) for i in range(adata.n_vars)]
-            x = [func1_(i) for i in range(adata.n_vars)]
+            y = [func2(i) for i in range(adata.n_vars)]
+            x = [func1(i) for i in range(adata.n_vars)]
             if mode3d:
                 z = [func3_(i) for i in range(adata.n_vars)]
             else:
                 z = None
         else:
-            y = [func2_(i) for i in subset_indices]
-            x = [func1_(i) for i in subset_indices]
+            y = [func2(i) for i in subset_indices]
+            x = [func1(i) for i in subset_indices]
             if mode3d:
                 z = [func3_(i) for i in subset_indices]
             else:
@@ -1061,11 +1061,11 @@ def scatter2d_and_3d(
 
 def scatter(
     adata,
-    func1_=_identity_func,
-    func2_=_identity_func,
+    func1=_identity_func,
+    func2=_identity_func,
     obs_or_var: str = "obs",
     *,
-    s: int = 3,
+    pointsize: int = 3,
     xlog_scale: bool = False,
     ylog_scale: bool = False,
     xlabel: str = "",
@@ -1079,11 +1079,11 @@ def scatter(
 ):
     scatter2d_and_3d(
         adata,
-        func1_,
-        func2_,
+        func1,
+        func2,
         None,
         obs_or_var,
-        s=s,
+        pointsize=pointsize,
         xlog_scale=xlog_scale,
         ylog_scale=ylog_scale,
         zlog_scale=False,
@@ -1104,7 +1104,7 @@ def plot(
     func=_identity_func,
     obs_or_var="obs",
     *,
-    s: int = 5,
+    pointsize: int = 5,
     ylog_scale=False,
     xlabel="",
     ylabel="",
@@ -1123,7 +1123,7 @@ def plot(
         _identity_func,
         func,
         obs_or_var,
-        s=s,
+        pointsize=pointsize,
         xlog_scale=False,
         ylog_scale=ylog_scale,
         xlabel=xlabel,
@@ -1141,8 +1141,7 @@ def plot_var(
     adata,
     features=None,
     *,
-    s: int = 5,
-    ylog_scale=False,
+    pointsize: int = 5,
     xlabel="",
     ylabel="",
     title="",
@@ -1166,8 +1165,8 @@ def plot_var(
             adata,
             lambda i: adata.X[i, idx],
             "obs",
-            s=s,
-            ylog_scale=ylog_scale,
+            pointsize=pointsize,
+            ylog_scale=False,
             xlabel=xlabel,
             ylabel=ylabel,
             title=title,
@@ -1178,6 +1177,8 @@ def plot_var(
             height=height,
         )
     else:
+        if features is None:
+            features = np.arange(adata.n_vars)
         if subset_indices is None:
             xsize = adata.n_obs
         else:
@@ -1286,9 +1287,9 @@ def plot_var(
 def plot_2d_obsm(
     adata,
     obsm_key,
-    var_name=None,
+    color_var=None,
     *,
-    s: int = 3,
+    pointsize: int = 3,
     xlabel: str = "",
     ylabel: str = "",
     title: str = "",
@@ -1303,22 +1304,22 @@ def plot_2d_obsm(
     def embedding_y(j):
         return adata.obsm[obsm_key][j, 1]
 
-    if var_name is not None:
+    if color_var is not None:
         if "colors" in adata.obs:
             adata.obs.rename(
                 {"colors": "xomx_temporary_colors"}, axis="columns", inplace=True
             )
         assert (
-            var_name in adata.var_names
-        ), "the var_name input must be in adata.var_names"
-        adata.obs["colors"] = np.array(_to_dense(adata[:, var_name].X))
+            color_var in adata.var_names
+        ), "the color_var input must be in adata.var_names"
+        adata.obs["colors"] = np.array(_to_dense(adata[:, color_var].X))
 
     scatter(
         adata,
         embedding_x,
         embedding_y,
         "obs",
-        s=s,
+        pointsize=pointsize,
         xlog_scale=False,
         ylog_scale=False,
         xlabel=xlabel,
@@ -1330,7 +1331,7 @@ def plot_2d_obsm(
         height=height,
     )
 
-    if var_name is not None:
+    if color_var is not None:
         del adata.obs["colors"]
         if "xomx_temporary_colors" in adata.obs:
             adata.obs.rename(
@@ -1341,9 +1342,9 @@ def plot_2d_obsm(
 def plot_3d_obsm(
     adata,
     obsm_key,
-    var_name=None,
+    color_var=None,
     *,
-    s: int = 3,
+    pointsize: int = 3,
     xlabel: str = "",
     ylabel: str = "",
     zlabel: str = "",
@@ -1362,15 +1363,15 @@ def plot_3d_obsm(
     def embedding_z(j):
         return adata.obsm[obsm_key][j, 2]
 
-    if var_name is not None:
+    if color_var is not None:
         if "colors" in adata.obs:
             adata.obs.rename(
                 {"colors": "xomx_temporary_colors"}, axis="columns", inplace=True
             )
         assert (
-            var_name in adata.var_names
-        ), "the var_name input must be in adata.var_names"
-        adata.obs["colors"] = np.array(_to_dense(adata[:, var_name].X))
+            color_var in adata.var_names
+        ), "the color_var input must be in adata.var_names"
+        adata.obs["colors"] = np.array(_to_dense(adata[:, color_var].X))
 
     scatter2d_and_3d(
         adata,
@@ -1378,7 +1379,7 @@ def plot_3d_obsm(
         embedding_y,
         embedding_z,
         "obs",
-        s=s,
+        pointsize=pointsize,
         xlog_scale=False,
         ylog_scale=False,
         zlog_scale=False,
@@ -1392,7 +1393,7 @@ def plot_3d_obsm(
         height=height,
     )
 
-    if var_name is not None:
+    if color_var is not None:
         del adata.obs["colors"]
         if "xomx_temporary_colors" in adata.obs:
             adata.obs.rename(
@@ -1403,9 +1404,9 @@ def plot_3d_obsm(
 def plot_2d_varm(
     adata,
     varm_key,
-    obs_name=None,
+    color_obs=None,
     *,
-    s: int = 3,
+    pointsize: int = 3,
     xlabel: str = "",
     ylabel: str = "",
     title: str = "",
@@ -1420,22 +1421,22 @@ def plot_2d_varm(
     def embedding_y(j):
         return adata.varm[varm_key][j, 1]
 
-    if obs_name is not None:
+    if color_obs is not None:
         if "colors" in adata.var:
             adata.var.rename(
                 {"colors": "xomx_temporary_colors"}, axis="columns", inplace=True
             )
         assert (
-            obs_name in adata.obs_names
-        ), "the obs_name input must be in adata.obs_names"
-        adata.var["colors"] = np.array(_to_dense(adata[obs_name, :].X))
+            color_obs in adata.obs_names
+        ), "the color_obs input must be in adata.obs_names"
+        adata.var["colors"] = np.array(_to_dense(adata[color_obs, :].X))
 
     scatter(
         adata,
         embedding_x,
         embedding_y,
         "var",
-        s=s,
+        pointsize=pointsize,
         xlog_scale=False,
         ylog_scale=False,
         xlabel=xlabel,
@@ -1447,7 +1448,7 @@ def plot_2d_varm(
         height=height,
     )
 
-    if obs_name is not None:
+    if color_obs is not None:
         del adata.var["colors"]
         if "xomx_temporary_colors" in adata.var:
             adata.var.rename(
@@ -1458,9 +1459,9 @@ def plot_2d_varm(
 def plot_3d_varm(
     adata,
     varm_key,
-    obs_name=None,
+    color_obs=None,
     *,
-    s: int = 3,
+    pointsize: int = 3,
     xlabel: str = "",
     ylabel: str = "",
     zlabel: str = "",
@@ -1479,15 +1480,15 @@ def plot_3d_varm(
     def embedding_z(j):
         return adata.varm[varm_key][j, 2]
 
-    if obs_name is not None:
+    if color_obs is not None:
         if "colors" in adata.var:
             adata.var.rename(
                 {"colors": "xomx_temporary_colors"}, axis="columns", inplace=True
             )
         assert (
-            obs_name in adata.obs_names
-        ), "the obs_name input must be in adata.obs_names"
-        adata.var["colors"] = np.array(_to_dense(adata[obs_name, :].X))
+            color_obs in adata.obs_names
+        ), "the color_obs input must be in adata.obs_names"
+        adata.var["colors"] = np.array(_to_dense(adata[color_obs, :].X))
 
     scatter2d_and_3d(
         adata,
@@ -1495,7 +1496,7 @@ def plot_3d_varm(
         embedding_y,
         embedding_z,
         "var",
-        s=s,
+        pointsize=pointsize,
         xlog_scale=False,
         ylog_scale=False,
         zlog_scale=False,
@@ -1509,7 +1510,7 @@ def plot_3d_varm(
         height=height,
     )
 
-    if obs_name is not None:
+    if color_obs is not None:
         del adata.var["colors"]
         if "xomx_temporary_colors" in adata.var:
             adata.var.rename(
