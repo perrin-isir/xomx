@@ -285,7 +285,7 @@ def plot_scores(
             tooltips += [("info", "@{" + random_id + "info}")]
         tooltips += [(key, "@{" + key + "}") for key in tmp_df.keys()]
         tmp_df[random_id + "x_" + xlabel] = np.arange(len(indices))
-        tmp_df[random_id + "y_" + ylabel] = scores.reshape(len(indices))
+        tmp_df[random_id + "y_" + ylabel] = np.array(scores).reshape(len(indices))
         tooltips += [
             ("x:" + xlabel, "@{" + random_id + "x_" + xlabel + "}"),
             ("y:" + ylabel, "@{" + random_id + "y_" + ylabel + "}"),
